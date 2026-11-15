@@ -1,5 +1,5 @@
 /* Offline support: always try the newest version online, fall back to the saved copy offline. Bump VERSION on each release. */
-const VERSION = "lift-ledger-beta-5";
+const VERSION = "lift-ledger-beta-6";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/i18n.js", "js/app.js", "js/library.js", "js/calories.js", "data/exercises.json", "manifest.webmanifest",
   "programs/index.json", "programs/full-body-3.json", "programs/upper-lower-4.json", "programs/push-pull-legs-6.json",

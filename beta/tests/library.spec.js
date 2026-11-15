@@ -8,6 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("./");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+  await page.locator('.home-card[data-id="full-body-3"]').click();
   await expect(page.locator(".ex").first()).toBeVisible();
 });
 test.afterEach(async ({ page }) => {
@@ -15,7 +16,7 @@ test.afterEach(async ({ page }) => {
   expect(await page.evaluate(() => [...MISSING])).toEqual([]);
 });
 
-const openLibrary = async page => { await page.click("#modeSet"); await page.click("#libBrowse"); await expect(page.locator("#picker")).toBeVisible(); };
+const openLibrary = async page => { await page.click("#modeSet"); await page.click('.setrow[data-page="library"]'); await page.click("#libBrowse"); await expect(page.locator("#picker")).toBeVisible(); };
 
 test("the library is complete and consistent", async ({ page }) => {
   const r = await page.evaluate(() => {
@@ -71,8 +72,9 @@ test("swap an exercise for any library exercise, starting with the same muscle",
   await expect(page.locator(".ex").first().locator("h3")).toContainText("Pendulum Squat");
   await expect(page.locator(".ex").first().locator(".swapped")).toContainText("Back Squat");
   await page.reload();
+  await page.click("#homeGo");
   await expect(page.locator(".ex").first().locator("h3")).toContainText("Pendulum Squat");
-  await page.locator(".wk").nth(1).click(); await page.locator(".day").first().click();
+  await page.click("#weekToggle"); await page.locator(".wk").nth(1).click(); await page.locator(".day").first().click();
   await expect(page.locator(".ex").first().locator("h3")).toContainText("Back Squat");
 });
 
@@ -99,7 +101,7 @@ test("add, find, edit and delete my own exercise", async ({ page }) => {
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem(PREFIX + "exercises-custom"))[0]);
   expect(saved).toMatchObject({ name: "Landmine Squat", primary: "quads", secondary: ["glutes"], reps: "8–12", custom: true });
   // glutes filter finds it through its secondary muscle; search finds it too
-  await page.reload(); await page.click("#modeSet"); await page.click("#libBrowse");
+  await page.reload(); await openLibrary(page);
   await page.fill("#pkSearch", "landmine squat");
   await page.locator(".pk-item", { hasText: "Landmine Squat" }).click();
   await expect(page.locator("#pkForm")).toBeVisible();

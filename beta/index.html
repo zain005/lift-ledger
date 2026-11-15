@@ -27,12 +27,14 @@
       <h1 id="appTitle">Lift Ledger</h1>
       <div class="phase" id="phase"></div>
     </div>
-    <div class="modes" id="modes" role="group" data-i18n-aria="nav.aria">
-      <button type="button" class="mode" id="modeWorkout" aria-pressed="true" data-i18n="nav.workout">Workout</button>
-      <button type="button" class="mode" id="modeCal" aria-pressed="false" data-i18n="nav.calories">Calories</button>
-      <button type="button" class="mode" id="modeSet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="nav.settings">Settings</span></button>
+    <div class="weekbar" id="weekbar" hidden>
+      <button type="button" class="weektoggle" id="weekToggle" aria-expanded="false" aria-controls="weeks">
+        <span class="wt-text"><b id="wtMain"></b><small id="wtSub"></small></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button type="button" class="statsbtn" id="statsBtn" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-6 4 3 7-9"/></svg><span data-i18n="stats.short">Stats</span></button>
     </div>
-    <div class="weeks" id="weeks" role="group" data-i18n-aria="nav.weekAria"></div>
+    <div class="weeks" id="weeks" role="group" data-i18n-aria="nav.weekAria" hidden></div>
     <div class="days" id="days" role="group" data-i18n-aria="nav.dayAria"></div>
   </div>
 </header>
@@ -40,6 +42,26 @@
 <main>
   <div class="wrap">
     <p class="loading" id="loading" data-i18n="loading">Loading programs…</p>
+
+    <section class="home" id="home" hidden data-i18n-aria="nav.home">
+      <div class="home-hero">
+        <p class="eyebrow" data-i18n="home.eyebrow">Your training log</p>
+        <h2 id="homeHeadline"></h2>
+        <p class="sub" id="homeSub"></p>
+      </div>
+      <div id="homeContinue"></div>
+      <h3 class="sect" id="homeChooseH"></h3>
+      <div class="progs" id="homeProgs"></div>
+      <button type="button" class="pcard create" id="homeCreate">
+        <span class="plus" aria-hidden="true">+</span>
+        <span><b data-i18n="home.create">Create my own program</b><small data-i18n="home.createSub">Pick your days and exercises, or start from a preset.</small><span class="tag soon" data-i18n="home.soon">Coming next</span></span>
+      </button>
+      <div class="home-links">
+        <label class="linkbtn" for="progFile" data-i18n="home.import">Import a program file</label>
+        <input type="file" id="progFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="msg" id="progMsg" hidden></p>
+    </section>
 
     <details class="rpe" id="rpe" hidden>
       <summary data-i18n="rpe.summary">What does RPE mean?</summary>
@@ -66,7 +88,12 @@
     <button type="button" class="daydone" id="dayDone" aria-pressed="false" hidden></button>
 
     <section class="cal" id="cal" hidden data-i18n-aria="nav.calories">
-      <h2 data-i18n="cal.title">Calories</h2>
+      <div class="panel setup" id="calSetup" hidden>
+        <h3 data-i18n="cal.setupTitle">Set up your calorie calculator</h3>
+        <p class="sub" data-i18n="cal.setupText">Add your weight, height and age, and it works out what you burn and where your eating puts you.</p>
+        <button type="button" class="addbtn" id="calSetupBtn" data-i18n="cal.setupBtn">Add my details</button>
+      </div>
+      <div id="calBody">
       <p class="note"><span data-i18n="cal.detailsIn">Your weight, height and weekly routine are in</span> <button type="button" class="linkbtn" id="calToSet" data-i18n="nav.settings">Settings</button>.</p>
 
       <div class="panel hero">
@@ -160,30 +187,26 @@
         <p data-i18n-html="how.weight"></p>
         <p data-i18n-html="how.accuracy"></p>
       </details>
+      </div>
     </section>
 
     <section class="cal" id="settings" hidden data-i18n-aria="nav.settings">
-      <h2 data-i18n="set.title">Settings</h2>
+      <div class="setlist" id="setList"></div>
+      <button type="button" class="backbtn" id="setBack" hidden><span aria-hidden="true">‹</span> <span data-i18n="set.title">Settings</span></button>
+      <div class="subpage" data-page="language" hidden>
       <div class="panel">
         <h3 data-i18n="set.language">Language</h3>
         <div class="seg two" id="langSeg" role="group" data-i18n-aria="set.language"></div>
       </div>
-      <div class="panel">
-        <h3 data-i18n="set.program">Program</h3>
-        <p class="sub" data-i18n="set.programSub">Each program keeps its own log, so switching never deletes anything.</p>
-        <div class="progs" id="setProgs"></div>
-        <div class="btnrow">
-          <label class="ghostbtn" for="progFile" style="cursor:pointer" data-i18n="set.import">Import a program (.json)</label>
-          <input type="file" id="progFile" accept=".json,application/json" hidden>
-          <a class="ghostbtn" href="https://github.com/zain005/lift-ledger/blob/main/docs/program-format.md" target="_blank" rel="noopener" style="text-decoration:none" data-i18n="set.format">Program file format</a>
-        </div>
-        <p class="msg" id="progMsg" hidden></p>
       </div>
+      <div class="subpage" data-page="library" hidden>
       <div class="panel">
         <h3 data-i18n="lib.title">Exercise library</h3>
         <p class="sub" id="libSummary"></p>
         <button type="button" class="ghostbtn" id="libBrowse" data-i18n="lib.browse">Browse exercises</button>
       </div>
+      </div>
+      <div class="subpage" data-page="appearance" hidden>
       <div class="panel">
         <h3 data-i18n="set.look">Appearance</h3>
         <div class="fld"><label data-i18n="set.theme">Theme</label>
@@ -194,6 +217,8 @@
           </div>
         </div>
       </div>
+      </div>
+      <div class="subpage" data-page="workout" hidden>
       <div class="panel">
         <h3 data-i18n="set.workoutScreen">Workout screen</h3>
         <div class="togs" id="setWorkout"></div>
@@ -205,10 +230,14 @@
         </div>
         <p class="note" data-i18n="set.unitNote">The unit is a label only. Pick it before you start logging; it doesn't convert numbers you've already entered.</p>
       </div>
+      </div>
+      <div class="subpage" data-page="app" hidden>
       <div class="panel">
         <h3 data-i18n="set.app">App</h3>
         <div class="togs" id="setApp"></div>
       </div>
+      </div>
+      <div class="subpage" data-page="details" hidden>
       <div class="panel">
         <h3 data-i18n="set.details">Your details</h3>
         <p class="sub" data-i18n="set.detailsSub">Used by the calorie calculator only.</p>
@@ -249,7 +278,10 @@
           <div class="fld"><label for="cInc" data-i18n="p.incline">Incline %</label><input id="cInc" inputmode="decimal"></div>
         </div>
         <p class="note" id="pAgeNote"></p>
+        <button type="button" class="addbtn" id="detailsDone" hidden data-i18n="set.seeCalories">See my calorie numbers</button>
       </div>
+      </div>
+      <div class="subpage" data-page="data" hidden>
       <div class="panel">
         <h3 data-i18n="data.title">Your data</h3>
         <p class="note" data-i18n="data.note">Everything is stored in this browser on this device. Nothing is sent anywhere. Export a backup now and then, and before clearing your browser data.</p>
@@ -265,6 +297,7 @@
           <button type="button" class="ghostbtn danger" id="eraseAll" data-i18n="data.erase">Erase all data</button>
         </div>
       </div>
+      </div>
     </section>
 
     <div class="foot" id="foot" hidden>
@@ -273,6 +306,13 @@
     </div>
   </div>
 </main>
+
+<nav class="tabbar" id="tabbar" data-i18n-aria="nav.aria">
+  <button type="button" class="tab" id="modeHome" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Home</span></button>
+  <button type="button" class="tab" id="modeWorkout" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg><span data-i18n="nav.workout">Workout</span></button>
+  <button type="button" class="tab" id="modeCal" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5.5 1-8.5z"/></svg><span data-i18n="nav.calories">Calories</span></button>
+  <button type="button" class="tab" id="modeSet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="nav.settings">Settings</span></button>
+</nav>
 
 <div class="sheet" id="picker" role="dialog" aria-modal="true" aria-labelledby="pkTitle" hidden>
   <div class="sheet-in">

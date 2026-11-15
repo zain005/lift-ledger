@@ -3,7 +3,7 @@
 
 const CAL_KEY = PREFIX + "cal", WHATIF_KEY = PREFIX + "whatif";
 const CAL_DEFAULT = {
-  weight: 75, height: 175, age: 30, sex: "male", bf: 0, act: 1.2, target: 20,
+  weight: "", height: "", age: "", sex: "male", bf: "", act: 1.2, target: 20,
   trainDays: 3, cardioDays: 0,
   warmMin: 5, warmSpd: 3, warmInc: 0, liftMin: 60, liftMet: 5,
   cardMin: 30, cardSpd: 3, cardInc: 5,
@@ -178,7 +178,7 @@ const BIND = { pWeight: "weight", pHeight: "height", pAge: "age", pBf: "bf", pSe
   tWm: "warmMin", tWs: "warmSpd", tWi: "warmInc", tLm: "liftMin", tLi: "liftMet", cMin: "cardMin", cSpd: "cardSpd", cInc: "cardInc" };
 function saveCal() { store(CAL_KEY, CAL); }
 function fillInputs() {
-  Object.entries(BIND).forEach(([id, k]) => { const el = $(id); if (el && document.activeElement !== el) el.value = k === "bf" && !+CAL[k] ? "" : CAL[k]; });
+  Object.entries(BIND).forEach(([id, k]) => { const el = $(id); if (el && document.activeElement !== el) el.value = PERSONAL.includes(k) && !+CAL[k] ? "" : CAL[k]; });
 }
 Object.entries(BIND).forEach(([id, k]) => {
   const el = $(id); if (!el) return;
@@ -186,10 +186,12 @@ Object.entries(BIND).forEach(([id, k]) => {
   el.addEventListener(ev, () => {
     let v = el.value;
     if (el.tagName !== "SELECT") { v = cleanNumber(v, 8); if (v !== el.value) el.value = v; }
-    CAL[k] = k === "sex" ? v : (v === "" ? 0 : parseFloat(v));
+    CAL[k] = k === "sex" ? v : (v === "" ? (PERSONAL.includes(k) ? "" : 0) : parseFloat(v));
     saveCal(); renderCalOutputs();
+    $("detailsDone").hidden = !detailsComplete() || !SET.calTab;
   });
 });
+$("detailsDone").addEventListener("click", () => { appMode = "cal"; renderAll(); window.scrollTo({ top: 0 }); });
 
 /* ---- food pickers ---- */
 const unitLbl = f => t("food.unit." + f.u);
@@ -293,5 +295,15 @@ function renderWhatIfResult(R) {
   $("wFatS").textContent = t(bal < 0 ? "whatif.fatUsed" : "whatif.fatStored");
 }
 
-function renderCal() { fillFoodSelects(); fillInputs(); syncFoodUnit(); syncActFields(); renderUsual(); renderWhatIfLists(); renderCalOutputs(); }
+/* New users start with blank details; the calculator stays on its setup prompt until these are filled in */
+const PERSONAL = ["weight", "height", "age", "bf"];
+const detailsComplete = () => +CAL.weight > 0 && +CAL.height > 0 && +CAL.age > 0;
+function detailsSummary() {
+  if (!detailsComplete()) return t("set.detailsNone");
+  return t("set.detailsSum", { kg: CAL.weight, cm: CAL.height, age: CAL.age });
+}
+function renderCal() {
+  const ok = detailsComplete();
+  $("detailsDone").hidden = !ok || !SET.calTab;
+  $("calSetup").hidden = ok; $("calBody").hidden = !ok; fillFoodSelects(); fillInputs(); syncFoodUnit(); syncActFields(); renderUsual(); renderWhatIfLists(); renderCalOutputs(); }
 if (typeof renderAll === "function" && typeof appMode !== "undefined" && appMode !== "workout") renderAll();

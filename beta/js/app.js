@@ -227,37 +227,39 @@ function nameNode(n, url) {
 /* ---------- render: header ---------- */
 function goWeek(w) { if (view.week !== w) view.day = w <= NW() ? smartDay(w) : 0; view.week = w; saveView(); renderAll(); window.scrollTo({ top: 0 }); }
 
+let weeksOpen = false;
 function renderWeeks() {
   const el = $("weeks"); el.innerHTML = "";
   const cols = [];
   P.phases.forEach((ph, pi) => { if (pi) cols.push("6px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
-  cols.push("6px", "minmax(0, 1.35fr)");
   el.style.gridTemplateColumns = cols.join(" ");
+  let anyMissed = false;
   for (let w = 1; w <= NW(); w++) {
     if (P.phases.some((ph, pi) => pi && ph.from === w)) { const g = document.createElement("span"); g.className = "gap"; g.setAttribute("aria-hidden", "true"); el.appendChild(g); }
     const b = document.createElement("button");
     const wc = weekComplete(w), wm = weekHasMissed(w);
+    if (wm) anyMissed = true;
     b.type = "button"; b.className = "wk" + (wc ? " complete" : "") + (wm ? " has-missed" : "");
     b.setAttribute("aria-pressed", String(w === view.week));
     b.setAttribute("aria-label", t("week.aria", { n: w }) + (wc ? ", " + t("status.done") : "") + (wm ? ", " + t("week.attention") : ""));
     b.innerHTML = "<small></small>" + w;
     b.querySelector("small").textContent = t("week.short");
-    b.addEventListener("click", () => goWeek(w));
+    b.addEventListener("click", () => { weeksOpen = false; goWeek(w); });
     el.appendChild(b);
   }
-  const g2 = document.createElement("span"); g2.className = "gap"; g2.setAttribute("aria-hidden", "true"); el.appendChild(g2);
-  const pb = document.createElement("button");
-  pb.type = "button"; pb.className = "wk prog";
-  pb.setAttribute("aria-pressed", String(view.week === STATS()));
-  pb.setAttribute("aria-label", t("stats.aria"));
-  pb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-6 4 3 7-9"/></svg><small></small>';
-  pb.querySelector("small").textContent = t("stats.short");
-  pb.addEventListener("click", () => goWeek(STATS()));
-  el.appendChild(pb);
-  if (view.week === STATS()) { $("phase").textContent = t("stats.title"); return; }
+  el.hidden = !weeksOpen;
+  const tg = $("weekToggle"), isStats = view.week === STATS();
+  tg.setAttribute("aria-expanded", String(weeksOpen));
+  tg.classList.toggle("has-missed", anyMissed);
+  $("statsBtn").setAttribute("aria-pressed", String(isStats));
+  $("phase").textContent = "";
+  if (isStats) { $("wtMain").textContent = t("stats.title"); $("wtSub").textContent = t("week.choose"); return; }
   const ph = phaseOf(view.week);
-  $("phase").textContent = P.phases.length > 1 ? t("phase.n", { n: phaseNum(view.week) }) + (ph.name ? " · " + ph.name : "") : ph.name;
+  $("wtMain").textContent = t("week.ofN", { n: view.week, total: NW() });
+  $("wtSub").textContent = P.phases.length > 1 ? t("phase.n", { n: phaseNum(view.week) }) + (ph.name ? " · " + ph.name : "") : ph.name;
 }
+$("weekToggle").addEventListener("click", () => { weeksOpen = !weeksOpen; renderWeeks(); });
+$("statsBtn").addEventListener("click", () => { weeksOpen = false; goWeek(view.week === STATS() ? currentSpot().week : STATS()); });
 
 function renderDays() {
   const el = $("days"); el.innerHTML = "";
@@ -549,25 +551,42 @@ function doneCount(p) {
   }
   return [n, p.weeks * D];
 }
-function showMsg(id, text, err) { const m = $(id); m.hidden = !text; m.textContent = text || ""; m.classList.toggle("err", !!err); }
-function setProgram(id) { useProgram(id); view = currentSpot(); saveView(); }
-
-function renderSeg(id, key, value) {
-  document.querySelectorAll("#" + id + " button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset[key] === value)));
+function hasLogs(p) {
+  const L = logsFor(p);
+  return Object.keys(L).some(k => /^w\d+$/.test(k) && L[k] && ((L[k].ex && Object.keys(L[k].ex).length) || (L[k].done && Object.keys(L[k].done).length)));
 }
-function renderSettings() {
-  const pg = $("setProgs"); pg.innerHTML = "";
+function openWorkout(spot) { appMode = "workout"; view = spot || currentSpot(); saveView(); renderAll(); window.scrollTo({ top: 0 }); }
+function forgetProgram() { P = null; logs = {}; try { localStorage.removeItem(KEY.prog); } catch (e) {} }
+
+function renderHome() {
+  $("homeHeadline").textContent = t(P ? "home.welcomeBack" : "home.welcome");
+  $("homeSub").textContent = t(P ? "home.subBack" : "home.subNew");
+  const hc = $("homeContinue"); hc.innerHTML = "";
+  if (P) {
+    const spot = currentSpot(), [n, tot] = doneCount(P), finished = spot.week === STATS();
+    const c = document.createElement("button"); c.type = "button"; c.className = "continue"; c.id = "homeGo";
+    c.innerHTML = '<span class="c-k"></span><b class="c-name"></b><span class="c-next"></span><span class="meter"><i style="width:' + Math.round(n / tot * 100) + '%"></i></span><span class="c-meta"></span>' +
+      '<svg class="c-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    c.querySelector(".c-k").textContent = t(finished ? "home.finished" : "home.continue");
+    c.querySelector(".c-name").textContent = P.name;
+    c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("day.title", { w: spot.week, name: P.dayNames[spot.day] });
+    c.querySelector(".c-meta").textContent = t("prog.done", { n, total: tot });
+    c.addEventListener("click", () => openWorkout(spot));
+    hc.appendChild(c);
+  }
+  $("homeChooseH").textContent = t(P ? "home.switch" : "home.choose");
+  const pg = $("homeProgs"); pg.innerHTML = "";
   PROGRAMS.forEach(p => {
-    const [n, tot] = doneCount(p);
+    const cur = P && p.id === P.id, [n, tot] = doneCount(p), started = !cur && hasLogs(p);
     const wrap = document.createElement("div"); wrap.className = "pcard-wrap";
-    const b = document.createElement("button"); b.type = "button"; b.className = "pcard";
-    b.setAttribute("aria-pressed", String(p.id === P.id));
-    b.innerHTML = '<span class="dot" aria-hidden="true"></span><span><b></b><small></small><small></small><span class="meter"><i style="width:' + Math.round(n / tot * 100) + '%"></i></span></span>';
-    const sm = b.querySelectorAll("small");
+    const b = document.createElement("button"); b.type = "button"; b.className = "pcard home-card"; b.dataset.id = p.id;
+    b.setAttribute("aria-pressed", String(!!cur));
+    b.innerHTML = '<span><b></b><small class="desc"></small><small class="meta"></small></span><span class="act"></span>';
     b.querySelector("b").textContent = p.name;
-    sm[0].textContent = (p.description || tn("prog.daysWeek", p.dayNames.length)) + (p.builtin ? "" : " · " + t("prog.imported"));
-    sm[1].textContent = t("prog.done", { n, total: tot }) + (p.id === P.id ? " · " + t("prog.current") : "");
-    b.addEventListener("click", () => { if (p.id !== P.id) { setProgram(p.id); renderSettings(); } });
+    b.querySelector(".desc").textContent = p.description || tn("prog.daysWeek", p.dayNames.length);
+    b.querySelector(".meta").textContent = tn("prog.weeks", p.weeks) + " · " + tn("prog.daysWeek", p.dayNames.length) + (p.builtin ? "" : " · " + t("prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
+    b.querySelector(".act").textContent = t(cur ? "home.open" : started ? "home.resume" : "home.start");
+    b.addEventListener("click", () => { if (!cur) setProgram(p.id); openWorkout(); });
     wrap.appendChild(b);
     if (!p.builtin) {
       const acts = document.createElement("div"); acts.className = "pcard-acts";
@@ -576,13 +595,47 @@ function renderSettings() {
         if (!confirm(t("prog.removeConfirm", { name: p.name }))) return;
         store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== p.id));
         PROGRAMS = PROGRAMS.filter(x => x !== p);
-        if (P === p) setProgram(PROGRAMS[0].id);
-        renderSettings();
+        if (cur) forgetProgram();
+        renderAll();
       });
       acts.appendChild(rm); wrap.appendChild(acts);
     }
     pg.appendChild(wrap);
   });
+}
+$("homeCreate").disabled = true;
+
+function showMsg(id, text, err) { const m = $(id); m.hidden = !text; m.textContent = text || ""; m.classList.toggle("err", !!err); }
+function setProgram(id) { useProgram(id); view = currentSpot(); saveView(); }
+
+function renderSeg(id, key, value) {
+  document.querySelectorAll("#" + id + " button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset[key] === value)));
+}
+let setPage = "";
+const SET_PAGES = [
+  ["language", "set.language", () => (LANGS.find(l => l.code === LANG) || LANGS[0]).name],
+  ["appearance", "set.look", () => t({ light: "set.themeLight", dark: "set.themeDark" }[SET.theme] || "set.themeSystem")],
+  ["workout", "set.workoutScreen", () => t("set.workoutSum", { unit: unitLabel() })],
+  ["app", "set.app", () => t(SET.calTab ? "set.appSum" : "set.appSumNoCal")],
+  ["details", "set.details", () => typeof detailsSummary === "function" ? detailsSummary() : ""],
+  ["library", "lib.title", () => typeof LIBRARY !== "undefined" ? tn("lib.count", LIBRARY.exercises.length + CUSTOM_EX.length) : ""],
+  ["data", "data.title", () => t("data.sum")]
+];
+function openSetPage(page) { setPage = page; appMode = "settings"; renderAll(); window.scrollTo({ top: 0 }); }
+function renderSettings() {
+  const list = $("setList"); list.innerHTML = "";
+  SET_PAGES.forEach(([page, title, sum]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "setrow"; b.dataset.page = page;
+    b.innerHTML = '<span><b></b><small></small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    b.querySelector("b").textContent = t(title); b.querySelector("small").textContent = sum();
+    b.addEventListener("click", () => openSetPage(page));
+    list.appendChild(b);
+  });
+  list.hidden = !!setPage;
+  $("setBack").hidden = !setPage;
+  document.querySelectorAll("#settings .subpage").forEach(el => { el.hidden = el.dataset.page !== setPage; });
+  const cur = SET_PAGES.find(x => x[0] === setPage);
+  $("phase").textContent = cur ? t(cur[1]) : t("set.subtitle");
   ["setWorkout", "setApp"].forEach(id => { $(id).innerHTML = ""; });
   SET_ITEMS.forEach(([box, k, title, desc]) => {
     const lab = document.createElement("label"); lab.className = "tog";
@@ -606,8 +659,9 @@ function renderSettings() {
     else b.addEventListener("click", () => { if (l.code === LANG) return; SET.lang = l.code; saveSettings(); setLanguage(SET.lang); renderAll(); });
     lg.appendChild(b);
   });
-  if (typeof renderCal === "function") renderCal();
+  if (setPage === "details" && typeof renderCal === "function") renderCal();
 }
+$("setBack").addEventListener("click", () => openSetPage(""));
 document.querySelectorAll("#unitSeg button").forEach(b => b.addEventListener("click", () => { SET.unit = b.dataset.u; saveSettings(); renderSettings(); }));
 document.querySelectorAll("#themeSeg button").forEach(b => b.addEventListener("click", () => { SET.theme = b.dataset.th; saveSettings(); applyTheme(); renderSeg("themeSeg", "th", SET.theme); }));
 
@@ -631,8 +685,8 @@ $("progFile").addEventListener("change", e => readFile(e.target, (err, raw) => {
   PROGRAMS = PROGRAMS.filter(q => q.id !== p.id).concat([p]);
   delete LOGS[p.id];
   setProgram(p.id);
+  renderAll();
   showMsg("progMsg", t("prog.importedMsg", { name: p.name }));
-  renderSettings();
 }));
 
 /* ---------- export / import ---------- */
@@ -690,28 +744,31 @@ $("eraseAll").addEventListener("click", () => {
 });
 
 /* ---------- frame ---------- */
-let appMode = "workout", openedOnce = false;
+let appMode = "home", openedOnce = false;
 function applyChrome() {
   $("modeCal").hidden = !SET.calTab;
-  if (!SET.calTab && appMode === "cal") appMode = "workout";
+  $("modeWorkout").hidden = !P;
+  if (!SET.calTab && appMode === "cal") appMode = "home";
+  if (!P && appMode === "workout") appMode = "home";
 }
+const WORKOUT_PARTS = ["weekbar", "weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"];
 function renderAll() {
   applyI18n();
-  if (!P) return;
-  if (!openedOnce) { if (SET.smartOpen || !(view.week >= 1 && view.week <= STATS() && view.day < DPW())) view = currentSpot(); saveView(); }
-  openedOnce = true;
-  if (view.week > STATS() || view.day >= DPW()) view = currentSpot();
+  if (!PROGRAMS.length) return;
+  if (P && !openedOnce) { if (SET.smartOpen || !(view.week >= 1 && view.week <= STATS() && view.day < DPW())) view = currentSpot(); saveView(); openedOnce = true; }
+  if (P && (view.week > STATS() || view.day >= DPW())) view = currentSpot();
   applyChrome();
   const mode = appMode;
+  document.body.dataset.mode = mode;
   $("loading").hidden = true;
-  $("modeWorkout").setAttribute("aria-pressed", String(mode === "workout"));
-  $("modeCal").setAttribute("aria-pressed", String(mode === "cal"));
-  $("modeSet").setAttribute("aria-pressed", String(mode === "settings"));
-  ["weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"].forEach(id => { $(id).hidden = mode !== "workout"; });
+  [["modeHome", "home"], ["modeWorkout", "workout"], ["modeCal", "cal"], ["modeSet", "settings"]].forEach(([id, m]) => $(id).setAttribute("aria-pressed", String(mode === m)));
+  WORKOUT_PARTS.forEach(id => { $(id).hidden = mode !== "workout"; });
+  $("home").hidden = mode !== "home";
   $("cal").hidden = mode !== "cal";
   $("settings").hidden = mode !== "settings";
+  if (mode === "home") { $("appTitle").textContent = "Lift Ledger"; $("phase").textContent = ""; renderHome(); return; }
   if (mode === "cal") { $("appTitle").textContent = t("cal.title"); $("phase").textContent = t("cal.subtitle"); if (typeof renderCal === "function") renderCal(); return; }
-  if (mode === "settings") { $("appTitle").textContent = t("set.title"); $("phase").textContent = t("set.subtitle"); renderSettings(); return; }
+  if (mode === "settings") { $("appTitle").textContent = t("set.title"); renderSettings(); return; }
   $("appTitle").textContent = P.name;
   $("footProg").textContent = P.schedule || "";
   const prog = view.week === STATS();
@@ -723,11 +780,13 @@ function renderAll() {
   if (prog) { renderProgress(); return; }
   renderDays(); renderList(); renderHead();
 }
-const go = m => () => { appMode = m; renderAll(); window.scrollTo({ top: 0 }); };
+const go = m => () => { if (m === "settings") setPage = ""; if (m === "workout" && P) view = view.week ? view : currentSpot(); appMode = m; weeksOpen = false; renderAll(); window.scrollTo({ top: 0 }); };
+$("modeHome").addEventListener("click", go("home"));
 $("modeWorkout").addEventListener("click", go("workout"));
 $("modeCal").addEventListener("click", go("cal"));
 $("modeSet").addEventListener("click", go("settings"));
-$("calToSet").addEventListener("click", go("settings"));
+$("calToSet").addEventListener("click", () => openSetPage("details"));
+$("calSetupBtn").addEventListener("click", () => openSetPage("details"));
 $("libBrowse").addEventListener("click", () => openPicker({}));
 
 /* ---------- start ---------- */
@@ -757,7 +816,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   load(KEY.custom, []).forEach(r => { try { const p = normalizeProgram(r, false); if (!builtins.some(b => b.id === p.id)) customs.push(p); } catch (e) {} });
   PROGRAMS = builtins.concat(customs);
   if (!PROGRAMS.length) return;
-  useProgram(load(KEY.prog, PROGRAMS[0].id));
+  const saved = load(KEY.prog, null);
+  if (saved && progById(saved)) useProgram(saved); else P = null;
   const v = load(KEY.view, null);
   if (v && v.week >= 1 && v.day >= 0) view = { week: v.week, day: v.day };
   await libLoad;

@@ -6,13 +6,16 @@ test.use({ serviceWorkers: "allow" });
 
 test("opens with no internet after the first visit", async ({ page, context }) => {
   await page.goto("./");
+  await page.locator('.home-card[data-id="full-body-3"]').click();
   await expect(page.locator(".ex").first()).toBeVisible();
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.reload();                               // now controlled by the worker
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  await page.click("#homeGo");
   await page.locator(".ex").first().locator(".set input").first().fill("42");
   await context.setOffline(true);
   await page.reload();
+  await page.click("#homeGo");
   await expect(page.locator(".ex").first()).toBeVisible();
   await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("42");
   await context.setOffline(false);
@@ -31,5 +34,5 @@ test("online, the newest files are fetched rather than the saved copy", async ({
   });
   await page.reload();
   await expect(page.locator("#stale")).toHaveCount(0);
-  await expect(page.locator(".ex").first()).toBeVisible();
+  await expect(page.locator("#home")).toBeVisible();
 });
