@@ -39,6 +39,7 @@
       "exercises": [
         {
           "id": "ppl-a1",
+          "ref": "chest-supported-row",
           "name": "Chest-Supported Row",
           "sets": 3,
           "reps": "8–10",
@@ -52,6 +53,7 @@
         },
         {
           "id": "ppl-a2",
+          "ref": "lat-pulldown",
           "name": "Lat Pulldown",
           "sets": 3,
           "reps": "8–10",
@@ -65,6 +67,7 @@
         },
         {
           "id": "ppl-a3",
+          "ref": "face-pull",
           "name": "Face Pull",
           "sets": 3,
           "reps": "12–15",
@@ -77,6 +80,7 @@
         },
         {
           "id": "ppl-a4",
+          "ref": "barbell-curl",
           "name": "Barbell Curl",
           "sets": 3,
           "reps": "8–10",
@@ -90,6 +94,7 @@
         },
         {
           "id": "ppl-a5",
+          "ref": "hammer-curl",
           "name": "Hammer Curl",
           "sets": 2,
           "reps": "10–12",
@@ -109,6 +114,7 @@
       "exercises": [
         {
           "id": "ppl-b1",
+          "ref": "bench-press",
           "name": "Barbell Bench Press",
           "sets": 3,
           "reps": "6–8",
@@ -122,6 +128,7 @@
         },
         {
           "id": "ppl-b2",
+          "ref": "seated-db-shoulder-press",
           "name": "Seated Dumbbell Shoulder Press",
           "sets": 3,
           "reps": "8–10",
@@ -135,6 +142,7 @@
         },
         {
           "id": "ppl-b3",
+          "ref": "cable-fly",
           "name": "Cable Fly",
           "sets": 2,
           "reps": "12–15",
@@ -147,6 +155,7 @@
         },
         {
           "id": "ppl-b4",
+          "ref": "db-lateral-raise",
           "name": "Dumbbell Lateral Raise",
           "sets": 3,
           "reps": "12–15",
@@ -159,6 +168,7 @@
         },
         {
           "id": "ppl-b5",
+          "ref": "triceps-pressdown",
           "name": "Triceps Pressdown",
           "sets": 3,
           "reps": "10–12",
@@ -178,6 +188,7 @@
       "exercises": [
         {
           "id": "ppl-c1",
+          "ref": "back-squat",
           "name": "Back Squat",
           "sets": 3,
           "reps": "6–8",
@@ -191,6 +202,7 @@
         },
         {
           "id": "ppl-c2",
+          "ref": "romanian-deadlift",
           "name": "Romanian Deadlift",
           "sets": 3,
           "reps": "8–10",
@@ -204,6 +216,7 @@
         },
         {
           "id": "ppl-c3",
+          "ref": "leg-extension",
           "name": "Leg Extension",
           "sets": 2,
           "reps": "12–15",
@@ -217,6 +230,7 @@
         },
         {
           "id": "ppl-c4",
+          "ref": "seated-leg-curl",
           "name": "Seated Leg Curl",
           "sets": 3,
           "reps": "10–12",
@@ -229,6 +243,7 @@
         },
         {
           "id": "ppl-c5",
+          "ref": "standing-calf-raise",
           "name": "Standing Calf Raise",
           "sets": 3,
           "reps": "10–12",
@@ -242,6 +257,7 @@
         },
         {
           "id": "ppl-c6",
+          "ref": "cable-crunch",
           "name": "Cable Crunch",
           "sets": 3,
           "reps": "10–12",
@@ -261,6 +277,7 @@
       "exercises": [
         {
           "id": "ppl-d1",
+          "ref": "pull-up",
           "name": "Pull-Up",
           "sets": 3,
           "reps": "6–10",
@@ -273,6 +290,7 @@
         },
         {
           "id": "ppl-d2",
+          "ref": "single-arm-cable-row",
           "name": "Single-Arm Cable Row",
           "sets": 3,
           "reps": "10–12",
@@ -286,6 +304,7 @@
         },
         {
           "id": "ppl-d3",
+          "ref": "reverse-pec-deck",
           "name": "Reverse Pec Deck",
           "sets": 3,
           "reps": "12–15",
@@ -299,6 +318,7 @@
         },
         {
           "id": "ppl-d4",
+          "ref": "incline-db-curl",
           "name": "Incline Dumbbell Curl",
           "sets": 3,
           "reps": "10–12",
@@ -311,6 +331,7 @@
         },
         {
           "id": "ppl-d5",
+          "ref": "db-shrug",
           "name": "Dumbbell Shrug",
           "sets": 2,
           "reps": "12–15",
@@ -330,6 +351,7 @@
       "exercises": [
         {
           "id": "ppl-e1",
+          "ref": "incline-db-press",
           "name": "Incline Dumbbell Press",
           "sets": 3,
           "reps": "8–10",
@@ -343,6 +365,7 @@
         },
         {
           "id": "ppl-e2",
+          "ref": "machine-shoulder-press",
           "name": "Machine Shoulder Press",
           "sets": 3,
           "reps": "10–12",
@@ -355,6 +378,7 @@
         },
         {
           "id": "ppl-e3",
+          "ref": "assisted-dip",
           "name": "Assisted Dip",
           "sets": 2,
           "reps": "8–12",
@@ -367,6 +391,7 @@
         },
         {
           "id": "ppl-e4",
+          "ref": "cable-lateral-raise",
           "name": "Cable Lateral Raise",
           "sets": 3,
           "reps": "12–15",
@@ -379,6 +404,7 @@
         },
         {
           "id": "ppl-e5",
+          "ref": "overhead-cable-extension",
           "name": "Overhead Cable Triceps Extension",
           "sets": 3,
           "reps": "10–12",
@@ -398,6 +424,7 @@
       "exercises": [
         {
           "id": "ppl-f1",
+          "ref": "hack-squat",
           "name": "Hack Squat",
           "sets": 3,
           "reps": "8–10",
@@ -411,6 +438,7 @@
         },
         {
           "id": "ppl-f2",
+          "ref": "hip-thrust",
           "name": "Hip Thrust",
           "sets": 3,
           "reps": "8–10",
@@ -424,6 +452,7 @@
         },
         {
           "id": "ppl-f3",
+          "ref": "bulgarian-split-squat",
           "name": "Bulgarian Split Squat",
           "sets": 2,
           "reps": "8–10",
@@ -437,6 +466,7 @@
         },
         {
           "id": "ppl-f4",
+          "ref": "lying-leg-curl",
           "name": "Lying Leg Curl",
           "sets": 2,
           "reps": "10–12",
@@ -449,6 +479,7 @@
         },
         {
           "id": "ppl-f5",
+          "ref": "seated-calf-raise",
           "name": "Seated Calf Raise",
           "sets": 3,
           "reps": "12–15",
@@ -461,6 +492,7 @@
         },
         {
           "id": "ppl-f6",
+          "ref": "hanging-leg-raise",
           "name": "Hanging Leg Raise",
           "sets": 3,
           "reps": "10–15",

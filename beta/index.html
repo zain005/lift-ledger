@@ -180,6 +180,11 @@
         <p class="msg" id="progMsg" hidden></p>
       </div>
       <div class="panel">
+        <h3 data-i18n="lib.title">Exercise library</h3>
+        <p class="sub" id="libSummary"></p>
+        <button type="button" class="ghostbtn" id="libBrowse" data-i18n="lib.browse">Browse exercises</button>
+      </div>
+      <div class="panel">
         <h3 data-i18n="set.look">Appearance</h3>
         <div class="fld"><label data-i18n="set.theme">Theme</label>
           <div class="seg" id="themeSeg">
@@ -269,8 +274,49 @@
   </div>
 </main>
 
+<div class="sheet" id="picker" role="dialog" aria-modal="true" aria-labelledby="pkTitle" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <h2 id="pkTitle"></h2>
+      <button type="button" class="sheet-x" id="pkClose" data-i18n-aria="lib.close">×</button>
+    </div>
+    <div id="pkBrowse">
+      <input type="search" id="pkSearch" class="pk-search" autocomplete="off" data-i18n-ph="lib.search">
+      <div class="chips" id="pkMuscles" role="group" data-i18n-aria="lib.muscleFilter"></div>
+      <div class="pk-row">
+        <select id="pkEquip" data-i18n-aria="lib.equipFilter"></select>
+        <span class="pk-count" id="pkCount"></span>
+      </div>
+      <ul class="pk-list" id="pkList"></ul>
+      <button type="button" class="addbtn" id="pkAddOwn" data-i18n="lib.addOwn">+ Add my own exercise</button>
+    </div>
+    <div id="pkForm" hidden>
+      <h3 id="pkFormTitle"></h3>
+      <div class="fld"><label for="fxName" data-i18n="lib.name">Exercise name</label><input id="fxName" maxlength="60" autocomplete="off"></div>
+      <div class="fgrid">
+        <div class="fld"><label for="fxPrimary" data-i18n="lib.primary">Main muscle</label><select id="fxPrimary"></select></div>
+        <div class="fld"><label for="fxEquip" data-i18n="lib.equipment">Equipment</label><select id="fxEquip"></select></div>
+      </div>
+      <div class="fld"><label data-i18n="lib.secondary">Other muscles it works (optional)</label><div class="chips wrap" id="fxSecondary"></div></div>
+      <div class="pk-checks">
+        <label class="chk"><input type="checkbox" id="fxTimed"> <span data-i18n="lib.isTimed">Timed (seconds, not reps)</span></label>
+        <label class="chk"><input type="checkbox" id="fxSide"> <span data-i18n="lib.isSide">One side at a time</span></label>
+        <label class="chk"><input type="checkbox" id="fxBw"> <span data-i18n="lib.isBw">Bodyweight</span></label>
+      </div>
+      <div class="fld"><label for="fxReps" id="fxRepsL"></label><input id="fxReps" inputmode="numeric" autocomplete="off" placeholder="8–12"></div>
+      <p class="msg" id="fxMsg" hidden></p>
+      <div class="btnrow">
+        <button type="button" class="addbtn" id="fxSave" data-i18n="lib.save">Save exercise</button>
+        <button type="button" class="ghostbtn" id="fxCancel" data-i18n="lib.cancel">Cancel</button>
+        <button type="button" class="ghostbtn danger" id="fxDelete" data-i18n="lib.delete" hidden>Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="js/i18n.js"></script>
 <script src="js/app.js"></script>
+<script src="js/library.js"></script>
 <script src="js/calories.js"></script>
 <script>
 if ("serviceWorker" in navigator && location.protocol !== "file:") {

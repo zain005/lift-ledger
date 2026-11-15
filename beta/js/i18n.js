@@ -159,6 +159,28 @@ const STRINGS = {
     "food.dates": "Dates", "food.pb": "Peanut butter", "food.oil": "Cooking or olive oil", "food.fries": "French fries",
     "food.custom": "Something else (enter kcal)", "food.other": "Other food",
     "food.unit.g": "Grams", "food.unit.ml": "ml", "food.unit.each": "How many", "food.unit.scoop": "Scoops", "food.unit.kcal": "kcal",
+    "muscle.chest": "Chest", "muscle.back": "Back (lats)", "muscle.traps": "Traps", "muscle.lower_back": "Lower back",
+    "muscle.front_delts": "Front shoulders", "muscle.side_delts": "Side shoulders", "muscle.rear_delts": "Rear shoulders",
+    "muscle.biceps": "Biceps", "muscle.triceps": "Triceps", "muscle.forearms": "Forearms", "muscle.quads": "Quads",
+    "muscle.hamstrings": "Hamstrings", "muscle.glutes": "Glutes", "muscle.adductors": "Inner thighs", "muscle.calves": "Calves", "muscle.abs": "Abs and core",
+    "equip.barbell": "Barbell", "equip.dumbbell": "Dumbbell", "equip.machine": "Machine", "equip.cable": "Cable", "equip.smith": "Smith machine",
+    "equip.bodyweight": "Bodyweight", "equip.band": "Band", "equip.kettlebell": "Kettlebell", "equip.other": "Other",
+    "lib.title": "Exercise library", "lib.pickTitle": "Choose an exercise", "lib.close": "Close", "lib.search": "Search exercises",
+    "lib.muscleFilter": "Filter by muscle", "lib.equipFilter": "Filter by equipment", "lib.all": "All", "lib.mine": "My exercises",
+    "lib.allEquip": "All equipment", "lib.count": { one: "{n} exercise", other: "{n} exercises" }, "lib.noResults": "No exercises match. Try fewer words, or add your own.",
+    "lib.loadFail": "The exercise library couldn't load. Check your connection and try again.",
+    "lib.timed": "timed", "lib.perSide": "each side", "lib.mineTag": "Mine", "lib.edit": "Edit",
+    "lib.addOwn": "+ Add my own exercise", "lib.addTitle": "Add my own exercise", "lib.editTitle": "Edit my exercise",
+    "lib.name": "Exercise name", "lib.primary": "Main muscle", "lib.equipment": "Equipment", "lib.secondary": "Other muscles it works (optional)",
+    "lib.choose": "Choose…", "lib.isTimed": "Timed (seconds, not reps)", "lib.isSide": "One side at a time", "lib.isBw": "Bodyweight",
+    "lib.reps": "Usual reps (e.g. 8–12)", "lib.seconds": "Usual seconds (e.g. 30–60)",
+    "lib.save": "Save exercise", "lib.cancel": "Cancel", "lib.delete": "Delete",
+    "lib.errName": "Give the exercise a name.", "lib.errMuscle": "Choose the main muscle it trains.",
+    "lib.errReps": "Enter reps as a number or a range, like 10 or 8–12.", "lib.errSeconds": "Enter seconds as a number or a range, like 45 or 30–60.",
+    "lib.deleteConfirm": "Delete “{name}” from your exercises? Programs that already use it keep their copy.",
+    "lib.browse": "Browse exercises", "lib.summary": "{n} exercises for every muscle, plus {mine} of your own.",
+    "lib.summaryNone": "{n} exercises for every muscle. Add your own from the list.",
+    "swap.library": "Choose from library…",
     "food.amt.g": "{a} g", "food.amt.ml": "{a} ml", "food.amt.each": "{a} ×", "food.amt.scoop": "{a} scoop(s)", "food.amt.kcal": "{a} kcal"
   }
 };
@@ -202,6 +224,7 @@ function applyI18n(root) {
   r.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
   r.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
   r.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+  r.querySelectorAll("[data-i18n-ph]").forEach(el => { el.setAttribute("placeholder", t(el.dataset.i18nPh)); });
 }
 /* Only for strings from STRINGS whose placeholders are numbers */
 function setHtml(el, html) { el.innerHTML = html; }

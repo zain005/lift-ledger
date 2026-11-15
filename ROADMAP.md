@@ -9,7 +9,7 @@ Each step ships first to the **test version** at [zain005.github.io/lift-ledger/
 | Step | What | Status |
 |---|---|---|
 | 1 | Groundwork: dark mode, translation system, right-to-left layout, permanent exercise ids | **Released** |
-| 2 | Exercise library | Planned |
+| 2 | Exercise library: 171 exercises, search and filters, "My exercises" | **In test version** |
 | 3 | Program builder | Planned |
 | 4 | Sharing programs | Planned |
 | 5 | Arabic | Planned |

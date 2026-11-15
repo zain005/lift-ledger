@@ -69,7 +69,7 @@ function normalizeProgram(raw, builtin) {
           seenEx.add(exId);
           const video = str(e.video, 300);
           return {
-            id: exId, name: en, sets, reps: str(e.reps, 12) || "", type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
+            id: exId, ref: sid(e.ref), name: en, sets, reps: str(e.reps, 12) || "", type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
             alts: Array.isArray(e.alts) ? e.alts.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
             video: /^https:\/\//.test(video) ? video : ""
           };
@@ -374,7 +374,7 @@ function renderList() {
       card.appendChild(p);
     }
 
-    if (alts.length) {
+    if (alts.length || typeof openPicker === "function") {
       const det = document.createElement("details"); det.className = "alts";
       const sum = document.createElement("summary"); sum.textContent = e.alt ? t("swap.change") : t("swap.open");
       const ul = document.createElement("ul");
@@ -395,11 +395,25 @@ function renderList() {
         ul.appendChild(li);
       });
       const note = document.createElement("p"); note.textContent = t("swap.note");
-      det.append(sum, ul, note);
+      det.append(sum, ul, libraryButton(ex, w, d, i), note);
       card.appendChild(det);
     }
     list.appendChild(card);
   });
+}
+
+/* Swap to anything in the library, starting with exercises for the same muscle */
+function libraryButton(ex, w, d, i) {
+  const b = document.createElement("button"); b.type = "button"; b.className = "ghostbtn libbtn"; b.textContent = t("swap.library");
+  b.addEventListener("click", () => {
+    const base = ex.ref && exById(ex.ref);
+    openPicker({ muscle: base ? base.primary : "", onPick: pick => {
+      const en = entry(w, d, i);
+      if (pick.name === ex.name) { delete en.alt; delete en.altRef; } else { en.alt = pick.name; en.altRef = pick.id; }
+      persist(); renderList();
+    } });
+  });
+  return b;
 }
 
 /* ---------- render: progress ---------- */
@@ -578,6 +592,9 @@ function renderSettings() {
     inp.addEventListener("change", () => { SET[k] = inp.checked; saveSettings(); applyChrome(); });
     $(box).appendChild(lab);
   });
+  if (typeof LIBRARY !== "undefined") {
+    $("libSummary").textContent = t(CUSTOM_EX.length ? "lib.summary" : "lib.summaryNone", { n: LIBRARY.exercises.length, mine: CUSTOM_EX.length });
+  }
   renderSeg("unitSeg", "u", SET.unit);
   renderSeg("themeSeg", "th", SET.theme);
   const lg = $("langSeg"); lg.innerHTML = "";
@@ -711,6 +728,7 @@ $("modeWorkout").addEventListener("click", go("workout"));
 $("modeCal").addEventListener("click", go("cal"));
 $("modeSet").addEventListener("click", go("settings"));
 $("calToSet").addEventListener("click", go("settings"));
+$("libBrowse").addEventListener("click", () => openPicker({}));
 
 /* ---------- start ---------- */
 async function loadBuiltins() {
@@ -729,8 +747,10 @@ if (PREFIX === "llb-") {
   const tag = document.createElement("span"); tag.className = "betatag"; tag.dataset.i18n = "beta.tag"; tag.textContent = t("beta.tag");
   $("appTitle").after(tag);
 }
-(async () => {
+/* Start once every script (library, calories) has loaded */
+document.addEventListener("DOMContentLoaded", async () => {
   let builtins = [];
+  const libLoad = typeof loadLibrary === "function" ? loadLibrary() : Promise.resolve();
   try { builtins = await loadBuiltins(); }
   catch (e) { $("loading").textContent = t("err.loadPrograms"); }
   const customs = [];
@@ -740,5 +760,6 @@ if (PREFIX === "llb-") {
   useProgram(load(KEY.prog, PROGRAMS[0].id));
   const v = load(KEY.view, null);
   if (v && v.week >= 1 && v.day >= 0) view = { week: v.week, day: v.day };
+  await libLoad;
   renderAll();
-})();
+});
