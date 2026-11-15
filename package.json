@@ -1,0 +1,17 @@
+{
+  "name": "lift-ledger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Workout log and calorie calculator that keeps your data on your device.",
+  "license": "MIT",
+  "author": "Zain Ali (https://github.com/zain005)",
+  "homepage": "https://zain005.github.io/lift-ledger/",
+  "repository": { "type": "git", "url": "https://github.com/zain005/lift-ledger.git" },
+  "scripts": {
+    "start": "python3 -m http.server 4173",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0"
+  }
+}
