@@ -155,6 +155,8 @@ npx playwright install chromium
 npm test
 ```
 
+**Test version.** New work ships first to [`/beta/`](https://zain005.github.io/lift-ledger/beta/), a full copy of the app that stores its data separately. When it's ready, `scripts/release-beta.sh` promotes it to the main app. See [ROADMAP.md](ROADMAP.md) for what's planned and the decisions behind it.
+
 The tests drive the app in a phone-sized browser. They check:
 - logging and saving
 - missed-session detection

@@ -1,0 +1,391 @@
+{
+  "format": 2,
+  "id": "upper-lower-4",
+  "name": "Upper / Lower",
+  "description": "4 days a week. Two upper and two lower sessions, about 8–12 hard sets per muscle a week.",
+  "schedule": "Upper, Lower, rest, Upper, Lower, then 2 rest days.",
+  "weeks": 8,
+  "phases": [
+    {
+      "name": "Foundation",
+      "weeks": [
+        1,
+        4
+      ],
+      "rpe": {
+        "heavy": "6 / 7",
+        "compound": "7 / 8",
+        "isolation": "8 / 9"
+      }
+    },
+    {
+      "name": "Build",
+      "weeks": [
+        5,
+        8
+      ],
+      "rpe": {
+        "heavy": "7 / 8",
+        "compound": "7–8 / 9",
+        "isolation": "9 / 10"
+      }
+    }
+  ],
+  "days": [
+    {
+      "id": "ul-a",
+      "name": "Upper A",
+      "short": "Upper",
+      "exercises": [
+        {
+          "id": "ul-a1",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "reps": "6–8",
+          "type": "compound",
+          "cue": "Shoulder blades pulled back, feet planted; lower to your lower chest and press up and slightly back.",
+          "alts": [
+            "Dumbbell bench press",
+            "Machine chest press",
+            "Smith machine bench press"
+          ]
+        },
+        {
+          "id": "ul-a2",
+          "name": "Chest-Supported Row",
+          "sets": 3,
+          "reps": "8–10",
+          "type": "compound",
+          "cue": "Chest on the pad; pull your elbows back and squeeze your upper back without shrugging.",
+          "alts": [
+            "Seated cable row",
+            "Dumbbell row",
+            "Machine row"
+          ]
+        },
+        {
+          "id": "ul-a3",
+          "name": "Seated Dumbbell Shoulder Press",
+          "sets": 2,
+          "reps": "8–10",
+          "type": "compound",
+          "cue": "Sit tall with your back on the pad; lower the dumbbells to ear level and press overhead.",
+          "alts": [
+            "Machine shoulder press",
+            "Standing overhead press",
+            "Arnold press"
+          ]
+        },
+        {
+          "id": "ul-a4",
+          "name": "Lat Pulldown",
+          "sets": 3,
+          "reps": "8–10",
+          "type": "compound",
+          "cue": "Lean back slightly and pull your elbows down toward your hips; let your arms fully extend at the top.",
+          "alts": [
+            "Pull-up",
+            "Assisted pull-up",
+            "Single-arm cable pulldown"
+          ]
+        },
+        {
+          "id": "ul-a5",
+          "name": "Cable Lateral Raise",
+          "sets": 3,
+          "reps": "12–15",
+          "type": "isolation",
+          "cue": "Cable at hand height behind you; raise your arm out to the side until it's level with your shoulder.",
+          "alts": [
+            "Dumbbell lateral raise",
+            "Machine lateral raise"
+          ]
+        },
+        {
+          "id": "ul-a6",
+          "name": "Incline Dumbbell Curl",
+          "sets": 2,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Arms hanging behind your body on an incline bench; curl without moving your elbows forward.",
+          "alts": [
+            "Cable curl",
+            "Dumbbell curl"
+          ]
+        },
+        {
+          "id": "ul-a7",
+          "name": "Triceps Pressdown",
+          "sets": 2,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Elbows pinned to your sides; push down until your arms are straight and pause.",
+          "alts": [
+            "Rope pressdown",
+            "Dip machine"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ul-b",
+      "name": "Lower A",
+      "short": "Lower",
+      "exercises": [
+        {
+          "id": "ul-b1",
+          "name": "Back Squat",
+          "sets": 3,
+          "reps": "6–8",
+          "type": "heavy",
+          "cue": "Brace before each rep, sit down between your hips and keep your knees tracking over your toes.",
+          "alts": [
+            "Hack squat",
+            "Smith machine squat",
+            "Leg press"
+          ]
+        },
+        {
+          "id": "ul-b2",
+          "name": "Romanian Deadlift",
+          "sets": 3,
+          "reps": "8–10",
+          "type": "heavy",
+          "cue": "Push your hips back with a slight knee bend and a flat back; stop when your hamstrings are fully stretched.",
+          "alts": [
+            "Dumbbell Romanian deadlift",
+            "Stiff-leg deadlift",
+            "45° back extension"
+          ]
+        },
+        {
+          "id": "ul-b3",
+          "name": "Leg Extension",
+          "sets": 2,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Pause briefly at the top and lower slowly; keep your hips down on the seat.",
+          "alts": [
+            "Sissy squat",
+            "Reverse Nordic",
+            "Goblet squat"
+          ]
+        },
+        {
+          "id": "ul-b4",
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Lean your chest forward a little for more stretch, curl hard and control the way back.",
+          "alts": [
+            "Lying leg curl",
+            "Nordic ham curl"
+          ]
+        },
+        {
+          "id": "ul-b5",
+          "name": "Standing Calf Raise",
+          "sets": 3,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Pause in the deep stretch at the bottom, then rise as high as you can. No bouncing.",
+          "alts": [
+            "Leg press calf raise",
+            "Seated calf raise",
+            "Single-leg calf raise"
+          ]
+        },
+        {
+          "id": "ul-b6",
+          "name": "Hanging Leg Raise",
+          "sets": 3,
+          "reps": "10–15",
+          "type": "isolation",
+          "cue": "Curl your pelvis up toward your ribs instead of just lifting your legs. Log 0 for bodyweight.",
+          "alts": [
+            "Captain's chair leg raise",
+            "Lying leg raise",
+            "Cable crunch"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ul-c",
+      "name": "Upper B",
+      "short": "Upper",
+      "exercises": [
+        {
+          "id": "ul-c1",
+          "name": "Incline Dumbbell Press",
+          "sets": 3,
+          "reps": "8–10",
+          "type": "compound",
+          "cue": "Bench at 30–45°. Lower under control to a stretch, then press up over your upper chest.",
+          "alts": [
+            "Incline barbell press",
+            "Incline machine press",
+            "Incline Smith press"
+          ]
+        },
+        {
+          "id": "ul-c2",
+          "name": "Single-Arm Cable Row",
+          "sets": 3,
+          "reps": "10–12",
+          "type": "compound",
+          "cue": "Reach forward for a full stretch, then pull your elbow back toward your hip.",
+          "alts": [
+            "Dumbbell row",
+            "Seated cable row",
+            "Chest-supported row"
+          ]
+        },
+        {
+          "id": "ul-c3",
+          "name": "Pull-Up",
+          "sets": 3,
+          "reps": "6–10",
+          "type": "compound",
+          "cue": "Start from a dead hang and pull your chest toward the bar. Use assistance if you can't hit the reps.",
+          "alts": [
+            "Assisted pull-up",
+            "Lat pulldown"
+          ]
+        },
+        {
+          "id": "ul-c4",
+          "name": "Pec Deck",
+          "sets": 2,
+          "reps": "12–15",
+          "type": "isolation",
+          "cue": "Keep a slight bend in your elbows and bring the handles together without shrugging.",
+          "alts": [
+            "Cable fly",
+            "Dumbbell fly"
+          ]
+        },
+        {
+          "id": "ul-c5",
+          "name": "Reverse Pec Deck",
+          "sets": 2,
+          "reps": "12–15",
+          "type": "isolation",
+          "cue": "Arms nearly straight; sweep back with your rear delts without squeezing your shoulder blades hard.",
+          "alts": [
+            "Reverse cable fly",
+            "Face pull",
+            "Bent-over dumbbell reverse fly"
+          ]
+        },
+        {
+          "id": "ul-c6",
+          "name": "Overhead Cable Triceps Extension",
+          "sets": 2,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Face away from the cable and let your hands travel well behind your head before extending.",
+          "alts": [
+            "Overhead dumbbell extension",
+            "EZ-bar skull crusher"
+          ]
+        },
+        {
+          "id": "ul-c7",
+          "name": "Hammer Curl",
+          "sets": 2,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Palms facing each other; curl without letting your upper arm swing.",
+          "alts": [
+            "Rope cable hammer curl",
+            "Cross-body hammer curl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ul-d",
+      "name": "Lower B",
+      "short": "Lower",
+      "exercises": [
+        {
+          "id": "ul-d1",
+          "name": "Leg Press",
+          "sets": 3,
+          "reps": "8–10",
+          "type": "compound",
+          "cue": "Lower until your hips are about to tuck under, then press without locking your knees hard.",
+          "alts": [
+            "Hack squat",
+            "Smith machine squat",
+            "Goblet squat"
+          ]
+        },
+        {
+          "id": "ul-d2",
+          "name": "Hip Thrust",
+          "sets": 3,
+          "reps": "8–10",
+          "type": "compound",
+          "cue": "Chin tucked, ribs down; drive through your heels and squeeze your glutes hard at the top.",
+          "alts": [
+            "Machine hip thrust",
+            "Glute bridge",
+            "Cable pull-through"
+          ]
+        },
+        {
+          "id": "ul-d3",
+          "name": "Walking Lunge",
+          "sets": 2,
+          "reps": "10–12",
+          "type": "compound",
+          "cue": "Take medium steps and let your back knee lower toward the floor with control.",
+          "alts": [
+            "Bulgarian split squat",
+            "Reverse lunge",
+            "Step-up"
+          ]
+        },
+        {
+          "id": "ul-d4",
+          "name": "Lying Leg Curl",
+          "sets": 2,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Keep your hips pressed into the pad and curl through the full range.",
+          "alts": [
+            "Seated leg curl",
+            "Nordic ham curl"
+          ]
+        },
+        {
+          "id": "ul-d5",
+          "name": "Seated Calf Raise",
+          "sets": 3,
+          "reps": "12–15",
+          "type": "isolation",
+          "cue": "Let your heels sink fully, pause, then press all the way up.",
+          "alts": [
+            "Standing calf raise",
+            "Leg press calf raise"
+          ]
+        },
+        {
+          "id": "ul-d6",
+          "name": "Cable Crunch",
+          "sets": 3,
+          "reps": "10–12",
+          "type": "isolation",
+          "cue": "Round your spine to bring your ribs toward your hips, rather than bending at the hips.",
+          "alts": [
+            "Machine crunch",
+            "Weighted crunch"
+          ]
+        }
+      ]
+    }
+  ]
+}

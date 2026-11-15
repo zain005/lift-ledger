@@ -26,7 +26,8 @@ test("loads the default program on a phone-sized screen", async ({ page }) => {
 
 test("makes no requests to other sites", async ({ page }) => {
   const external = [];
-  page.on("request", r => { if (!r.url().startsWith("http://localhost:4173")) external.push(r.url()); });
+  const origin = new URL(page.url()).origin;
+  page.on("request", r => { if (new URL(r.url()).origin !== origin) external.push(r.url()); });
   await page.reload();
   await expect(page.locator(".ex").first()).toBeVisible();
   await page.click("#modeCal");

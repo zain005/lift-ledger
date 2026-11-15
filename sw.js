@@ -1,5 +1,5 @@
 /* Offline support: serve the app from cache, refresh the cache in the background. Bump VERSION on each release. */
-const VERSION = "lift-ledger-v1";
+const VERSION = "lift-ledger-v2";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/app.js", "js/calories.js", "manifest.webmanifest",
   "programs/index.json", "programs/full-body-3.json", "programs/upper-lower-4.json", "programs/push-pull-legs-6.json",
@@ -15,7 +15,10 @@ self.addEventListener("activate", e => {
 });
 self.addEventListener("fetch", e => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  const url = new URL(req.url);
+  // The main app's worker leaves the test version at /beta/ to its own worker.
+  const leaveAlone = !location.pathname.includes("/beta/") && url.pathname.includes("/beta/");
+  if (req.method !== "GET" || url.origin !== location.origin || leaveAlone) return;
   e.respondWith(caches.open(VERSION).then(async cache => {
     const cached = await cache.match(req, { ignoreSearch: true });
     const fresh = fetch(req).then(res => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => cached);
