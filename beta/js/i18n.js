@@ -49,7 +49,7 @@ const STRINGS = {
     "set.title": "Settings", "set.subtitle": "Your preferences",
     "set.program": "Program", "set.programSub": "Each program keeps its own log, so switching never deletes anything.",
     "set.import": "Import a program (.json)", "set.format": "Program file format",
-    "set.look": "Look and language", "set.theme": "Theme", "set.themeLight": "Light", "set.themeDark": "Dark", "set.themeSystem": "Match phone",
+    "set.look": "Appearance", "set.langSoon": "coming soon", "set.theme": "Theme", "set.themeLight": "Light", "set.themeDark": "Dark", "set.themeSystem": "Match phone",
     "set.language": "Language",
     "set.workoutScreen": "Workout screen", "set.app": "App",
     "set.videos": "Demo links", "set.videosDesc": "Exercise names link to the program's demo video, or a YouTube search.",
@@ -163,8 +163,12 @@ const STRINGS = {
   }
 };
 
-/* Languages offered in Settings. Arabic is added here once its strings are complete and reviewed. */
-const LANGS = [{ code: "en", name: "English", dir: "ltr" }];
+/* Languages offered in Settings. A language is "ready" once its strings are complete and reviewed;
+   until then it's listed but can't be picked. Names are written in their own language. */
+const LANGS = [
+  { code: "en", name: "English", dir: "ltr", ready: true },
+  { code: "ar", name: "العربية", dir: "rtl", ready: false, soon: "قريبًا" }
+];
 
 let LANG = "en";
 const MISSING = new Set();     // keys asked for but not defined (checked by the tests)
@@ -186,7 +190,7 @@ function tn(key, n, vars) {
   return fill(v[form] !== undefined ? v[form] : v.other, Object.assign({ n }, vars));
 }
 function setLanguage(code) {
-  const L = LANGS.find(l => l.code === code) || LANGS[0];
+  const L = LANGS.find(l => l.code === code && l.ready) || LANGS[0];
   LANG = L.code;
   pluralRules = new Intl.PluralRules(L.code);
   document.documentElement.lang = L.code;

@@ -580,16 +580,19 @@ function renderSettings() {
   });
   renderSeg("unitSeg", "u", SET.unit);
   renderSeg("themeSeg", "th", SET.theme);
-  const ls = $("langSel");
-  ls.innerHTML = "";
-  LANGS.forEach(l => { const o = document.createElement("option"); o.value = l.code; o.textContent = l.name; ls.appendChild(o); });
-  ls.value = SET.lang;
-  $("langRow").hidden = LANGS.length < 2;
+  const lg = $("langSeg"); lg.innerHTML = "";
+  LANGS.forEach(l => {
+    const b = document.createElement("button"); b.type = "button"; b.lang = l.code; b.dir = l.dir;
+    b.setAttribute("aria-pressed", String(l.code === LANG));
+    b.textContent = l.name;
+    if (!l.ready) { b.disabled = true; const s = document.createElement("small"); s.textContent = " · " + (l.soon || t("set.langSoon")); b.appendChild(s); }
+    else b.addEventListener("click", () => { if (l.code === LANG) return; SET.lang = l.code; saveSettings(); setLanguage(SET.lang); renderAll(); });
+    lg.appendChild(b);
+  });
   if (typeof renderCal === "function") renderCal();
 }
 document.querySelectorAll("#unitSeg button").forEach(b => b.addEventListener("click", () => { SET.unit = b.dataset.u; saveSettings(); renderSettings(); }));
 document.querySelectorAll("#themeSeg button").forEach(b => b.addEventListener("click", () => { SET.theme = b.dataset.th; saveSettings(); applyTheme(); renderSeg("themeSeg", "th", SET.theme); }));
-$("langSel").addEventListener("change", e => { SET.lang = e.target.value; saveSettings(); setLanguage(SET.lang); renderAll(); });
 
 function readFile(input, cb) {
   const f = input.files && input.files[0]; input.value = "";

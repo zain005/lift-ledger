@@ -263,3 +263,13 @@ test("the test version and the main app keep separate data", async ({ page }) =>
   expect(keys.length).toBeGreaterThan(0);
   expect(keys.every(k => k.startsWith(prefix))).toBe(true);
 });
+
+test("language choice sits at the top of Settings", async ({ page }) => {
+  await page.click("#modeSet");
+  const first = page.locator("#settings .panel").first();
+  await expect(first.locator("h3")).toHaveText("Language");
+  await expect(first.locator("#langSeg button")).toHaveCount(2);
+  await expect(first.locator('#langSeg button[lang="en"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(first.locator('#langSeg button[lang="ar"]')).toBeDisabled();
+  await expect(first.locator('#langSeg button[lang="ar"]')).toContainText("العربية");
+});

@@ -1,5 +1,5 @@
 /* Offline support: serve the app from cache, refresh the cache in the background. Bump VERSION on each release. */
-const VERSION = "lift-ledger-beta-1";
+const VERSION = "lift-ledger-beta-2";
 const SHELL = [
   "./", "index.html", "css/app.css", "js/i18n.js", "js/app.js", "js/calories.js", "manifest.webmanifest",
   "programs/index.json", "programs/full-body-3.json", "programs/upper-lower-4.json", "programs/push-pull-legs-6.json",
