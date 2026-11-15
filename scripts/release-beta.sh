@@ -7,7 +7,7 @@ ver="${1:?Give the new main-app version number, e.g. 3}"
 for item in index.html css js programs icons fonts; do
   rm -rf "./$item"; cp -R "beta/$item" "./$item"
 done
-cp beta/tests/app.spec.js tests/app.spec.js
+cp beta/tests/*.spec.js tests/
 # The main app keeps its own manifest; its service worker gets the beta file list with a new cache name
 # and must keep ignoring /beta/.
 sed -e "s/const VERSION = \"lift-ledger-beta-[0-9]*\";/const VERSION = \"lift-ledger-v$ver\";/" beta/sw.js > sw.js
