@@ -1,7 +1,7 @@
-/* Lift Ledger: calorie calculator. Stores its own data under "ll-cal" and "ll-whatif"; never touches workout logs. */
+/* Lift Ledger: calorie calculator. Stores its own data under PREFIX + "cal" and "whatif"; never touches workout logs. */
 "use strict";
 
-const CAL_KEY = "ll-cal", WHATIF_KEY = "ll-whatif";
+const CAL_KEY = PREFIX + "cal", WHATIF_KEY = PREFIX + "whatif";
 const CAL_DEFAULT = {
   weight: 75, height: 175, age: 30, sex: "male", bf: 0, act: 1.2, target: 20,
   trainDays: 3, cardioDays: 0,
@@ -12,33 +12,34 @@ const CAL_DEFAULT = {
 let CAL = Object.assign({}, CAL_DEFAULT, load(CAL_KEY, {}));
 let WHATIF = Object.assign({ type: "training", base: true, foods: [], acts: [] }, load(WHATIF_KEY, {}));
 
-/* Per 100 g (or per item / scoop). Typical values from public nutrition tables; check your labels. */
+/* Per 100 g (or per item / scoop). Typical values from public nutrition tables; check your labels. Names come from the strings file. */
 const FOODS = [
-  { k: "chickenbreast", n: "Chicken breast, skinless (raw)", kcal: 120, p: 22.5, f: 2.6, c: 0, u: "g" },
-  { k: "chickenthigh", n: "Chicken thigh, skinless (raw)", kcal: 120, p: 19.5, f: 4.2, c: 0, u: "g" },
-  { k: "beef", n: "Beef mince, 10% fat (raw)", kcal: 176, p: 20, f: 10, c: 0, u: "g" },
-  { k: "salmon", n: "Salmon (raw)", kcal: 208, p: 20, f: 13, c: 0, u: "g" },
-  { k: "tuna", n: "Tuna, canned in water, drained", kcal: 116, p: 25.5, f: 0.8, c: 0, u: "g" },
-  { k: "sardine", n: "Sardines, canned in oil, drained", kcal: 208, p: 24.6, f: 11.5, c: 0, u: "g" },
-  { k: "egg", n: "Egg, large", kcal: 72, p: 6.3, f: 4.8, c: 0.4, u: "each" },
-  { k: "yogurt", n: "Greek yogurt, plain, non-fat", kcal: 59, p: 10.2, f: 0.4, c: 3.6, u: "g" },
-  { k: "milk", n: "Milk, whole", kcal: 61, p: 3.2, f: 3.3, c: 4.8, u: "ml" },
-  { k: "whey", n: "Protein powder (1 scoop)", kcal: 110, p: 25, f: 0.5, c: 1, u: "scoop" },
-  { k: "oats", n: "Oats (dry)", kcal: 389, p: 16.9, f: 6.9, c: 66.3, u: "g" },
-  { k: "rice", n: "White rice (cooked)", kcal: 130, p: 2.7, f: 0.3, c: 28.2, u: "g" },
-  { k: "pasta", n: "Pasta (cooked)", kcal: 158, p: 5.8, f: 0.9, c: 30.9, u: "g" },
-  { k: "bread", n: "Bread or pita", kcal: 270, p: 9, f: 3, c: 52, u: "g" },
-  { k: "potato", n: "Potato, boiled with skin", kcal: 87, p: 1.9, f: 0.1, c: 20.1, u: "g" },
-  { k: "lentils", n: "Lentils (cooked)", kcal: 116, p: 9, f: 0.4, c: 20, u: "g" },
-  { k: "banana", n: "Banana", kcal: 89, p: 1.1, f: 0.3, c: 22.8, u: "g" },
-  { k: "apple", n: "Apple", kcal: 52, p: 0.3, f: 0.2, c: 13.8, u: "g" },
-  { k: "dates", n: "Dates", kcal: 282, p: 2.5, f: 0.4, c: 75, u: "g" },
-  { k: "pb", n: "Peanut butter", kcal: 588, p: 25, f: 50, c: 20, u: "g" },
-  { k: "oil", n: "Cooking or olive oil", kcal: 884, p: 0, f: 100, c: 0, u: "g" },
-  { k: "fries", n: "French fries", kcal: 312, p: 3.4, f: 15, c: 41, u: "g" },
-  { k: "custom", n: "Something else (enter kcal)", u: "kcal" }
+  { k: "chickenbreast", kcal: 120, p: 22.5, f: 2.6, c: 0, u: "g" },
+  { k: "chickenthigh", kcal: 120, p: 19.5, f: 4.2, c: 0, u: "g" },
+  { k: "beef", kcal: 176, p: 20, f: 10, c: 0, u: "g" },
+  { k: "salmon", kcal: 208, p: 20, f: 13, c: 0, u: "g" },
+  { k: "tuna", kcal: 116, p: 25.5, f: 0.8, c: 0, u: "g" },
+  { k: "sardine", kcal: 208, p: 24.6, f: 11.5, c: 0, u: "g" },
+  { k: "egg", kcal: 72, p: 6.3, f: 4.8, c: 0.4, u: "each" },
+  { k: "yogurt", kcal: 59, p: 10.2, f: 0.4, c: 3.6, u: "g" },
+  { k: "milk", kcal: 61, p: 3.2, f: 3.3, c: 4.8, u: "ml" },
+  { k: "whey", kcal: 110, p: 25, f: 0.5, c: 1, u: "scoop" },
+  { k: "oats", kcal: 389, p: 16.9, f: 6.9, c: 66.3, u: "g" },
+  { k: "rice", kcal: 130, p: 2.7, f: 0.3, c: 28.2, u: "g" },
+  { k: "pasta", kcal: 158, p: 5.8, f: 0.9, c: 30.9, u: "g" },
+  { k: "bread", kcal: 270, p: 9, f: 3, c: 52, u: "g" },
+  { k: "potato", kcal: 87, p: 1.9, f: 0.1, c: 20.1, u: "g" },
+  { k: "lentils", kcal: 116, p: 9, f: 0.4, c: 20, u: "g" },
+  { k: "banana", kcal: 89, p: 1.1, f: 0.3, c: 22.8, u: "g" },
+  { k: "apple", kcal: 52, p: 0.3, f: 0.2, c: 13.8, u: "g" },
+  { k: "dates", kcal: 282, p: 2.5, f: 0.4, c: 75, u: "g" },
+  { k: "pb", kcal: 588, p: 25, f: 50, c: 20, u: "g" },
+  { k: "oil", kcal: 884, p: 0, f: 100, c: 0, u: "g" },
+  { k: "fries", kcal: 312, p: 3.4, f: 15, c: 41, u: "g" },
+  { k: "custom", u: "kcal" }
 ];
 const foodBy = k => FOODS.find(f => f.k === k);
+const foodName = f => t("food." + f.k);
 const per = f => (f.u === "g" || f.u === "ml") ? 100 : 1;
 function foodMacros(k, amt) {
   const f = foodBy(k); const a = Math.max(0, +amt || 0);
@@ -48,9 +49,10 @@ function foodMacros(k, amt) {
 }
 const addM = (a, b) => ({ kcal: a.kcal + b.kcal, p: a.p + b.p, f: a.f + b.f, c: a.c + b.c });
 const ZERO = { kcal: 0, p: 0, f: 0, c: 0 };
-const r0 = n => Math.round(n).toLocaleString("en-US");
+const r0 = n => fmtInt(n);
 const sgn = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + r0(Math.abs(n));
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, Math.round(+v || 0)));
+const pctText = p => (p > 0 ? "+" : p < 0 ? "−" : "") + Math.abs(Math.round(p)) + "%";
 
 /* ACSM walking equation; kcal ABOVE resting for the bout (valid for walking speeds) */
 function treadNet(mph, gradePct, min, kg) {
@@ -84,16 +86,18 @@ function calc() {
 }
 
 const BANDS = [
-  { lo: -99, hi: -35, n: "Very aggressive deficit", d: "Fast fat loss; building muscle is unlikely", col: "#dc2626" },
-  { lo: -35, hi: -25, n: "Aggressive deficit", d: "Quick fat loss; muscle gain is hard", col: "#f97316" },
-  { lo: -25, hi: -15, n: "Moderate deficit", d: "Steady fat loss; recomp still possible", col: "#16a34a" },
-  { lo: -15, hi: -5, n: "Mild deficit", d: "Slow fat loss; good for recomp", col: "#86c99a" },
-  { lo: -5, hi: 5, n: "Maintenance", d: "Weight stays about the same", col: "#b9c2cf" },
-  { lo: 5, hi: 15, n: "Lean surplus", d: "Slow gain, mostly muscle if training hard", col: "#93b4f5" },
-  { lo: 15, hi: 99, n: "Surplus", d: "Faster gain, more of it fat", col: "#2f5fd0" }
+  { lo: -99, hi: -35, k: "veryAggressive", col: "#dc2626" },
+  { lo: -35, hi: -25, k: "aggressive", col: "#f97316" },
+  { lo: -25, hi: -15, k: "moderate", col: "#16a34a" },
+  { lo: -15, hi: -5, k: "mild", col: "#86c99a" },
+  { lo: -5, hi: 5, k: "maintenance", col: "#b9c2cf" },
+  { lo: 5, hi: 15, k: "lean", col: "#93b4f5" },
+  { lo: 15, hi: 99, k: "surplus", col: "#2f5fd0" }
 ];
 const bandOf = p => BANDS.find(b => p >= b.lo && p < b.hi) || BANDS[BANDS.length - 1];
+const bandName = b => t("band." + b.k);
 const SC_LO = -50, SC_HI = 30, pos = p => (Math.min(SC_HI, Math.max(SC_LO, p)) - SC_LO) / (SC_HI - SC_LO) * 100;
+const signed = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
 
 function renderLadder(p, target, show) {
   const el = $("cLadder"); el.innerHTML = "";
@@ -101,8 +105,8 @@ function renderLadder(p, target, show) {
     const lo = Math.max(SC_LO, b.lo), hi = Math.min(SC_HI, b.hi);
     const i = document.createElement("i"); i.style.width = ((hi - lo) / (SC_HI - SC_LO) * 100) + "%"; i.style.background = b.col; el.appendChild(i);
   });
-  [-target, 0, target].forEach(v => { const t = document.createElement("span"); t.className = "ltick"; t.style.left = pos(v) + "%"; el.appendChild(t); });
-  if (show) { const m = document.createElement("span"); m.className = "lmark"; m.style.left = pos(p) + "%"; el.appendChild(m); }
+  [-target, 0, target].forEach(v => { const tk = document.createElement("span"); tk.className = "ltick"; tk.style.left = pos(v) + "%"; el.appendChild(tk); });
+  if (show) { const m = document.createElement("span"); m.className = "lmark"; m.dataset.label = t("cal.you"); m.style.left = pos(p) + "%"; el.appendChild(m); }
   const sc = $("cScale"); sc.innerHTML = "";
   [[SC_LO, "−50%"], [-target, "−" + target + "%"], [0, "0"], [target, "+" + target + "%"]].forEach(([v, l]) => {
     const s = document.createElement("span"); s.style.left = Math.min(96, Math.max(4, pos(v))) + "%"; s.textContent = l; sc.appendChild(s);
@@ -111,10 +115,11 @@ function renderLadder(p, target, show) {
   const cur = show ? bandOf(p) : null;
   BANDS.slice().reverse().forEach(b => {
     const li = document.createElement("li"); if (b === cur) li.className = "on";
-    const rng = b.lo <= -99 ? "below −35%" : b.hi >= 99 ? "above +15%" : (b.lo > 0 ? "+" : b.lo < 0 ? "−" : "") + Math.abs(b.lo) + " to " + (b.hi > 0 ? "+" : b.hi < 0 ? "−" : "") + Math.abs(b.hi) + "%";
-    li.innerHTML = '<i style="background:' + b.col + '"></i><span><span class="bn"></span><br><span class="bd" style="font-weight:400;color:var(--muted)"></span></span><small>' + rng + '</small>';
-    li.querySelector(".bn").textContent = b.n + (b === cur ? " · you are here" : "");
-    li.querySelector(".bd").textContent = b.d;
+    const rng = b.lo <= -99 ? t("band.below", { v: "−35%" }) : b.hi >= 99 ? t("band.above", { v: "+15%" }) : t("band.range", { a: signed(b.lo), b: signed(b.hi) + "%" });
+    li.innerHTML = '<i style="background:' + b.col + '"></i><span><span class="bn"></span><br><span class="bd" style="font-weight:400;color:var(--muted)"></span></span><small dir="ltr"></small>';
+    li.querySelector(".bn").textContent = bandName(b) + (b === cur ? " · " + t("band.youAreHere") : "");
+    li.querySelector(".bd").textContent = t("band." + b.k + "Desc");
+    li.querySelector("small").textContent = rng;
     ul.appendChild(li);
   });
 }
@@ -122,38 +127,48 @@ function renderLadder(p, target, show) {
 function renderCalOutputs() {
   const R = calc(), T = R.t, tp = Math.round(T * 100);
   if (R.hasDiet) {
-    $("cPct").textContent = (R.pct > 0 ? "+" : R.pct < 0 ? "−" : "") + Math.abs(Math.round(R.pct)) + "%";
-    $("cBand").textContent = bandOf(R.pct).n;
-    $("cHero1").innerHTML = "You eat about <b>" + r0(R.avgIn) + " kcal</b> a day on average, against a maintenance of <b>" + r0(R.avg) + " kcal</b>. That's <b>" + r0(Math.abs(R.bal)) + " kcal " + (R.bal < 0 ? "below" : "above") + "</b> maintenance, or about <b>" + Math.abs(R.bal * 7 / 7700).toFixed(2) + " kg " + (R.bal < 0 ? "lost" : "gained") + " per week</b>.";
-    $("cHero2").innerHTML = "A −" + tp + "% deficit is <b>" + r0(R.avg * (1 - T)) + " kcal</b> a day and a +" + tp + "% surplus is <b>" + r0(R.avg * (1 + T)) + " kcal</b>.";
+    $("cPct").textContent = pctText(R.pct);
+    $("cBand").textContent = bandName(bandOf(R.pct));
+    setHtml($("cHero1"), t(R.bal < 0 ? "cal.hero.below" : "cal.hero.above", {
+      eat: r0(R.avgIn), maint: r0(R.avg), diff: r0(Math.abs(R.bal)), kg: Math.abs(R.bal * 7 / 7700).toFixed(2) }));
+    setHtml($("cHero2"), t("cal.hero.targets", { tp, def: r0(R.avg * (1 - T)), sur: r0(R.avg * (1 + T)) }));
   } else {
     $("cPct").textContent = r0(R.avg);
-    $("cBand").textContent = "kcal maintenance";
-    $("cHero1").innerHTML = "That's what you burn on an average day, based on your details and weekly routine in Settings.";
-    $("cHero2").innerHTML = "Add your usual day of eating below to see whether you're in a deficit or a surplus.";
+    $("cBand").textContent = t("cal.kcalMaint");
+    setHtml($("cHero1"), t("cal.hero.noDiet1"));
+    setHtml($("cHero2"), t("cal.hero.noDiet2"));
   }
   renderLadder(R.pct, tp, R.hasDiet);
   $("tBmr").textContent = r0(R.bmr);
   $("tMaint").textContent = r0(R.avg);
-  $("tDefK").textContent = "Deficit −" + tp + "%"; $("tSurK").textContent = "Surplus +" + tp + "%";
-  $("tDef").textContent = r0(R.avg * (1 - T)); $("tDefS").textContent = "≈ " + (R.avg * T * 7 / 7700).toFixed(2) + " kg lost a week";
-  $("tSur").textContent = r0(R.avg * (1 + T)); $("tSurS").textContent = "≈ " + (R.avg * T * 7 / 7700).toFixed(2) + " kg gained a week";
-  const row = (n, s, v, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + n + (s ? '<small>' + s + '</small>' : '') + '</td><td><b>' + r0(v) + '</b></td><td>' + r0(v * (1 - T)) + '</td><td>' + r0(v * (1 + T)) + '</td></tr>';
-  const x = n => " <small style=\"display:inline;color:var(--muted)\">× " + n + "</small>";
-  $("cTable").innerHTML = '<tr><th>Day</th><th>Maintain</th><th>−' + tp + '%</th><th>+' + tp + '%</th></tr>' +
-    (R.nt ? row("Training" + x(R.nt), "+" + r0(R.warm) + " warm-up, +" + r0(R.lift) + " lifting", R.days.training) : "") +
-    (R.nc ? row("Cardio" + x(R.nc), "+" + r0(R.card) + " treadmill", R.days.cardio) : "") +
-    (R.nr ? row("Rest" + x(R.nr), "Daily life only", R.days.rest) : "") +
-    row("Average", "BMR " + r0(R.bmr) + " × " + (+CAL.act) + " daily life", R.avg, "avg");
-  $("cTableSub").textContent = "What you burn on each type of day, and how many of each you have a week.";
-  $("rBaseOut").innerHTML = R.hasDiet
-    ? "Usual day: <span><b>" + r0(R.base.kcal) + "</b> kcal</span><span><b>" + r0(R.base.p) + "</b> g protein" + (R.kg ? " (" + (R.base.p / R.kg).toFixed(1) + " g/kg)" : "") + "</span><span><b>" + r0(R.base.f) + "</b> g fat</span><span><b>" + r0(R.base.c) + "</b> g carbs</span>"
-    : "";
-  $("rWeekOut").innerHTML = R.hasDiet ? "Week average: <span><b>" + r0(R.avgIn) + "</b> kcal a day</span>" + (+CAL.highDays ? "<span>Bigger days ≈ <b>" + r0(R.base.kcal + (+CAL.highExtra || 0)) + "</b> kcal</span>" : "") : "";
-  $("wkNote").textContent = "That leaves " + R.nr + " rest day" + (R.nr === 1 ? "" : "s") + " a week.";
+  $("tDefK").textContent = t("cal.deficitN", { tp }); $("tSurK").textContent = t("cal.surplusN", { tp });
+  $("tDef").textContent = r0(R.avg * (1 - T)); $("tDefS").textContent = t("cal.kgLostWeek", { kg: (R.avg * T * 7 / 7700).toFixed(2) });
+  $("tSur").textContent = r0(R.avg * (1 + T)); $("tSurS").textContent = t("cal.kgGainedWeek", { kg: (R.avg * T * 7 / 7700).toFixed(2) });
+  const tb = $("cTable"); tb.innerHTML = "";
+  const tr = (cells, cls, head) => {
+    const r = document.createElement("tr"); if (cls) r.className = cls;
+    cells.forEach(c => { const td = document.createElement(head ? "th" : "td"); if (c && c.nodeType) td.appendChild(c); else td.textContent = c; r.appendChild(td); });
+    tb.appendChild(r);
+  };
+  const first = (name, count, sub) => {
+    const f = document.createDocumentFragment();
+    f.append(name);
+    if (count) { const x = document.createElement("small"); x.style.display = "inline"; x.style.color = "var(--muted)"; x.textContent = " × " + count; f.append(x); }
+    const s = document.createElement("small"); s.textContent = sub; f.append(s);
+    return f;
+  };
+  const bold = v => { const b = document.createElement("b"); b.textContent = r0(v); return b; };
+  tr([t("cal.col.day"), t("cal.col.maintain"), "−" + tp + "%", "+" + tp + "%"], "", true);
+  if (R.nt) tr([first(t("cal.day.training"), R.nt, t("cal.day.trainingSub", { warm: r0(R.warm), lift: r0(R.lift) })), bold(R.days.training), r0(R.days.training * (1 - T)), r0(R.days.training * (1 + T))]);
+  if (R.nc) tr([first(t("cal.day.cardio"), R.nc, t("cal.day.cardioSub", { card: r0(R.card) })), bold(R.days.cardio), r0(R.days.cardio * (1 - T)), r0(R.days.cardio * (1 + T))]);
+  if (R.nr) tr([first(t("cal.day.rest"), R.nr, t("cal.day.restSub")), bold(R.days.rest), r0(R.days.rest * (1 - T)), r0(R.days.rest * (1 + T))]);
+  tr([first(t("cal.day.average"), 0, t("cal.day.averageSub", { bmr: r0(R.bmr), act: +CAL.act })), bold(R.avg), r0(R.avg * (1 - T)), r0(R.avg * (1 + T))], "avg");
+  setHtml($("rBaseOut"), R.hasDiet ? t("cal.usualTotals", { kcal: r0(R.base.kcal), p: r0(R.base.p), pkg: R.kg ? (R.base.p / R.kg).toFixed(1) : "–", f: r0(R.base.f), c: r0(R.base.c) }) : "");
+  setHtml($("rWeekOut"), R.hasDiet ? t("cal.weekAvg", { kcal: r0(R.avgIn) }) + (+CAL.highDays ? t("cal.biggerDaysTotal", { kcal: r0(R.base.kcal + (+CAL.highExtra || 0)) }) : "") : "");
+  $("wkNote").textContent = tn("cal.restLeft", R.nr);
   $("pAgeNote").textContent = R.katch === null
-    ? "BMR " + r0(R.bmr) + " kcal from Mifflin-St Jeor. Add a body fat % to also use Katch-McArdle."
-    : "Lean mass " + R.lean.toFixed(1) + " kg · BMR " + r0(R.katch) + " (Katch-McArdle) and " + r0(R.mifflin) + " (Mifflin-St Jeor), averaged to " + r0(R.bmr) + ".";
+    ? t("cal.bmrNote", { bmr: r0(R.bmr) })
+    : t("cal.bmrNoteBf", { lean: R.lean.toFixed(1), katch: r0(R.katch), mifflin: r0(R.mifflin), bmr: r0(R.bmr) });
   renderWhatIfResult(R);
 }
 
@@ -170,35 +185,42 @@ Object.entries(BIND).forEach(([id, k]) => {
   const ev = el.tagName === "SELECT" ? "change" : "input";
   el.addEventListener(ev, () => {
     let v = el.value;
-    if (el.tagName !== "SELECT") { v = v.replace(",", ".").replace(/[^0-9.]/g, ""); if (v !== el.value) el.value = v; }
+    if (el.tagName !== "SELECT") { v = cleanNumber(v, 8); if (v !== el.value) el.value = v; }
     CAL[k] = k === "sex" ? v : (v === "" ? 0 : parseFloat(v));
     saveCal(); renderCalOutputs();
   });
 });
 
 /* ---- food pickers ---- */
-const unitLabel = f => f.u === "g" ? "Grams" : f.u === "ml" ? "ml" : f.u === "each" ? "How many" : f.u === "scoop" ? "Scoops" : "kcal";
-const amtText = (f, a) => f.u === "kcal" ? r0(a) + " kcal" : a + (f.u === "g" ? " g" : f.u === "ml" ? " ml" : f.u === "each" ? " ×" : " scoop" + (a == 1 ? "" : "s"));
-["fSel", "uSel"].forEach(id => FOODS.forEach(f => { const o = document.createElement("option"); o.value = f.k; o.textContent = f.n; $(id).appendChild(o); }));
-function syncFoodUnit() { $("fAmtL").textContent = unitLabel(foodBy($("fSel").value)); $("uAmtL").textContent = unitLabel(foodBy($("uSel").value)); }
+const unitLbl = f => t("food.unit." + f.u);
+const amtText = (f, a) => t("food.amt." + f.u, { a: f.u === "kcal" ? r0(a) : a });
+function fillFoodSelects() {
+  ["fSel", "uSel"].forEach(id => {
+    const sel = $(id), cur = sel.value; sel.innerHTML = "";
+    FOODS.forEach(f => { const o = document.createElement("option"); o.value = f.k; o.textContent = foodName(f); sel.appendChild(o); });
+    if (cur) sel.value = cur;
+  });
+}
+function syncFoodUnit() { $("fAmtL").textContent = unitLbl(foodBy($("fSel").value) || FOODS[0]); $("uAmtL").textContent = unitLbl(foodBy($("uSel").value) || FOODS[0]); }
 $("fSel").addEventListener("change", syncFoodUnit);
 $("uSel").addEventListener("change", syncFoodUnit);
-const readAmt = id => parseFloat(($(id).value || "").replace(",", "."));
+const readAmt = id => parseFloat(cleanNumber($(id).value || "", 8));
 
 function itemRow(label, value, onRemove) {
   const li = document.createElement("li");
   const s = document.createElement("span"); s.textContent = label;
   const b = document.createElement("b"); b.textContent = value;
-  const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "Remove " + label);
+  const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", t("item.remove", { name: label }));
   x.addEventListener("click", onRemove);
   li.append(s, b, x); return li;
 }
+function noneRow(ul, key) { const li = document.createElement("li"); li.className = "none"; li.textContent = t(key); ul.appendChild(li); }
+const foodLabel = it => { const f = foodBy(it.k) || FOODS[FOODS.length - 1]; return (f.u === "kcal" ? t("food.other") : foodName(f)) + " · " + amtText(f, it.a); };
 function renderUsual() {
   const ul = $("uList"); ul.innerHTML = "";
-  if (!CAL.usual.length) ul.innerHTML = '<li class="none">Nothing added yet</li>';
+  if (!CAL.usual.length) noneRow(ul, "cal.usualNone");
   CAL.usual.forEach((it, idx) => {
-    const f = foodBy(it.k) || FOODS[FOODS.length - 1];
-    ul.appendChild(itemRow((f.u === "kcal" ? "Other food" : f.n) + " · " + amtText(f, it.a), r0(foodMacros(it.k, it.a).kcal) + " kcal",
+    ul.appendChild(itemRow(foodLabel(it), t("kcal.n", { n: r0(foodMacros(it.k, it.a).kcal) }),
       () => { CAL.usual.splice(idx, 1); saveCal(); renderUsual(); renderCalOutputs(); }));
   });
 }
@@ -215,9 +237,9 @@ $("fAdd").addEventListener("click", () => {
   WHATIF.foods.push({ k: $("fSel").value, a }); $("fAmt").value = ""; saveWhatIf(); renderWhatIfLists(); renderCalOutputs();
 });
 function syncActFields() {
-  const t = $("aSel").value;
-  $("aL1").textContent = t === "steps" ? "Steps" : t === "other" ? "kcal" : "Minutes";
-  $("aMore").hidden = t !== "tread";
+  const tp = $("aSel").value;
+  $("aL1").textContent = t(tp === "steps" ? "act.steps" : tp === "other" ? "act.kcal" : "act.minutes");
+  $("aMore").hidden = tp !== "tread";
 }
 $("aSel").addEventListener("change", syncActFields);
 function actNet(a) {
@@ -228,32 +250,31 @@ function actNet(a) {
   return a.v || 0;
 }
 function actLabel(a) {
-  if (a.t === "tread") return "Treadmill " + a.v + " min · " + a.spd + " mph · " + a.inc + "%";
-  if (a.t === "lift") return "Weight training " + a.v + " min";
-  if (a.t === "steps") return "Walking " + r0(a.v) + " steps";
-  return "Other activity";
+  if (a.t === "tread") return t("act.label.tread", { min: a.v, spd: a.spd, inc: a.inc });
+  if (a.t === "lift") return t("act.label.lift", { min: a.v });
+  if (a.t === "steps") return t("act.label.steps", { n: r0(a.v) });
+  return t("act.label.other");
 }
 $("aAdd").addEventListener("click", () => {
-  const t = $("aSel").value;
+  const tp = $("aSel").value;
   const v = readAmt("aV1"); if (!(v > 0)) { $("aV1").focus(); return; }
-  const a = { t, v };
-  if (t === "tread") { a.spd = readAmt("aV2") || 0; a.inc = readAmt("aV3") || 0; if (!(a.spd > 0)) { $("aV2").focus(); return; } }
+  const a = { t: tp, v };
+  if (tp === "tread") { a.spd = readAmt("aV2") || 0; a.inc = readAmt("aV3") || 0; if (!(a.spd > 0)) { $("aV2").focus(); return; } }
   WHATIF.acts.push(a); $("aV1").value = ""; saveWhatIf(); renderWhatIfLists(); renderCalOutputs();
 });
 function renderWhatIfLists() {
   document.querySelectorAll("#wType button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.t === WHATIF.type)));
   $("wBase").checked = !!WHATIF.base;
   const fl = $("fList"); fl.innerHTML = "";
-  if (!WHATIF.foods.length) fl.innerHTML = '<li class="none">No extra food added</li>';
+  if (!WHATIF.foods.length) noneRow(fl, "whatif.noFood");
   WHATIF.foods.forEach((it, idx) => {
-    const f = foodBy(it.k) || FOODS[FOODS.length - 1];
-    fl.appendChild(itemRow((f.u === "kcal" ? "Other food" : f.n) + " · " + amtText(f, it.a), r0(foodMacros(it.k, it.a).kcal) + " kcal",
+    fl.appendChild(itemRow(foodLabel(it), t("kcal.n", { n: r0(foodMacros(it.k, it.a).kcal) }),
       () => { WHATIF.foods.splice(idx, 1); saveWhatIf(); renderWhatIfLists(); renderCalOutputs(); }));
   });
   const al = $("aList"); al.innerHTML = "";
-  if (!WHATIF.acts.length) al.innerHTML = '<li class="none">No extra activity added</li>';
+  if (!WHATIF.acts.length) noneRow(al, "whatif.noAct");
   WHATIF.acts.forEach((a, idx) => {
-    al.appendChild(itemRow(actLabel(a), "+" + r0(actNet(a)) + " kcal", () => { WHATIF.acts.splice(idx, 1); saveWhatIf(); renderWhatIfLists(); renderCalOutputs(); }));
+    al.appendChild(itemRow(actLabel(a), "+" + t("kcal.n", { n: r0(actNet(a)) }), () => { WHATIF.acts.splice(idx, 1); saveWhatIf(); renderWhatIfLists(); renderCalOutputs(); }));
   });
 }
 document.querySelectorAll("#wType button").forEach(b => b.addEventListener("click", () => { WHATIF.type = b.dataset.t; saveWhatIf(); renderWhatIfLists(); renderCalOutputs(); }));
@@ -265,12 +286,12 @@ function renderWhatIfResult(R) {
   const extra = WHATIF.acts.reduce((s, a) => s + actNet(a), 0);
   const burn = (R.days[WHATIF.type] || R.days.rest) + extra;
   const bal = eat.kcal - burn, pct = burn ? bal / burn * 100 : 0;
-  $("wIn").textContent = r0(eat.kcal); $("wInS").textContent = r0(eat.p) + " g protein";
-  $("wOut").textContent = r0(burn); $("wOutS").textContent = extra ? "incl. +" + r0(extra) + " extra activity" : "maintenance for this day";
-  $("wBal").textContent = sgn(bal); $("wBalS").textContent = (pct > 0 ? "+" : pct < 0 ? "−" : "") + Math.abs(Math.round(pct)) + "% · " + bandOf(pct).n.toLowerCase();
-  $("wFat").textContent = (bal < 0 ? "−" : "+") + r0(Math.abs(bal) / 7.7) + " g";
-  $("wFatS").textContent = bal < 0 ? "body fat used that day" : "stored; repeated, it adds up";
+  $("wIn").textContent = r0(eat.kcal); $("wInS").textContent = t("whatif.protein", { p: r0(eat.p) });
+  $("wOut").textContent = r0(burn); $("wOutS").textContent = extra ? t("whatif.inclExtra", { kcal: r0(extra) }) : t("whatif.maintDay");
+  $("wBal").textContent = sgn(bal); $("wBalS").textContent = pctText(pct) + " · " + bandName(bandOf(pct));
+  $("wFat").textContent = (bal < 0 ? "−" : "+") + t("g.n", { n: r0(Math.abs(bal) / 7.7) });
+  $("wFatS").textContent = t(bal < 0 ? "whatif.fatUsed" : "whatif.fatStored");
 }
 
-function renderCal() { fillInputs(); syncFoodUnit(); syncActFields(); renderUsual(); renderWhatIfLists(); renderCalOutputs(); }
+function renderCal() { fillFoodSelects(); fillInputs(); syncFoodUnit(); syncActFields(); renderUsual(); renderWhatIfLists(); renderCalOutputs(); }
 if (typeof renderAll === "function" && typeof appMode !== "undefined" && appMode !== "workout") renderAll();

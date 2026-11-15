@@ -53,6 +53,8 @@
 
 **Settings**
 - Switch between programs; each keeps its own log.
+- Light, dark, or match your phone's theme.
+- Language choice (Arabic is on the way; see the [roadmap](ROADMAP.md)).
 - kg or lb.
 - Show or hide demo links, exercise tips, last-time weights, the RPE explainer and the Calories tab.
 

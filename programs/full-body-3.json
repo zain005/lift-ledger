@@ -1,5 +1,5 @@
 {
-  "format": 1,
+  "format": 2,
   "id": "full-body-3",
   "name": "Full Body",
   "description": "3 days a week. Most muscles trained two or three times a week; a good first program.",
@@ -33,10 +33,12 @@
   ],
   "days": [
     {
+      "id": "fb-a",
       "name": "Full Body A",
       "short": "A",
       "exercises": [
         {
+          "id": "fb-a1",
           "name": "Back Squat",
           "sets": 3,
           "reps": "6–8",
@@ -49,6 +51,7 @@
           ]
         },
         {
+          "id": "fb-a2",
           "name": "Dumbbell Bench Press",
           "sets": 3,
           "reps": "8–10",
@@ -61,6 +64,7 @@
           ]
         },
         {
+          "id": "fb-a3",
           "name": "Lat Pulldown",
           "sets": 3,
           "reps": "8–10",
@@ -73,6 +77,7 @@
           ]
         },
         {
+          "id": "fb-a4",
           "name": "Romanian Deadlift",
           "sets": 2,
           "reps": "8–10",
@@ -85,6 +90,7 @@
           ]
         },
         {
+          "id": "fb-a5",
           "name": "Cable Lateral Raise",
           "sets": 2,
           "reps": "12–15",
@@ -96,6 +102,7 @@
           ]
         },
         {
+          "id": "fb-a6",
           "name": "Cable Curl",
           "sets": 2,
           "reps": "10–12",
@@ -109,10 +116,12 @@
       ]
     },
     {
+      "id": "fb-b",
       "name": "Full Body B",
       "short": "B",
       "exercises": [
         {
+          "id": "fb-b1",
           "name": "Leg Press",
           "sets": 3,
           "reps": "8–10",
@@ -125,6 +134,7 @@
           ]
         },
         {
+          "id": "fb-b2",
           "name": "Seated Dumbbell Shoulder Press",
           "sets": 3,
           "reps": "8–10",
@@ -137,6 +147,7 @@
           ]
         },
         {
+          "id": "fb-b3",
           "name": "Chest-Supported Row",
           "sets": 3,
           "reps": "8–10",
@@ -149,6 +160,7 @@
           ]
         },
         {
+          "id": "fb-b4",
           "name": "Seated Leg Curl",
           "sets": 3,
           "reps": "10–12",
@@ -160,6 +172,7 @@
           ]
         },
         {
+          "id": "fb-b5",
           "name": "Overhead Cable Triceps Extension",
           "sets": 2,
           "reps": "10–12",
@@ -171,6 +184,7 @@
           ]
         },
         {
+          "id": "fb-b6",
           "name": "Standing Calf Raise",
           "sets": 3,
           "reps": "10–12",
@@ -185,10 +199,12 @@
       ]
     },
     {
+      "id": "fb-c",
       "name": "Full Body C",
       "short": "C",
       "exercises": [
         {
+          "id": "fb-c1",
           "name": "Hip Thrust",
           "sets": 3,
           "reps": "8–10",
@@ -201,6 +217,7 @@
           ]
         },
         {
+          "id": "fb-c2",
           "name": "Incline Dumbbell Press",
           "sets": 3,
           "reps": "8–10",
@@ -213,6 +230,7 @@
           ]
         },
         {
+          "id": "fb-c3",
           "name": "Neutral-Grip Pulldown",
           "sets": 3,
           "reps": "10–12",
@@ -224,6 +242,7 @@
           ]
         },
         {
+          "id": "fb-c4",
           "name": "Bulgarian Split Squat",
           "sets": 2,
           "reps": "8–10",
@@ -236,6 +255,7 @@
           ]
         },
         {
+          "id": "fb-c5",
           "name": "Reverse Pec Deck",
           "sets": 2,
           "reps": "12–15",
@@ -248,6 +268,7 @@
           ]
         },
         {
+          "id": "fb-c6",
           "name": "Cable Crunch",
           "sets": 3,
           "reps": "10–12",

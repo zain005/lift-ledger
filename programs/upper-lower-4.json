@@ -1,5 +1,5 @@
 {
-  "format": 1,
+  "format": 2,
   "id": "upper-lower-4",
   "name": "Upper / Lower",
   "description": "4 days a week. Two upper and two lower sessions, about 8–12 hard sets per muscle a week.",
@@ -33,10 +33,12 @@
   ],
   "days": [
     {
+      "id": "ul-a",
       "name": "Upper A",
       "short": "Upper",
       "exercises": [
         {
+          "id": "ul-a1",
           "name": "Barbell Bench Press",
           "sets": 3,
           "reps": "6–8",
@@ -49,6 +51,7 @@
           ]
         },
         {
+          "id": "ul-a2",
           "name": "Chest-Supported Row",
           "sets": 3,
           "reps": "8–10",
@@ -61,6 +64,7 @@
           ]
         },
         {
+          "id": "ul-a3",
           "name": "Seated Dumbbell Shoulder Press",
           "sets": 2,
           "reps": "8–10",
@@ -73,6 +77,7 @@
           ]
         },
         {
+          "id": "ul-a4",
           "name": "Lat Pulldown",
           "sets": 3,
           "reps": "8–10",
@@ -85,6 +90,7 @@
           ]
         },
         {
+          "id": "ul-a5",
           "name": "Cable Lateral Raise",
           "sets": 3,
           "reps": "12–15",
@@ -96,6 +102,7 @@
           ]
         },
         {
+          "id": "ul-a6",
           "name": "Incline Dumbbell Curl",
           "sets": 2,
           "reps": "10–12",
@@ -107,6 +114,7 @@
           ]
         },
         {
+          "id": "ul-a7",
           "name": "Triceps Pressdown",
           "sets": 2,
           "reps": "10–12",
@@ -120,10 +128,12 @@
       ]
     },
     {
+      "id": "ul-b",
       "name": "Lower A",
       "short": "Lower",
       "exercises": [
         {
+          "id": "ul-b1",
           "name": "Back Squat",
           "sets": 3,
           "reps": "6–8",
@@ -136,6 +146,7 @@
           ]
         },
         {
+          "id": "ul-b2",
           "name": "Romanian Deadlift",
           "sets": 3,
           "reps": "8–10",
@@ -148,6 +159,7 @@
           ]
         },
         {
+          "id": "ul-b3",
           "name": "Leg Extension",
           "sets": 2,
           "reps": "10–12",
@@ -160,6 +172,7 @@
           ]
         },
         {
+          "id": "ul-b4",
           "name": "Seated Leg Curl",
           "sets": 3,
           "reps": "10–12",
@@ -171,6 +184,7 @@
           ]
         },
         {
+          "id": "ul-b5",
           "name": "Standing Calf Raise",
           "sets": 3,
           "reps": "10–12",
@@ -183,6 +197,7 @@
           ]
         },
         {
+          "id": "ul-b6",
           "name": "Hanging Leg Raise",
           "sets": 3,
           "reps": "10–15",
@@ -197,10 +212,12 @@
       ]
     },
     {
+      "id": "ul-c",
       "name": "Upper B",
       "short": "Upper",
       "exercises": [
         {
+          "id": "ul-c1",
           "name": "Incline Dumbbell Press",
           "sets": 3,
           "reps": "8–10",
@@ -213,6 +230,7 @@
           ]
         },
         {
+          "id": "ul-c2",
           "name": "Single-Arm Cable Row",
           "sets": 3,
           "reps": "10–12",
@@ -225,6 +243,7 @@
           ]
         },
         {
+          "id": "ul-c3",
           "name": "Pull-Up",
           "sets": 3,
           "reps": "6–10",
@@ -236,6 +255,7 @@
           ]
         },
         {
+          "id": "ul-c4",
           "name": "Pec Deck",
           "sets": 2,
           "reps": "12–15",
@@ -247,6 +267,7 @@
           ]
         },
         {
+          "id": "ul-c5",
           "name": "Reverse Pec Deck",
           "sets": 2,
           "reps": "12–15",
@@ -259,6 +280,7 @@
           ]
         },
         {
+          "id": "ul-c6",
           "name": "Overhead Cable Triceps Extension",
           "sets": 2,
           "reps": "10–12",
@@ -270,6 +292,7 @@
           ]
         },
         {
+          "id": "ul-c7",
           "name": "Hammer Curl",
           "sets": 2,
           "reps": "10–12",
@@ -283,10 +306,12 @@
       ]
     },
     {
+      "id": "ul-d",
       "name": "Lower B",
       "short": "Lower",
       "exercises": [
         {
+          "id": "ul-d1",
           "name": "Leg Press",
           "sets": 3,
           "reps": "8–10",
@@ -299,6 +324,7 @@
           ]
         },
         {
+          "id": "ul-d2",
           "name": "Hip Thrust",
           "sets": 3,
           "reps": "8–10",
@@ -311,6 +337,7 @@
           ]
         },
         {
+          "id": "ul-d3",
           "name": "Walking Lunge",
           "sets": 2,
           "reps": "10–12",
@@ -323,6 +350,7 @@
           ]
         },
         {
+          "id": "ul-d4",
           "name": "Lying Leg Curl",
           "sets": 2,
           "reps": "10–12",
@@ -334,6 +362,7 @@
           ]
         },
         {
+          "id": "ul-d5",
           "name": "Seated Calf Raise",
           "sets": 3,
           "reps": "12–15",
@@ -345,6 +374,7 @@
           ]
         },
         {
+          "id": "ul-d6",
           "name": "Cable Crunch",
           "sets": 3,
           "reps": "10–12",

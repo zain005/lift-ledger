@@ -721,6 +721,8 @@ async function loadBuiltins() {
 setLanguage(SET.lang);
 applyTheme();
 applyI18n();
+/* Ask the browser to keep this app's data even when the phone is low on storage (no prompt on most browsers) */
+if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => {});
 /* Mark the test version so it's never mistaken for the main app */
 if (PREFIX === "llb-") {
   document.title = "Lift Ledger · " + t("beta.tag");

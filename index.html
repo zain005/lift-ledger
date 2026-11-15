@@ -1,18 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr" data-theme="system">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lift Ledger</title>
 <meta name="description" content="A simple, offline-friendly workout log and calorie calculator. Your data stays on your device.">
 <meta name="theme-color" content="#ffffff">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lift Ledger">
 <link rel="stylesheet" href="css/app.css">
+<script>
+/* Apply the saved theme before the page paints, so dark mode never flashes white */
+(function () { try { var p = /\/beta\//.test(location.pathname) ? "llb-" : "ll-"; var s = JSON.parse(localStorage.getItem(p + "settings")) || {};
+  document.documentElement.dataset.theme = s.theme === "light" || s.theme === "dark" ? s.theme : "system"; } catch (e) {} })();
+</script>
 </head>
 <body>
 
@@ -22,35 +27,35 @@
       <h1 id="appTitle">Lift Ledger</h1>
       <div class="phase" id="phase"></div>
     </div>
-    <div class="modes" id="modes" role="group" aria-label="Section">
-      <button type="button" class="mode" id="modeWorkout" aria-pressed="true">Workout</button>
-      <button type="button" class="mode" id="modeCal" aria-pressed="false">Calories</button>
-      <button type="button" class="mode" id="modeSet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+    <div class="modes" id="modes" role="group" data-i18n-aria="nav.aria">
+      <button type="button" class="mode" id="modeWorkout" aria-pressed="true" data-i18n="nav.workout">Workout</button>
+      <button type="button" class="mode" id="modeCal" aria-pressed="false" data-i18n="nav.calories">Calories</button>
+      <button type="button" class="mode" id="modeSet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="nav.settings">Settings</span></button>
     </div>
-    <div class="weeks" id="weeks" role="group" aria-label="Week"></div>
-    <div class="days" id="days" role="group" aria-label="Workout day"></div>
+    <div class="weeks" id="weeks" role="group" data-i18n-aria="nav.weekAria"></div>
+    <div class="days" id="days" role="group" data-i18n-aria="nav.dayAria"></div>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <p class="loading" id="loading">Loading programs…</p>
+    <p class="loading" id="loading" data-i18n="loading">Loading programs…</p>
 
     <details class="rpe" id="rpe" hidden>
-      <summary>What does RPE mean?</summary>
+      <summary data-i18n="rpe.summary">What does RPE mean?</summary>
       <div class="body">
-        <p>RPE is how hard a set feels on a 1–10 scale, judged by how many more reps you could have done before failing.</p>
+        <p data-i18n="rpe.p1">RPE is how hard a set feels on a 1–10 scale, judged by how many more reps you could have done before failing.</p>
         <div class="scale">
-          <div><b>10</b><span>0 reps left</span></div>
-          <div><b>9</b><span>1 rep left</span></div>
-          <div><b>8</b><span>2 reps left</span></div>
-          <div><b>7</b><span>3 reps left</span></div>
+          <div><b>10</b><span data-i18n="rpe.left0">0 reps left</span></div>
+          <div><b>9</b><span data-i18n="rpe.left1">1 rep left</span></div>
+          <div><b>8</b><span data-i18n="rpe.left2">2 reps left</span></div>
+          <div><b>7</b><span data-i18n="rpe.left3">3 reps left</span></div>
         </div>
-        <p>Two numbers like <b>7–8 / 9</b> mean your early sets at RPE 7–8 and your last set at 9. Reps are a range: when every set reaches the top of the range, add weight next time.</p>
+        <p data-i18n-html="rpe.p2"></p>
       </div>
     </details>
 
-    <section class="prog-wrap" id="progress" hidden aria-label="Progress"></section>
+    <section class="prog-wrap" id="progress" hidden data-i18n-aria="stats.aria"></section>
 
     <div class="day-head" id="dayHead" hidden>
       <h2 id="dayTitle"></h2>
@@ -58,14 +63,14 @@
     </div>
     <div id="list" class="list" style="display:grid;gap:12px"></div>
     <p class="warn" id="emptyWarn" hidden></p>
-    <button type="button" class="daydone" id="dayDone" aria-pressed="false" hidden>Mark day done</button>
+    <button type="button" class="daydone" id="dayDone" aria-pressed="false" hidden></button>
 
-    <section class="cal" id="cal" hidden aria-label="Calories">
-      <h2>Calories</h2>
-      <p class="note">Your weight, height and weekly routine are in <button type="button" class="linkbtn" id="calToSet">Settings</button>.</p>
+    <section class="cal" id="cal" hidden data-i18n-aria="nav.calories">
+      <h2 data-i18n="cal.title">Calories</h2>
+      <p class="note"><span data-i18n="cal.detailsIn">Your weight, height and weekly routine are in</span> <button type="button" class="linkbtn" id="calToSet" data-i18n="nav.settings">Settings</button>.</p>
 
       <div class="panel hero">
-        <div class="k" style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Your usual week, on average</div>
+        <div class="k" style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)" data-i18n="cal.heroLabel">Your usual week, on average</div>
         <div class="big"><b id="cPct">–</b><span id="cBand">–</span></div>
         <p id="cHero1"></p>
         <p id="cHero2"></p>
@@ -75,181 +80,196 @@
       </div>
 
       <div class="tiles">
-        <div class="tile"><div class="k">BMR (at rest)</div><div class="v" id="tBmr">–</div><div class="s">kcal a day lying still</div></div>
-        <div class="tile"><div class="k">Maintenance</div><div class="v" id="tMaint">–</div><div class="s">kcal a day, week average</div></div>
-        <div class="tile"><div class="k" id="tDefK">Deficit</div><div class="v" id="tDef">–</div><div class="s" id="tDefS">kcal a day</div></div>
-        <div class="tile"><div class="k" id="tSurK">Surplus</div><div class="v" id="tSur">–</div><div class="s" id="tSurS">kcal a day</div></div>
+        <div class="tile"><div class="k" data-i18n="cal.bmr">BMR (at rest)</div><div class="v" id="tBmr">–</div><div class="s" data-i18n="cal.bmrSub">kcal a day lying still</div></div>
+        <div class="tile"><div class="k" data-i18n="cal.maint">Maintenance</div><div class="v" id="tMaint">–</div><div class="s" data-i18n="cal.maintSub">kcal a day, week average</div></div>
+        <div class="tile"><div class="k" id="tDefK"></div><div class="v" id="tDef">–</div><div class="s" id="tDefS"></div></div>
+        <div class="tile"><div class="k" id="tSurK"></div><div class="v" id="tSur">–</div><div class="s" id="tSurS"></div></div>
       </div>
 
       <div class="panel">
-        <h3>Maintenance by day</h3>
-        <p class="sub" id="cTableSub">What you burn on each type of day.</p>
+        <h3 data-i18n="cal.byDay">Maintenance by day</h3>
+        <p class="sub" data-i18n="cal.byDaySub">What you burn on each type of day, and how many of each you have a week.</p>
         <div style="overflow-x:auto"><table class="ctable" id="cTable"></table></div>
       </div>
 
       <div class="panel">
-        <h3>Your usual day of eating</h3>
-        <p class="sub">Add what you eat on a normal day. Amounts are raw or as listed.</p>
+        <h3 data-i18n="cal.usual">Your usual day of eating</h3>
+        <p class="sub" data-i18n="cal.usualSub">Add what you eat on a normal day. Amounts are raw or as listed.</p>
         <div class="addrow">
-          <div class="fld"><label for="uSel">Food</label><select id="uSel"></select></div>
-          <div class="fld"><label for="uAmt" id="uAmtL">Grams</label><input id="uAmt" inputmode="decimal"></div>
+          <div class="fld"><label for="uSel" data-i18n="cal.food">Food</label><select id="uSel"></select></div>
+          <div class="fld"><label for="uAmt" id="uAmtL"></label><input id="uAmt" inputmode="decimal"></div>
         </div>
-        <button type="button" class="addbtn" id="uAdd">Add to usual day</button>
+        <button type="button" class="addbtn" id="uAdd" data-i18n="cal.addUsual">Add to usual day</button>
         <ul class="items" id="uList"></ul>
         <div class="out" id="rBaseOut"></div>
         <div class="fgrid">
-          <div class="fld"><label for="rHighDays">Bigger days / week</label><input id="rHighDays" inputmode="numeric"></div>
-          <div class="fld"><label for="rHighExtra">Extra kcal on those</label><input id="rHighExtra" inputmode="numeric"></div>
+          <div class="fld"><label for="rHighDays" data-i18n="cal.bigDays">Bigger days / week</label><input id="rHighDays" inputmode="numeric"></div>
+          <div class="fld"><label for="rHighExtra" data-i18n="cal.bigExtra">Extra kcal on those</label><input id="rHighExtra" inputmode="numeric"></div>
         </div>
-        <p class="note">Bigger days are days you eat more than usual, like a meal out. Leave at 0 if you eat the same every day.</p>
+        <p class="note" data-i18n="cal.bigNote">Bigger days are days you eat more than usual, like a meal out. Leave at 0 if you eat the same every day.</p>
         <div class="out" id="rWeekOut"></div>
       </div>
 
       <div class="panel">
-        <h3>What-if calculator</h3>
-        <p class="sub">Plan or check any single day: pick the day, add what you ate and any extra activity.</p>
+        <h3 data-i18n="whatif.title">What-if calculator</h3>
+        <p class="sub" data-i18n="whatif.sub">Plan or check any single day: pick the day, add what you ate and any extra activity.</p>
         <div class="seg" id="wType">
-          <button type="button" data-t="training">Training</button>
-          <button type="button" data-t="cardio">Cardio</button>
-          <button type="button" data-t="rest">Rest</button>
+          <button type="button" data-t="training" data-i18n="cal.day.training">Training</button>
+          <button type="button" data-t="cardio" data-i18n="cal.day.cardio">Cardio</button>
+          <button type="button" data-t="rest" data-i18n="cal.day.rest">Rest</button>
         </div>
-        <label class="chk"><input type="checkbox" id="wBase"> Include my usual day</label>
+        <label class="chk"><input type="checkbox" id="wBase"> <span data-i18n="whatif.includeUsual">Include my usual day</span></label>
 
         <div class="addrow">
-          <div class="fld"><label for="fSel">Add food</label><select id="fSel"></select></div>
-          <div class="fld"><label for="fAmt" id="fAmtL">Grams</label><input id="fAmt" inputmode="decimal"></div>
+          <div class="fld"><label for="fSel" data-i18n="whatif.addFood">Add food</label><select id="fSel"></select></div>
+          <div class="fld"><label for="fAmt" id="fAmtL"></label><input id="fAmt" inputmode="decimal"></div>
         </div>
-        <button type="button" class="addbtn" id="fAdd">Add food</button>
+        <button type="button" class="addbtn" id="fAdd" data-i18n="whatif.addFood">Add food</button>
         <ul class="items" id="fList"></ul>
 
         <div class="addrow">
-          <div class="fld"><label for="aSel">Add activity</label><select id="aSel">
-            <option value="tread">Treadmill walk</option>
-            <option value="lift">Weight training</option>
-            <option value="steps">Walking (steps)</option>
-            <option value="other">Something else (enter kcal)</option>
+          <div class="fld"><label for="aSel" data-i18n="whatif.addAct">Add activity</label><select id="aSel">
+            <option value="tread" data-i18n="act.tread">Treadmill walk</option>
+            <option value="lift" data-i18n="act.lift">Weight training</option>
+            <option value="steps" data-i18n="act.walk">Walking (steps)</option>
+            <option value="other" data-i18n="act.other">Something else (enter kcal)</option>
           </select></div>
-          <div class="fld" id="aF1"><label for="aV1" id="aL1">Minutes</label><input id="aV1" inputmode="decimal"></div>
+          <div class="fld" id="aF1"><label for="aV1" id="aL1"></label><input id="aV1" inputmode="decimal"></div>
         </div>
         <div class="fgrid" id="aMore">
-          <div class="fld"><label for="aV2">Speed (mph)</label><input id="aV2" inputmode="decimal"></div>
-          <div class="fld"><label for="aV3">Incline (%)</label><input id="aV3" inputmode="decimal"></div>
+          <div class="fld"><label for="aV2" data-i18n="act.speed">Speed (mph)</label><input id="aV2" inputmode="decimal"></div>
+          <div class="fld"><label for="aV3" data-i18n="act.incline">Incline (%)</label><input id="aV3" inputmode="decimal"></div>
         </div>
-        <button type="button" class="addbtn" id="aAdd">Add activity</button>
+        <button type="button" class="addbtn" id="aAdd" data-i18n="whatif.addAct">Add activity</button>
         <ul class="items" id="aList"></ul>
 
         <div class="result">
-          <div class="tile"><div class="k">Eaten</div><div class="v" id="wIn">–</div><div class="s" id="wInS"></div></div>
-          <div class="tile"><div class="k">Burned</div><div class="v" id="wOut">–</div><div class="s" id="wOutS"></div></div>
-          <div class="tile"><div class="k">Balance</div><div class="v" id="wBal">–</div><div class="s" id="wBalS"></div></div>
-          <div class="tile"><div class="k">Body weight effect</div><div class="v" id="wFat">–</div><div class="s" id="wFatS"></div></div>
+          <div class="tile"><div class="k" data-i18n="whatif.eaten">Eaten</div><div class="v" id="wIn">–</div><div class="s" id="wInS"></div></div>
+          <div class="tile"><div class="k" data-i18n="whatif.burned">Burned</div><div class="v" id="wOut">–</div><div class="s" id="wOutS"></div></div>
+          <div class="tile"><div class="k" data-i18n="whatif.balance">Balance</div><div class="v" id="wBal">–</div><div class="s" id="wBalS"></div></div>
+          <div class="tile"><div class="k" data-i18n="whatif.effect">Body weight effect</div><div class="v" id="wFat">–</div><div class="s" id="wFatS"></div></div>
         </div>
       </div>
 
       <details class="panel how">
-        <summary>How this is calculated</summary>
-        <p><b>BMR</b> uses Mifflin-St Jeor (weight, height, age and sex). If you enter a body fat %, it's averaged with Katch-McArdle, which uses your lean mass.</p>
-        <p><b>Daily life</b> multiplies BMR to cover a normal day at your activity level, including digesting food.</p>
-        <p><b>Treadmill</b> burn uses the ACSM walking formula from speed, incline and your weight, counting only what you burn above resting, because BMR already covers that. It assumes you don't hold the handrails. Treadmill displays usually show total calories, so they read higher.</p>
-        <p><b>Weight training</b> uses MET values for resistance training (moderate 3.5, hard 5.0). Most of a session is rest between sets, which is why it burns less than cardio.</p>
-        <p><b>Weight change</b> uses about 7,700 kcal per kg of body fat. Water and food in your gut make the scale swing day to day, so judge trends over 2–3 weeks.</p>
-        <p><b>Accuracy</b>: expect about ±10%. If your weight trend over 3–4 weeks doesn't match the estimate, adjust "Daily life" until it does. This is an estimate, not medical advice.</p>
+        <summary data-i18n="how.title">How this is calculated</summary>
+        <p data-i18n-html="how.bmr"></p>
+        <p data-i18n-html="how.life"></p>
+        <p data-i18n-html="how.tread"></p>
+        <p data-i18n-html="how.lift"></p>
+        <p data-i18n-html="how.weight"></p>
+        <p data-i18n-html="how.accuracy"></p>
       </details>
     </section>
 
-    <section class="cal" id="settings" hidden aria-label="Settings">
-      <h2>Settings</h2>
+    <section class="cal" id="settings" hidden data-i18n-aria="nav.settings">
+      <h2 data-i18n="set.title">Settings</h2>
       <div class="panel">
-        <h3>Program</h3>
-        <p class="sub">Each program keeps its own log, so switching never deletes anything.</p>
+        <h3 data-i18n="set.language">Language</h3>
+        <div class="seg two" id="langSeg" role="group" data-i18n-aria="set.language"></div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.program">Program</h3>
+        <p class="sub" data-i18n="set.programSub">Each program keeps its own log, so switching never deletes anything.</p>
         <div class="progs" id="setProgs"></div>
         <div class="btnrow">
-          <label class="ghostbtn" for="progFile" style="cursor:pointer">Import a program (.json)</label>
+          <label class="ghostbtn" for="progFile" style="cursor:pointer" data-i18n="set.import">Import a program (.json)</label>
           <input type="file" id="progFile" accept=".json,application/json" hidden>
-          <a class="ghostbtn" href="https://github.com/zain005/lift-ledger/blob/main/docs/program-format.md" target="_blank" rel="noopener" style="text-decoration:none">Program file format</a>
+          <a class="ghostbtn" href="https://github.com/zain005/lift-ledger/blob/main/docs/program-format.md" target="_blank" rel="noopener" style="text-decoration:none" data-i18n="set.format">Program file format</a>
         </div>
         <p class="msg" id="progMsg" hidden></p>
       </div>
       <div class="panel">
-        <h3>Workout screen</h3>
-        <div class="togs" id="setWorkout"></div>
-        <div class="fld" style="margin-top:4px"><label>Weight unit</label>
-          <div class="seg two" id="unitSeg">
-            <button type="button" data-u="kg">kg</button>
-            <button type="button" data-u="lb">lb</button>
+        <h3 data-i18n="set.look">Appearance</h3>
+        <div class="fld"><label data-i18n="set.theme">Theme</label>
+          <div class="seg" id="themeSeg">
+            <button type="button" data-th="light" data-i18n="set.themeLight">Light</button>
+            <button type="button" data-th="dark" data-i18n="set.themeDark">Dark</button>
+            <button type="button" data-th="system" data-i18n="set.themeSystem">Match phone</button>
           </div>
         </div>
-        <p class="note">The unit is a label only. Pick it before you start logging; it doesn't convert numbers you've already entered.</p>
       </div>
       <div class="panel">
-        <h3>App</h3>
+        <h3 data-i18n="set.workoutScreen">Workout screen</h3>
+        <div class="togs" id="setWorkout"></div>
+        <div class="fld" style="margin-top:4px"><label data-i18n="set.unit">Weight unit</label>
+          <div class="seg two" id="unitSeg">
+            <button type="button" data-u="kg" data-i18n="unit.kg">kg</button>
+            <button type="button" data-u="lb" data-i18n="unit.lb">lb</button>
+          </div>
+        </div>
+        <p class="note" data-i18n="set.unitNote">The unit is a label only. Pick it before you start logging; it doesn't convert numbers you've already entered.</p>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.app">App</h3>
         <div class="togs" id="setApp"></div>
       </div>
       <div class="panel">
-        <h3>Your details</h3>
-        <p class="sub">Used by the calorie calculator only.</p>
+        <h3 data-i18n="set.details">Your details</h3>
+        <p class="sub" data-i18n="set.detailsSub">Used by the calorie calculator only.</p>
         <div class="fgrid">
-          <div class="fld"><label for="pWeight">Weight (kg)</label><input id="pWeight" inputmode="decimal"></div>
-          <div class="fld"><label for="pHeight">Height (cm)</label><input id="pHeight" inputmode="decimal"></div>
-          <div class="fld"><label for="pAge">Age</label><input id="pAge" inputmode="numeric"></div>
-          <div class="fld"><label for="pBf">Body fat % (optional)</label><input id="pBf" inputmode="decimal"></div>
-          <div class="fld"><label for="pSex">Sex</label><select id="pSex"><option value="male">Male</option><option value="female">Female</option></select></div>
-          <div class="fld"><label for="pAct">Daily life</label><select id="pAct">
-            <option value="1.2">Desk, little walking</option>
-            <option value="1.25">Desk + walk breaks</option>
-            <option value="1.375">On your feet a lot</option>
-            <option value="1.5">Physical job</option>
+          <div class="fld"><label for="pWeight" data-i18n="p.weight">Weight (kg)</label><input id="pWeight" inputmode="decimal"></div>
+          <div class="fld"><label for="pHeight" data-i18n="p.height">Height (cm)</label><input id="pHeight" inputmode="decimal"></div>
+          <div class="fld"><label for="pAge" data-i18n="p.age">Age</label><input id="pAge" inputmode="numeric"></div>
+          <div class="fld"><label for="pBf" data-i18n="p.bf">Body fat % (optional)</label><input id="pBf" inputmode="decimal"></div>
+          <div class="fld"><label for="pSex" data-i18n="p.sex">Sex</label><select id="pSex"><option value="male" data-i18n="p.male">Male</option><option value="female" data-i18n="p.female">Female</option></select></div>
+          <div class="fld"><label for="pAct" data-i18n="p.act">Daily life</label><select id="pAct">
+            <option value="1.2" data-i18n="p.act1">Desk, little walking</option>
+            <option value="1.25" data-i18n="p.act2">Desk + walk breaks</option>
+            <option value="1.375" data-i18n="p.act3">On your feet a lot</option>
+            <option value="1.5" data-i18n="p.act4">Physical job</option>
           </select></div>
-          <div class="fld"><label for="pTarget">Target ± (%)</label><input id="pTarget" inputmode="decimal"></div>
+          <div class="fld"><label for="pTarget" data-i18n="p.target">Target ± (%)</label><input id="pTarget" inputmode="decimal"></div>
         </div>
-        <h3 style="margin-top:6px">Your week</h3>
+        <h3 style="margin-top:6px" data-i18n="p.week">Your week</h3>
         <div class="fgrid">
-          <div class="fld"><label for="wkTrain">Training days</label><input id="wkTrain" inputmode="numeric"></div>
-          <div class="fld"><label for="wkCardio">Cardio-only days</label><input id="wkCardio" inputmode="numeric"></div>
+          <div class="fld"><label for="wkTrain" data-i18n="p.trainDays">Training days</label><input id="wkTrain" inputmode="numeric"></div>
+          <div class="fld"><label for="wkCardio" data-i18n="p.cardioDays">Cardio-only days</label><input id="wkCardio" inputmode="numeric"></div>
         </div>
         <p class="note" id="wkNote"></p>
-        <h3 style="margin-top:6px">Training day</h3>
+        <h3 style="margin-top:6px" data-i18n="p.trainingDay">Training day</h3>
         <div class="fgrid three">
-          <div class="fld"><label for="tWm">Warm-up min</label><input id="tWm" inputmode="decimal"></div>
-          <div class="fld"><label for="tWs">Speed mph</label><input id="tWs" inputmode="decimal"></div>
-          <div class="fld"><label for="tWi">Incline %</label><input id="tWi" inputmode="decimal"></div>
+          <div class="fld"><label for="tWm" data-i18n="p.warmMin">Warm-up min</label><input id="tWm" inputmode="decimal"></div>
+          <div class="fld"><label for="tWs" data-i18n="p.speed">Speed mph</label><input id="tWs" inputmode="decimal"></div>
+          <div class="fld"><label for="tWi" data-i18n="p.incline">Incline %</label><input id="tWi" inputmode="decimal"></div>
         </div>
         <div class="fgrid">
-          <div class="fld"><label for="tLm">Lifting minutes</label><input id="tLm" inputmode="decimal"></div>
-          <div class="fld"><label for="tLi">Lifting effort</label><select id="tLi"><option value="3.5">Moderate</option><option value="5">Hard (RPE 7–9)</option></select></div>
+          <div class="fld"><label for="tLm" data-i18n="p.liftMin">Lifting minutes</label><input id="tLm" inputmode="decimal"></div>
+          <div class="fld"><label for="tLi" data-i18n="p.liftEffort">Lifting effort</label><select id="tLi"><option value="3.5" data-i18n="p.moderate">Moderate</option><option value="5" data-i18n="p.hard">Hard (RPE 7–9)</option></select></div>
         </div>
-        <h3 style="margin-top:6px">Cardio day</h3>
+        <h3 style="margin-top:6px" data-i18n="p.cardioDay">Cardio day</h3>
         <div class="fgrid three">
-          <div class="fld"><label for="cMin">Minutes</label><input id="cMin" inputmode="decimal"></div>
-          <div class="fld"><label for="cSpd">Speed mph</label><input id="cSpd" inputmode="decimal"></div>
-          <div class="fld"><label for="cInc">Incline %</label><input id="cInc" inputmode="decimal"></div>
+          <div class="fld"><label for="cMin" data-i18n="p.minutes">Minutes</label><input id="cMin" inputmode="decimal"></div>
+          <div class="fld"><label for="cSpd" data-i18n="p.speed">Speed mph</label><input id="cSpd" inputmode="decimal"></div>
+          <div class="fld"><label for="cInc" data-i18n="p.incline">Incline %</label><input id="cInc" inputmode="decimal"></div>
         </div>
         <p class="note" id="pAgeNote"></p>
       </div>
       <div class="panel">
-        <h3>Your data</h3>
-        <p class="note">Everything is stored in this browser on this device. Nothing is sent anywhere. Export a backup now and then, and before clearing your browser data.</p>
+        <h3 data-i18n="data.title">Your data</h3>
+        <p class="note" data-i18n="data.note">Everything is stored in this browser on this device. Nothing is sent anywhere. Export a backup now and then, and before clearing your browser data.</p>
         <div class="btnrow">
-          <button type="button" class="ghostbtn" id="expJson">Export backup (.json)</button>
-          <button type="button" class="ghostbtn" id="expCsv">Export sets (.csv)</button>
-          <label class="ghostbtn" for="impFile" style="cursor:pointer">Restore backup</label>
+          <button type="button" class="ghostbtn" id="expJson" data-i18n="data.exportJson">Export backup (.json)</button>
+          <button type="button" class="ghostbtn" id="expCsv" data-i18n="data.exportCsv">Export sets (.csv)</button>
+          <label class="ghostbtn" for="impFile" style="cursor:pointer" data-i18n="data.restore">Restore backup</label>
           <input type="file" id="impFile" accept=".json,application/json" hidden>
         </div>
         <p class="msg" id="dataMsg" hidden></p>
         <div class="btnrow">
-          <button type="button" class="ghostbtn" id="setReset">Reset screen settings</button>
-          <button type="button" class="ghostbtn danger" id="eraseAll">Erase all data</button>
+          <button type="button" class="ghostbtn" id="setReset" data-i18n="data.reset">Reset screen settings</button>
+          <button type="button" class="ghostbtn danger" id="eraseAll" data-i18n="data.erase">Erase all data</button>
         </div>
       </div>
     </section>
 
     <div class="foot" id="foot" hidden>
-      <p>Your data stays in this browser. Export a backup from Settings.</p>
+      <p data-i18n="foot.data">Your data stays in this browser. Export a backup from Settings.</p>
       <p id="footProg"></p>
     </div>
   </div>
 </main>
 
+<script src="js/i18n.js"></script>
 <script src="js/app.js"></script>
 <script src="js/calories.js"></script>
 <script>

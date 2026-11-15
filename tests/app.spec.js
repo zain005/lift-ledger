@@ -6,7 +6,7 @@ const errors = new WeakMap();
 test.beforeEach(async ({ page }) => {
   const list = []; errors.set(page, list);
   page.on("pageerror", e => list.push(e.message));
-  await page.goto("/");
+  await page.goto("./");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await expect(page.locator(".ex").first()).toBeVisible();
@@ -158,4 +158,118 @@ test("calorie calculator shows maintenance, then a balance once food is added", 
   await page.click("#uAdd");
   await expect(page.locator("#cPct")).toHaveText(/^[−+±]?\d+%$/);
   expect(await noSideScroll(page)).toBe(true);
+});
+
+/* ---------- Step 1: dark mode, translation groundwork, permanent ids ---------- */
+
+const bodyBg = page => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+
+test("dark mode can be chosen in settings and is remembered", async ({ page }) => {
+  const light = await bodyBg(page);
+  await page.click("#modeSet");
+  await page.locator('#themeSeg button[data-th="dark"]').click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  expect(await bodyBg(page)).not.toBe(light);
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.click("#modeSet");
+  await page.locator('#themeSeg button[data-th="light"]').click();
+  expect(await bodyBg(page)).toBe(light);
+});
+
+test("'Match phone' follows the phone's dark setting", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
+  expect(await bodyBg(page)).toBe("rgb(13, 16, 22)");
+  await page.emulateMedia({ colorScheme: "light" });
+  expect(await bodyBg(page)).toBe("rgb(238, 241, 245)");
+});
+
+test("every screen's text comes from the strings file", async ({ page }) => {
+  await page.locator(".ex").first().locator(".set input").first().fill("40");
+  await page.click("#dayDone");
+  await page.click(".wk.prog");
+  await page.click("#modeCal");
+  await page.selectOption("#uSel", "egg"); await page.fill("#uAmt", "3"); await page.click("#uAdd");
+  await page.selectOption("#aSel", "steps"); await page.fill("#aV1", "5000"); await page.click("#aAdd");
+  await page.click("#modeSet");
+  expect(await page.evaluate(() => [...MISSING])).toEqual([]);
+});
+
+test("Arabic-Indic digits typed on an Arabic keyboard are accepted", async ({ page }) => {
+  const box = page.locator(".ex").first().locator(".set input").first();
+  await box.fill("٦٢٫٥");
+  await expect(box).toHaveValue("62.5");
+  await page.reload();
+  await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("62.5");
+});
+
+test("right-to-left layout fits the screen on every page", async ({ page }) => {
+  await page.evaluate(() => { document.documentElement.dir = "rtl"; renderAll(); });
+  const fits = () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+  expect(await fits()).toBe(true);
+  await page.click(".wk.prog"); expect(await fits()).toBe(true);
+  await page.click("#modeCal"); expect(await fits()).toBe(true);
+  await page.click("#modeSet"); expect(await fits()).toBe(true);
+});
+
+test("logs saved by the previous version are upgraded without losing anything", async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem(PREFIX + "program", JSON.stringify("full-body-3"));
+    localStorage.setItem(PREFIX + "log-full-body-3", JSON.stringify({
+      w1: { "0-0": { s: ["55", "57.5", "60"] }, "0-3": { s: ["40", "", ""], alt: "Stiff-leg deadlift" }, done0: true, "1-2": { s: ["30", "", ""] } }
+    }));
+  });
+  await page.reload();
+  await page.locator(".wk").first().click();
+  await page.locator(".day").first().click();
+  await expect(page.locator(".day").first()).toHaveClass(/complete/);
+  await expect(page.locator(".ex").nth(0).locator(".set input").nth(2)).toHaveValue("60");
+  await expect(page.locator(".ex").nth(3)).toContainText("Stiff-leg deadlift");
+  await page.locator(".day").nth(1).click();
+  await expect(page.locator(".ex").nth(2).locator(".set input").first()).toHaveValue("30");
+  const saved = await page.evaluate(() => ({
+    log: JSON.parse(localStorage.getItem(PREFIX + "log-full-body-3")),
+    backup: localStorage.getItem(PREFIX + "log-v1-backup-full-body-3") !== null
+  }));
+  expect(saved.log.v).toBe(2);
+  expect(saved.log.w1.ex["fb-a1"].s).toEqual(["55", "57.5", "60"]);
+  expect(saved.log.w1.done["fb-a"]).toBe(true);
+  expect(saved.backup).toBe(true);
+});
+
+test("a backup restores whichever version made it", async ({ page }) => {
+  const backup = { app: "lift-ledger", format: 1, data: {
+    "ll-program": "upper-lower-4",
+    "ll-log-upper-lower-4": { w1: { "0-0": { s: ["70", "70", "70"] } } },
+    "ll-settings": { theme: "dark" }
+  } };
+  await page.click("#modeSet");
+  page.once("dialog", d => d.accept());
+  await page.setInputFiles("#impFile", { name: "b.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(backup)) });
+  await page.waitForLoadState("load");
+  await expect(page.locator("#appTitle")).toHaveText("Upper / Lower");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.locator(".wk").first().click();
+  await page.locator(".day").first().click();
+  await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("70");
+});
+
+test("the test version and the main app keep separate data", async ({ page }) => {
+  await page.locator(".ex").first().locator(".set input").first().fill("99");
+  const { keys, prefix } = await page.evaluate(() => ({ keys: Object.keys(localStorage), prefix: PREFIX }));
+  expect(prefix).toBe(new URL(page.url()).pathname.includes("/beta/") ? "llb-" : "ll-");
+  expect(keys.length).toBeGreaterThan(0);
+  expect(keys.every(k => k.startsWith(prefix))).toBe(true);
+});
+
+test("language choice sits at the top of Settings", async ({ page }) => {
+  await page.click("#modeSet");
+  const first = page.locator("#settings .panel").first();
+  await expect(first.locator("h3")).toHaveText("Language");
+  await expect(first.locator("#langSeg button")).toHaveCount(2);
+  await expect(first.locator('#langSeg button[lang="en"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(first.locator('#langSeg button[lang="ar"]')).toBeDisabled();
+  await expect(first.locator('#langSeg button[lang="ar"]')).toContainText("العربية");
 });

@@ -1,10 +1,10 @@
 /* Lift Ledger: workout log. Plain JavaScript, no dependencies.
-   All data lives in localStorage under keys that start with "ll-". */
+   All data lives in localStorage under keys that start with PREFIX (see i18n.js). */
 "use strict";
 
 const $ = id => document.getElementById(id);
 const range = n => Array.from({ length: n }, (_, k) => k);
-const KEY = { custom: "ll-programs-custom", prog: "ll-program", view: "ll-view", set: "ll-settings", log: id => "ll-log-" + id };
+const KEY = { custom: PREFIX + "programs-custom", prog: PREFIX + "program", view: PREFIX + "view", set: PREFIX + "settings", log: id => PREFIX + "log-" + id };
 function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; } catch (e) { return fallback; } }
 function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
 
@@ -12,45 +12,64 @@ const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>';
 
 /* ---------- settings ---------- */
-const SET_DEFAULT = { videos: true, cues: true, last: true, rpeBox: true, smartOpen: true, calTab: true, unit: "kg" };
+const SET_DEFAULT = { videos: true, cues: true, last: true, rpeBox: true, smartOpen: true, calTab: true, unit: "kg", theme: "system", lang: "en" };
 let SET = Object.assign({}, SET_DEFAULT, load(KEY.set, {}));
 const SET_ITEMS = [
-  ["setWorkout", "videos", "Demo links", "Exercise names link to the program's demo video, or a YouTube search."],
-  ["setWorkout", "cues", "Exercise tips", "A short form cue under each exercise."],
-  ["setWorkout", "last", "Last time", "The weights you lifted the week before."],
-  ["setWorkout", "rpeBox", "RPE explainer", "The “What does RPE mean?” box above the workout."],
-  ["setApp", "smartOpen", "Open on my next session", "Off: reopen on the week and day you last viewed."],
-  ["setApp", "calTab", "Calories tab", "Show the calorie calculator."]
+  ["setWorkout", "videos", "set.videos", "set.videosDesc"],
+  ["setWorkout", "cues", "set.cues", "set.cuesDesc"],
+  ["setWorkout", "last", "set.last", "set.lastDesc"],
+  ["setWorkout", "rpeBox", "set.rpeBox", "set.rpeBoxDesc"],
+  ["setApp", "smartOpen", "set.smartOpen", "set.smartOpenDesc"],
+  ["setApp", "calTab", "set.calTab", "set.calTabDesc"]
 ];
 function saveSettings() { store(KEY.set, SET); }
+
+/* ---------- theme ---------- */
+const darkQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+function applyTheme() {
+  const th = ["light", "dark", "system"].includes(SET.theme) ? SET.theme : "system";
+  document.documentElement.dataset.theme = th;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() || "#ffffff";
+}
+if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener("change", applyTheme);
 
 /* ---------- programs ---------- */
 const slug = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 const str = (v, max) => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, max || 200) : "";
+const sid = s => String(s || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24);
+const fail = (key, vars) => { const e = new Error(t(key, vars)); throw e; };
 
-/* Turn a program file into the shape the app uses. Throws an Error with a readable message if it's invalid. */
+/* Turn a program file into the shape the app uses. Throws an Error with a readable message if it's invalid.
+   Every day and exercise gets a permanent id; logs are stored by id, so reordering never moves history. */
 function normalizeProgram(raw, builtin) {
-  if (!raw || typeof raw !== "object") throw new Error("The file isn't a program (expected a JSON object).");
+  if (!raw || typeof raw !== "object") fail("err.notProgram");
   const name = str(raw.name, 40).trim();
-  if (!name) throw new Error("The program needs a \"name\".");
+  if (!name) fail("err.noName");
   const weeks = raw.weeks === undefined ? 8 : Math.floor(+raw.weeks);
-  if (!(weeks >= 1 && weeks <= 12)) throw new Error("\"weeks\" must be between 1 and 12.");
+  if (!(weeks >= 1 && weeks <= 12)) fail("err.weeks");
   const parseDays = (days, where) => {
-    if (!Array.isArray(days) || days.length < 1 || days.length > 7) throw new Error(where + ": \"days\" must be a list of 1 to 7 days.");
+    if (!Array.isArray(days) || days.length < 1 || days.length > 7) fail("err.days", { where });
+    const seenDay = new Set();
     return days.map((d, di) => {
-      if (!d || !Array.isArray(d.exercises) || !d.exercises.length || d.exercises.length > 15)
-        throw new Error(where + ", day " + (di + 1) + ": \"exercises\" must be a list of 1 to 15 exercises.");
+      if (!d || !Array.isArray(d.exercises) || !d.exercises.length || d.exercises.length > 15) fail("err.exercises", { where, day: di + 1 });
+      const dayId = sid(d.id) || "d" + (di + 1);
+      if (seenDay.has(dayId)) fail("err.dupId", { id: dayId });
+      seenDay.add(dayId);
+      const seenEx = new Set();
       return {
-        name: str(d.name, 30).trim() || "Day " + (di + 1),
-        short: str(d.short, 8).trim(),
+        id: dayId, name: str(d.name, 30).trim() || t("day.n", { n: di + 1 }), short: str(d.short, 8).trim(),
         exercises: d.exercises.map((e, ei) => {
           const en = e && str(e.name, 60).trim();
-          if (!en) throw new Error(where + ", day " + (di + 1) + ", exercise " + (ei + 1) + ": missing \"name\".");
+          if (!en) fail("err.exName", { where, day: di + 1, ex: ei + 1 });
           const sets = Math.floor(+e.sets);
-          if (!(sets >= 1 && sets <= 10)) throw new Error("\"" + en + "\": \"sets\" must be 1 to 10.");
+          if (!(sets >= 1 && sets <= 10)) fail("err.sets", { name: en });
+          const exId = sid(e.id) || dayId + "e" + (ei + 1);
+          if (seenEx.has(exId)) fail("err.dupId", { id: exId });
+          seenEx.add(exId);
           const video = str(e.video, 300);
           return {
-            name: en, sets, reps: str(e.reps, 12) || "", type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
+            id: exId, name: en, sets, reps: str(e.reps, 12) || "", type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
             alts: Array.isArray(e.alts) ? e.alts.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
             video: /^https:\/\//.test(video) ? video : ""
           };
@@ -58,60 +77,94 @@ function normalizeProgram(raw, builtin) {
       };
     });
   };
-  const baseDays = parseDays(raw.days, "Program");
+  const baseDays = parseDays(raw.days, t("err.where.program"));
   let phases = Array.isArray(raw.phases) && raw.phases.length ? raw.phases : [{ name: "", weeks: [1, weeks] }];
   phases = phases.map((ph, pi) => {
     const w = Array.isArray(ph.weeks) ? ph.weeks : [1, weeks];
     const from = Math.max(1, Math.floor(+w[0] || 1)), to = Math.min(weeks, Math.floor(+w[w.length - 1] || weeks));
-    if (to < from) throw new Error("Phase " + (pi + 1) + " has an empty week range.");
-    const days = ph.days ? parseDays(ph.days, "Phase " + (pi + 1)) : baseDays;
-    if (days.length !== baseDays.length) throw new Error("Phase " + (pi + 1) + " must have the same number of days as the program.");
+    if (to < from) fail("err.phaseRange", { n: pi + 1 });
+    const days = ph.days ? parseDays(ph.days, t("err.where.phase", { n: pi + 1 })) : baseDays;
+    if (days.length !== baseDays.length) fail("err.phaseDays", { n: pi + 1 });
     const rpe = ph.rpe && typeof ph.rpe === "object" ? ph.rpe : {};
     return {
       name: str(ph.name, 30), from, to,
+      dayIds: days.map(d => d.id),
       days: days.map(d => d.exercises.map(e => Object.assign({}, e, { rpe: e.rpe || str(rpe[e.type], 16) })))
     };
   }).sort((a, b) => a.from - b.from);
   return {
     id: slug(raw.id) || slug(name), name, builtin: !!builtin,
     description: str(raw.description, 200), schedule: str(raw.schedule, 300), weeks,
-    dayNames: baseDays.map(d => d.name), dayShort: baseDays.map(d => d.short),
+    dayIds: baseDays.map(d => d.id), dayNames: baseDays.map(d => d.name), dayShort: baseDays.map(d => d.short),
     phases
   };
 }
 
 let PROGRAMS = [];          // normalized programs, built-in first
 let P = null;               // current program
-let LOGS = {};              // per program id: { w1: { "0-3": { s: ["", ""], alt? }, done0: true } }
+let LOGS = {};              // per program id: { v: 2, w1: { ex: { [exerciseId]: { s: ["", ""], alt? } }, done: { [dayId]: true } } }
 let logs = {};
 let view = { week: 1, day: 0 };
 
 const progById = id => PROGRAMS.find(p => p.id === id);
 const DPW = () => P.dayNames.length;
 const NW = () => P.weeks;
-const phaseOf = w => P.phases.find(p => w >= p.from && w <= p.to) || P.phases[P.phases.length - 1];
+const phaseFor = (p, w) => p.phases.find(x => w >= x.from && w <= x.to) || p.phases[p.phases.length - 1];
+const phaseOf = w => phaseFor(P, w);
 const phaseNum = w => P.phases.indexOf(phaseOf(w)) + 1;
 const dayList = (w, d) => phaseOf(w).days[d];
+const dayIdOf = (w, d) => phaseOf(w).dayIds[d];
 const STATS = () => NW() + 1;   // the Stats "week"
 
-function logsFor(id) { return LOGS[id] || (LOGS[id] = load(KEY.log(id), {})); }
+/* Logs saved before version 2 were keyed by position ("day-exercise" and "done<day>").
+   Convert them once to id-based keys, keeping an untouched copy of the original. */
+function migrateLogs(p, L) {
+  if (!L || L.v === 2) return L || { v: 2 };
+  store(PREFIX + "log-v1-backup-" + p.id, L);
+  const out = { v: 2 };
+  Object.keys(L).forEach(wk => {
+    const m = /^w(\d+)$/.exec(wk); if (!m || !L[wk] || typeof L[wk] !== "object") return;
+    const w = +m[1], ph = phaseFor(p, w), old = L[wk], nw = { ex: {}, done: {} };
+    Object.keys(old).forEach(k => {
+      let mm;
+      if ((mm = /^done(\d+)$/.exec(k)) && old[k] && ph.dayIds[+mm[1]]) nw.done[ph.dayIds[+mm[1]]] = true;
+      else if ((mm = /^(\d+)-(\d+)$/.exec(k)) && ph.days[+mm[1]] && ph.days[+mm[1]][+mm[2]]) nw.ex[ph.days[+mm[1]][+mm[2]].id] = old[k];
+    });
+    out[wk] = nw;
+  });
+  return out;
+}
+function logsFor(p) {
+  if (!LOGS[p.id]) {
+    const raw = load(KEY.log(p.id), null);
+    const L = migrateLogs(p, raw);
+    if (raw && raw.v !== 2) store(KEY.log(p.id), L);
+    LOGS[p.id] = L;
+  }
+  return LOGS[p.id];
+}
 function useProgram(id) {
   P = progById(id) || PROGRAMS[0];
-  logs = logsFor(P.id);
+  logs = logsFor(P);
   store(KEY.prog, P.id);
 }
 
 /* ---------- log access ---------- */
-function entry(w, d, i) {
-  const wk = logs["w" + w] || (logs["w" + w] = {});
-  return wk[d + "-" + i] || (wk[d + "-" + i] = { s: Array(dayList(w, d)[i].sets).fill("") });
+function weekLog(w, create) {
+  const k = "w" + w;
+  if (!logs[k] && create) logs[k] = { ex: {}, done: {} };
+  return logs[k];
 }
-function peek(w, d, i) { const wk = logs["w" + w]; return wk && wk[d + "-" + i]; }
+function entry(w, d, i) {
+  const wk = weekLog(w, true), ex = dayList(w, d)[i];
+  return wk.ex[ex.id] || (wk.ex[ex.id] = { s: Array(ex.sets).fill("") });
+}
+function peek(w, d, i) { const wk = weekLog(w); const ex = dayList(w, d)[i]; return wk && ex && wk.ex[ex.id]; }
 function persist() { store(KEY.log(P.id), logs); }
 function saveView() { store(KEY.view, view); }
 
 /* ---------- derived state ---------- */
-function isDayDone(w, d) { return !!(logs["w" + w] && logs["w" + w]["done" + d]); }
+function isDayDone(w, d) { const wk = weekLog(w); return !!(wk && wk.done[dayIdOf(w, d)]); }
 function weekComplete(w) { return range(DPW()).every(d => isDayDone(w, d)); }
 /* A session is missed when it isn't done but a later session (in program order) is. */
 function lastDoneIndex() {
@@ -142,16 +195,16 @@ function currentSpot() {
   const w = Math.floor((last + 1) / D) + 1;
   return { week: w, day: smartDay(w) };
 }
-/* Most recent earlier week with this exercise logged: same day first, then any day */
-function lastTime(w, d0, name) {
+/* Most recent earlier week with this exercise logged: same exercise id first, then the same name on any day */
+function lastTime(w, d0, ex) {
   for (let pw = w - 1; pw >= 1; pw--) {
+    const wk = logs["w" + pw]; if (!wk) continue;
     const days = phaseOf(pw).days;
-    const order = [d0].concat(range(days.length).reverse().filter(d => d !== d0));
-    for (const d of order) {
-      const idx = days[d].findIndex(e => e.name === name);
-      if (idx < 0) continue;
-      const e = peek(pw, d, idx);
-      if (e && e.s && e.s.some(v => v !== "")) return { week: pw, s: e.s.slice(0, days[d][idx].sets), actual: e.alt || name };
+    const cands = [];
+    days.forEach((day, d) => day.forEach(e => { if (e.id === ex.id) cands.unshift(e); else if (e.name === ex.name) cands.push(e); }));
+    for (const e of cands) {
+      const en = wk.ex[e.id];
+      if (en && en.s && en.s.some(v => v !== "")) return { week: pw, s: en.s.slice(0, e.sets), actual: en.alt || e.name };
     }
   }
   return null;
@@ -167,7 +220,7 @@ function nameNode(n, url) {
   const a = document.createElement("a");
   a.href = url; a.target = "_blank"; a.rel = "noopener"; a.className = "vlink";
   a.append(n + " "); a.insertAdjacentHTML("beforeend", PLAY_SVG);
-  a.setAttribute("aria-label", n + " demo");
+  a.setAttribute("aria-label", t("demo.aria", { name: n }));
   return a;
 }
 
@@ -186,8 +239,9 @@ function renderWeeks() {
     const wc = weekComplete(w), wm = weekHasMissed(w);
     b.type = "button"; b.className = "wk" + (wc ? " complete" : "") + (wm ? " has-missed" : "");
     b.setAttribute("aria-pressed", String(w === view.week));
-    b.setAttribute("aria-label", "Week " + w + (wc ? ", done" : "") + (wm ? ", needs attention" : ""));
-    b.innerHTML = "<small>WK</small>" + w;
+    b.setAttribute("aria-label", t("week.aria", { n: w }) + (wc ? ", " + t("status.done") : "") + (wm ? ", " + t("week.attention") : ""));
+    b.innerHTML = "<small></small>" + w;
+    b.querySelector("small").textContent = t("week.short");
     b.addEventListener("click", () => goWeek(w));
     el.appendChild(b);
   }
@@ -195,13 +249,14 @@ function renderWeeks() {
   const pb = document.createElement("button");
   pb.type = "button"; pb.className = "wk prog";
   pb.setAttribute("aria-pressed", String(view.week === STATS()));
-  pb.setAttribute("aria-label", "Progress");
-  pb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-6 4 3 7-9"/></svg><small>STATS</small>';
+  pb.setAttribute("aria-label", t("stats.aria"));
+  pb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-6 4 3 7-9"/></svg><small></small>';
+  pb.querySelector("small").textContent = t("stats.short");
   pb.addEventListener("click", () => goWeek(STATS()));
   el.appendChild(pb);
-  if (view.week === STATS()) { $("phase").textContent = "Your progress"; return; }
+  if (view.week === STATS()) { $("phase").textContent = t("stats.title"); return; }
   const ph = phaseOf(view.week);
-  $("phase").textContent = P.phases.length > 1 ? "Phase " + phaseNum(view.week) + (ph.name ? " · " + ph.name : "") : ph.name;
+  $("phase").textContent = P.phases.length > 1 ? t("phase.n", { n: phaseNum(view.week) }) + (ph.name ? " · " + ph.name : "") : ph.name;
 }
 
 function renderDays() {
@@ -213,13 +268,14 @@ function renderDays() {
     const done = isDayDone(view.week, d), missed = isMissed(view.week, d), gaps = dayHasGaps(view.week, d);
     const b = document.createElement("button");
     b.type = "button"; b.className = "day" + (done ? " complete" : missed ? " missed" : "") + (gaps ? " has-gaps" : "");
-    if (gaps) b.title = "Some sets have no weight logged";
+    if (gaps) b.title = t("day.gapsTitle");
     b.setAttribute("aria-pressed", String(d === view.day));
-    const status = done ? "Done" : missed ? "Missed" : "To do";
-    b.setAttribute("aria-label", "Day " + (d + 1) + ", " + P.dayNames[d] + ", " + status);
+    const status = done ? t("status.done") : missed ? t("status.missed") : t("status.todo");
+    b.setAttribute("aria-label", t("day.n", { n: d + 1 }) + ", " + P.dayNames[d] + ", " + status);
     const sh = P.dayShort[d];
-    const sub = sh ? (done ? "✓ " : "") + sh : (done ? "✓ Done" : status);
-    b.innerHTML = (D > 4 ? "D" : "Day ") + (d + 1) + "<small></small>";
+    const sub = sh ? (done ? "✓ " : "") + sh : (done ? "✓ " + status : status);
+    b.innerHTML = "<span></span><small></small>";
+    b.querySelector("span").textContent = (D > 4 ? t("day.shortN", { n: d + 1 }) : t("day.n", { n: d + 1 }));
     b.querySelector("small").textContent = sub;
     b.addEventListener("click", () => { view.day = d; saveView(); renderAll(); window.scrollTo({ top: 0 }); });
     el.appendChild(b);
@@ -228,16 +284,16 @@ function renderDays() {
 
 function renderHead() {
   const done = isDayDone(view.week, view.day), missed = isMissed(view.week, view.day);
-  $("dayTitle").textContent = "Wk " + view.week + " · " + P.dayNames[view.day];
+  $("dayTitle").textContent = t("day.title", { w: view.week, name: P.dayNames[view.day] });
   const st = $("dayStatus");
   st.hidden = !(done || missed);
   st.className = "status " + (done ? "done" : "missed");
-  st.textContent = done ? "✓ Done" : "Missed";
+  st.textContent = done ? "✓ " + t("status.done") : t("status.missed");
   const btn = $("dayDone");
   btn.setAttribute("aria-pressed", String(done));
-  btn.innerHTML = done
-    ? CHECK_SVG + "Day " + (view.day + 1) + " done <small>· tap to undo</small>"
-    : CHECK_SVG + "Mark day " + (view.day + 1) + " done";
+  btn.innerHTML = CHECK_SVG + "<span></span>" + (done ? " <small></small>" : "");
+  btn.querySelector("span").textContent = done ? t("dayDone.done", { n: view.day + 1 }) : t("dayDone.mark", { n: view.day + 1 });
+  if (done) btn.querySelector("small").textContent = "· " + t("dayDone.undo");
   $("list").classList.toggle("is-done", done);
   updateEmptyWarn();
 }
@@ -246,17 +302,17 @@ function updateEmptyWarn() {
   if (!isDayDone(view.week, view.day) || view.week === STATS()) { el.hidden = true; return; }
   const n = $("list").querySelectorAll(".set input.empty").length;
   el.hidden = n === 0;
-  el.textContent = n + (n === 1 ? " set has" : " sets have") + " no weight logged. Fill in the red boxes (enter 0 for bodyweight).";
+  el.textContent = tn("warn.empty", n);
 }
 $("dayDone").addEventListener("click", () => {
-  const w = view.week, key = "done" + view.day;
-  const wk = logs["w" + w] || (logs["w" + w] = {});
-  if (wk[key]) delete wk[key]; else wk[key] = true;
+  const w = view.week, wk = weekLog(w, true), id = dayIdOf(w, view.day);
+  if (wk.done[id]) delete wk.done[id]; else wk.done[id] = true;
   persist(); renderWeeks(); renderDays(); renderHead();
 });
 
 /* ---------- render: workout ---------- */
 const fmt = v => v === "" || v === undefined ? "–" : v;
+const unitLabel = () => t(SET.unit === "lb" ? "unit.lb" : "unit.kg");
 
 function renderList() {
   const list = $("list"); list.innerHTML = "";
@@ -274,14 +330,15 @@ function renderList() {
     nm.append(h);
     if (e.alt) {
       const sw = document.createElement("p"); sw.className = "swapped";
-      sw.append("Instead of "); const b = document.createElement("b"); b.textContent = name; sw.append(b);
+      sw.append(t("swap.insteadOf") + " "); const b = document.createElement("b"); b.textContent = name; sw.append(b);
       nm.append(sw);
     }
     const pr = document.createElement("div"); pr.className = "presc";
-    pr.innerHTML = '<span class="sr"></span>' + (rpe ? '<span class="pill"></span>' : '') + (e.alt ? '<span class="tag">Swapped</span>' : '');
+    pr.innerHTML = '<span class="sr" dir="ltr"></span>' + (rpe ? '<span class="pill"></span>' : '') + (e.alt ? '<span class="tag"></span>' : '');
     pr.querySelector(".sr").innerHTML = sets + "<i>×</i>";
     pr.querySelector(".sr").append(reps);
-    if (rpe) pr.querySelector(".pill").textContent = "RPE " + rpe;
+    if (rpe) { const pl = pr.querySelector(".pill"); pl.textContent = t("rpe.pill", { rpe }); }
+    if (e.alt) pr.querySelector(".tag").textContent = t("swap.tag");
     nm.append(pr);
     top.append(num, nm);
     card.append(top);
@@ -292,12 +349,14 @@ function renderList() {
     for (let s = 0; s < sets; s++) {
       const id = "w" + w + "d" + d + "e" + i + "s" + s;
       const wrap = document.createElement("div"); wrap.className = "set";
-      wrap.innerHTML = '<label for="' + id + '">Set ' + (s + 1) + '</label><div class="field"><input id="' + id + '" type="text" inputmode="decimal" autocomplete="off" placeholder="0"><span class="unit">' + (SET.unit === "lb" ? "lb" : "kg") + '</span></div>';
+      wrap.innerHTML = '<label for="' + id + '"></label><div class="field"><input id="' + id + '" type="text" inputmode="decimal" autocomplete="off" placeholder="0"><span class="unit"></span></div>';
+      wrap.querySelector("label").textContent = t("sets.n", { n: s + 1 });
+      wrap.querySelector(".unit").textContent = unitLabel();
       const inp = wrap.querySelector("input");
       inp.value = (e.s && e.s[s]) || "";
       inp.classList.toggle("empty", !inp.value);
       inp.addEventListener("input", () => {
-        const clean = inp.value.replace(",", ".").replace(/[^0-9.]/g, "").slice(0, 6);
+        const clean = cleanNumber(inp.value, 6);
         if (clean !== inp.value) inp.value = clean;
         entry(w, d, i).s[s] = clean; persist();
         inp.classList.toggle("empty", !clean); updateEmptyWarn();
@@ -307,35 +366,35 @@ function renderList() {
     }
     card.append(setsEl);
 
-    const lt = SET.last ? lastTime(w, d, name) : null;
+    const lt = SET.last ? lastTime(w, d, ex) : null;
     if (lt) {
       const p = document.createElement("p"); p.className = "last";
-      p.append("Last time (week " + lt.week + (lt.actual !== shown ? ", " + lt.actual : "") + "): ");
-      const b = document.createElement("b"); b.textContent = lt.s.map(fmt).join(" · "); p.append(b, " " + SET.unit);
+      p.append(t(lt.actual !== shown ? "last.withName" : "last.plain", { w: lt.week, name: lt.actual }) + " ");
+      const b = document.createElement("b"); b.dir = "ltr"; b.textContent = lt.s.map(fmt).join(" · "); p.append(b, " " + unitLabel());
       card.appendChild(p);
     }
 
     if (alts.length) {
       const det = document.createElement("details"); det.className = "alts";
-      const sum = document.createElement("summary"); sum.textContent = e.alt ? "Change exercise" : "Swap exercise";
+      const sum = document.createElement("summary"); sum.textContent = e.alt ? t("swap.change") : t("swap.open");
       const ul = document.createElement("ul");
       [name].concat(alts).filter(s => s !== shown).forEach(s => {
         const li = document.createElement("li");
         const btn = document.createElement("button"); btn.type = "button";
         if (s === name) btn.className = "orig";
-        const lbl = document.createElement("span"); lbl.textContent = s + (s === name ? " (planned)" : "");
+        const lbl = document.createElement("span"); lbl.textContent = s + (s === name ? " " + t("swap.planned") : "");
         btn.appendChild(lbl);
         btn.addEventListener("click", () => { const en = entry(w, d, i); if (s === name) delete en.alt; else en.alt = s; persist(); renderList(); });
         li.appendChild(btn);
         const vu = demoUrl(s, s === name ? ex.video : "");
         if (vu) {
           const va = document.createElement("a"); va.href = vu; va.target = "_blank"; va.rel = "noopener";
-          va.className = "vbtn"; va.innerHTML = PLAY_SVG; va.setAttribute("aria-label", s + " demo");
+          va.className = "vbtn"; va.innerHTML = PLAY_SVG; va.setAttribute("aria-label", t("demo.aria", { name: s }));
           li.appendChild(va);
         }
         ul.appendChild(li);
       });
-      const note = document.createElement("p"); note.textContent = "The swap applies to this week only. Keep the same sets, reps and RPE.";
+      const note = document.createElement("p"); note.textContent = t("swap.note");
       det.append(sum, ul, note);
       card.appendChild(det);
     }
@@ -345,7 +404,7 @@ function renderList() {
 
 /* ---------- render: progress ---------- */
 const num = v => { const n = parseFloat(v); return isFinite(n) && n > 0 ? n : 0; };
-const fmtKg = n => n >= 10000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : Math.round(n).toLocaleString("en-US");
+const fmtKg = n => n >= 10000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : fmtInt(n);
 const fmtW = n => (Math.round(n * 10) / 10).toString();
 
 function computeStats() {
@@ -396,7 +455,7 @@ function volumeChart(weekVol) {
   const top = Math.max(nice * 3, 1);
   const y = v => T + (H - T - B) * (1 - v / top);
   const bw = (W - L - R) / n, gap = Math.min(6, bw * 0.2);
-  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Weekly training volume">';
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + escAttr(t("vol.aria")) + '" direction="ltr">';
   for (let k = 0; k <= 3; k++) {
     const v = nice * k, yy = y(v).toFixed(1);
     s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--line)" stroke-width="1"' + (k ? ' stroke-dasharray="2 3"' : '') + '/>';
@@ -406,93 +465,101 @@ function volumeChart(weekVol) {
     const x0 = L + i * bw + gap / 2, w = bw - gap, x1 = x0 + w, yb = y(0), yt = y(v), r = Math.min(4, (yb - yt) / 2, w / 2);
     if (v > 0) s += '<path d="M' + x0 + ',' + yb + 'V' + (yt + r) + 'Q' + x0 + ',' + yt + ' ' + (x0 + r) + ',' + yt + 'H' + (x1 - r) + 'Q' + x1 + ',' + yt + ' ' + x1 + ',' + (yt + r) + 'V' + yb + 'Z" fill="var(--accent)"/>';
     s += '<rect class="hit" data-i="' + i + '" x="' + (L + i * bw) + '" y="' + T + '" width="' + bw + '" height="' + (H - T - B) + '" fill="transparent" style="cursor:pointer"/>';
-    s += '<text x="' + (x0 + w / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)">W' + (i + 1) + '</text>';
+    s += '<text x="' + (x0 + w / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)">' + escAttr(t("week.chartN", { n: i + 1 })) + '</text>';
   });
   return s + '</svg>';
 }
 
 function renderProgress() {
-  const st = computeStats(), el = $("progress"), D = DPW(), total = NW() * D, U = SET.unit;
+  const st = computeStats(), el = $("progress"), D = DPW(), total = NW() * D, U = escAttr(unitLabel());
   const pct = Math.round(st.done / total * 100);
   const best = st.weekVol.map((v, i) => [v, i]).filter(([v]) => v > 0).reduce((b, c) => (c[0] > (b ? b[0] : -1) ? c : b), null);
   const gains = st.liftList.filter(l => l.weeks.length > 1);
   const ups = gains.filter(l => l.diff > 0).length;
+  const T = k => escAttr(t(k));
 
   let h = '<h2 id="progTitle"></h2><div class="tiles">' +
-    '<div class="tile"><div class="k">Sessions done</div><div class="v">' + st.done + '<small> / ' + total + '</small></div><div class="meter"><i style="width:' + pct + '%"></i></div><div class="s">' + pct + '% of the program</div></div>' +
-    '<div class="tile"><div class="k">Missed</div><div class="v">' + st.missed + '</div><div class="s">' + (st.missed ? 'Skipped before a later session' : 'None so far') + '</div></div>' +
-    '<div class="tile"><div class="k">Total volume</div><div class="v">' + fmtKg(st.totalVol) + '<small> ' + U + '</small></div><div class="s">Weight × reps, all logged sets</div></div>' +
-    '<div class="tile"><div class="k">Lifts going up</div><div class="v">' + ups + '<small> / ' + gains.length + '</small></div><div class="s">' + (gains.length ? 'Heavier than the first time' : 'Log 2+ weeks to compare') + '</div></div>' +
+    '<div class="tile"><div class="k">' + T("stats.sessions") + '</div><div class="v">' + st.done + '<small> / ' + total + '</small></div><div class="meter"><i style="width:' + pct + '%"></i></div><div class="s">' + escAttr(t("stats.pctProgram", { pct })) + '</div></div>' +
+    '<div class="tile"><div class="k">' + T("stats.missed") + '</div><div class="v">' + st.missed + '</div><div class="s">' + T(st.missed ? "stats.missedSome" : "stats.missedNone") + '</div></div>' +
+    '<div class="tile"><div class="k">' + T("stats.volume") + '</div><div class="v">' + fmtKg(st.totalVol) + '<small> ' + U + '</small></div><div class="s">' + T("stats.volumeDesc") + '</div></div>' +
+    '<div class="tile"><div class="k">' + T("stats.up") + '</div><div class="v">' + ups + '<small> / ' + gains.length + '</small></div><div class="s">' + T(gains.length ? "stats.upDesc" : "stats.upNone") + '</div></div>' +
     '</div>';
 
   const cols = ["22px"];
   P.phases.forEach((ph, pi) => { if (pi) cols.push("4px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
   const isBreak = w => P.phases.some((ph, pi) => pi && ph.from === w);
-  h += '<div class="panel"><h3>Sessions by week</h3><div class="sessgrid" style="grid-template-columns:' + cols.join(" ") + '"><span></span>';
-  for (let w = 1; w <= NW(); w++) { if (isBreak(w)) h += '<span></span>'; h += '<span class="lbl">W' + w + '</span>'; }
+  h += '<div class="panel"><h3>' + T("stats.byWeek") + '</h3><div class="sessgrid" style="grid-template-columns:' + cols.join(" ") + '"><span></span>';
+  for (let w = 1; w <= NW(); w++) { if (isBreak(w)) h += '<span></span>'; h += '<span class="lbl">' + escAttr(t("week.chartN", { n: w })) + '</span>'; }
   for (let d = 0; d < D; d++) {
-    h += '<span class="lbl">D' + (d + 1) + '</span>';
+    h += '<span class="lbl">' + escAttr(t("day.shortN", { n: d + 1 })) + '</span>';
     for (let w = 1; w <= NW(); w++) {
       if (isBreak(w)) h += '<span></span>';
       const dn = isDayDone(w, d), ms = isMissed(w, d);
-      h += '<span class="cell' + (dn ? ' done' : ms ? ' missed' : '') + '" title="Week ' + w + ' Day ' + (d + 1) + (dn ? ': done' : ms ? ': missed' : ': to do') + '">' + (dn ? '✓' : ms ? '✕' : '') + '</span>';
+      h += '<span class="cell' + (dn ? ' done' : ms ? ' missed' : '') + '" title="' + escAttr(t("stats.cellTitle", { w, d: d + 1, status: t(dn ? "status.done" : ms ? "status.missed" : "status.todo") })) + '">' + (dn ? '✓' : ms ? '✕' : '') + '</span>';
     }
   }
-  h += '</div><div class="legend"><span><i class="done"></i>Done</span><span><i class="missed"></i>Missed</span><span><i></i>To do</span></div></div>';
+  h += '</div><div class="legend"><span><i class="done"></i>' + T("status.done") + '</span><span><i class="missed"></i>' + T("status.missed") + '</span><span><i></i>' + T("status.todo") + '</span></div></div>';
 
-  h += '<div class="panel chart"><h3>Weekly volume (' + U + ')</h3><p class="sub">Total weight moved each week, assuming the bottom of each rep range.</p>' +
+  h += '<div class="panel chart"><h3>' + escAttr(t("stats.volTitle", { unit: unitLabel() })) + '</h3><p class="sub">' + T("stats.volSub") + '</p>' +
     volumeChart(st.weekVol) + '<div class="readout" id="volReadout"></div></div>';
 
-  h += '<div class="panel"><h3>Strength by exercise</h3><p class="sub">Heaviest set each week, first logged vs latest.</p><div class="lifts">';
-  if (!st.liftList.length) h += '<p class="empty">Log weights on any workout and your lifts will show up here.</p>';
+  h += '<div class="panel"><h3>' + T("stats.strength") + '</h3><p class="sub">' + T("stats.strengthSub") + '</p><div class="lifts">';
+  if (!st.liftList.length) h += '<p class="empty">' + T("stats.liftsEmpty") + '</p>';
   st.liftList.forEach(l => {
     const cls = l.weeks.length < 2 ? '' : l.diff > 0 ? ' up' : l.diff < 0 ? ' down' : '';
-    const delta = l.weeks.length < 2 ? '<span style="color:var(--muted)">–</span><small>1 week logged</small>'
-      : (l.diff > 0 ? '+' : l.diff < 0 ? '−' : '±') + fmtW(Math.abs(l.diff)) + ' ' + U + '<small>' + (l.diff >= 0 ? '+' : '−') + Math.abs(Math.round(l.pct)) + '%</small>';
-    h += '<div class="lift"><div><div class="n"></div><div class="r">' +
-      (l.weeks.length < 2 ? 'W' + l.firstW + ': ' + fmtW(l.first) + ' ' + U : 'W' + l.firstW + ' ' + fmtW(l.first) + ' → W' + l.lastW + ' ' + fmtW(l.last) + ' ' + U) +
+    const delta = l.weeks.length < 2 ? '<span style="color:var(--muted)">–</span><small>' + T("stats.oneWeek") + '</small>'
+      : '<span dir="ltr">' + (l.diff > 0 ? '+' : l.diff < 0 ? '−' : '±') + fmtW(Math.abs(l.diff)) + ' ' + U + '</span><small dir="ltr">' + (l.diff >= 0 ? '+' : '−') + Math.abs(Math.round(l.pct)) + '%</small>';
+    const wl = n => escAttr(t("week.chartN", { n }));
+    h += '<div class="lift"><div><div class="n"></div><div class="r" dir="ltr">' +
+      (l.weeks.length < 2 ? wl(l.firstW) + ': ' + fmtW(l.first) + ' ' + U : wl(l.firstW) + ' ' + fmtW(l.first) + ' → ' + wl(l.lastW) + ' ' + fmtW(l.last) + ' ' + U) +
       '</div></div>' + sparkline(l) + '<div class="d' + cls + '">' + delta + '</div></div>';
   });
   h += '</div></div>';
   el.innerHTML = h;
-  $("progTitle").textContent = "Your progress · " + P.name;
+  $("progTitle").textContent = t("stats.heading", { name: P.name });
   el.querySelectorAll(".lift .n").forEach((n, i) => { n.textContent = st.liftList[i].name; });
 
   const ro = $("volReadout");
-  const show = i => { ro.innerHTML = 'Week ' + (i + 1) + ': <b>' + Math.round(st.weekVol[i]).toLocaleString("en-US") + ' ' + U + '</b>' + (st.weekVol[i] ? '' : ' (nothing logged)'); };
-  if (best) ro.innerHTML = 'Best week: <b>Week ' + (best[1] + 1) + ', ' + Math.round(best[0]).toLocaleString("en-US") + ' ' + U + '</b>. Tap a bar for details.';
-  else ro.textContent = 'Log weights to see your weekly volume.';
+  const show = i => { ro.textContent = t(st.weekVol[i] ? "stats.weekVol" : "stats.weekVolNone", { n: i + 1, v: fmtInt(st.weekVol[i]), unit: unitLabel() }); };
+  ro.textContent = best ? t("stats.bestWeek", { n: best[1] + 1, v: fmtInt(best[0]), unit: unitLabel() }) : t("stats.volEmpty");
   el.querySelectorAll(".hit").forEach(r => { const i = +r.dataset.i; r.addEventListener("click", () => show(i)); r.addEventListener("mouseenter", () => show(i)); });
 }
 
 /* ---------- settings page ---------- */
 function doneCount(p) {
-  const L = logsFor(p.id), D = p.dayNames.length; let n = 0;
-  for (let w = 1; w <= p.weeks; w++) for (let d = 0; d < D; d++) if (L["w" + w] && L["w" + w]["done" + d]) n++;
+  const L = logsFor(p), D = p.dayNames.length; let n = 0;
+  for (let w = 1; w <= p.weeks; w++) {
+    const wk = L["w" + w]; if (!wk) continue;
+    const ph = phaseFor(p, w);
+    for (let d = 0; d < D; d++) if (wk.done && wk.done[ph.dayIds[d]]) n++;
+  }
   return [n, p.weeks * D];
 }
 function showMsg(id, text, err) { const m = $(id); m.hidden = !text; m.textContent = text || ""; m.classList.toggle("err", !!err); }
 function setProgram(id) { useProgram(id); view = currentSpot(); saveView(); }
 
+function renderSeg(id, key, value) {
+  document.querySelectorAll("#" + id + " button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset[key] === value)));
+}
 function renderSettings() {
   const pg = $("setProgs"); pg.innerHTML = "";
   PROGRAMS.forEach(p => {
-    const [n, t] = doneCount(p);
+    const [n, tot] = doneCount(p);
     const wrap = document.createElement("div"); wrap.className = "pcard-wrap";
     const b = document.createElement("button"); b.type = "button"; b.className = "pcard";
     b.setAttribute("aria-pressed", String(p.id === P.id));
-    b.innerHTML = '<span class="dot" aria-hidden="true"></span><span><b></b><small></small><small></small><span class="meter"><i style="width:' + Math.round(n / t * 100) + '%"></i></span></span>';
+    b.innerHTML = '<span class="dot" aria-hidden="true"></span><span><b></b><small></small><small></small><span class="meter"><i style="width:' + Math.round(n / tot * 100) + '%"></i></span></span>';
     const sm = b.querySelectorAll("small");
     b.querySelector("b").textContent = p.name;
-    sm[0].textContent = (p.description || p.dayNames.length + " days a week") + (p.builtin ? "" : " · imported");
-    sm[1].textContent = n + " of " + t + " sessions done" + (p.id === P.id ? " · current" : "");
+    sm[0].textContent = (p.description || tn("prog.daysWeek", p.dayNames.length)) + (p.builtin ? "" : " · " + t("prog.imported"));
+    sm[1].textContent = t("prog.done", { n, total: tot }) + (p.id === P.id ? " · " + t("prog.current") : "");
     b.addEventListener("click", () => { if (p.id !== P.id) { setProgram(p.id); renderSettings(); } });
     wrap.appendChild(b);
     if (!p.builtin) {
       const acts = document.createElement("div"); acts.className = "pcard-acts";
-      const rm = document.createElement("button"); rm.type = "button"; rm.className = "linkbtn"; rm.textContent = "Remove program";
+      const rm = document.createElement("button"); rm.type = "button"; rm.className = "linkbtn"; rm.textContent = t("prog.remove");
       rm.addEventListener("click", () => {
-        if (!confirm("Remove \"" + p.name + "\"? Its logged weights stay saved and come back if you import it again.")) return;
+        if (!confirm(t("prog.removeConfirm", { name: p.name }))) return;
         store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== p.id));
         PROGRAMS = PROGRAMS.filter(x => x !== p);
         if (P === p) setProgram(PROGRAMS[0].id);
@@ -506,23 +573,34 @@ function renderSettings() {
   SET_ITEMS.forEach(([box, k, title, desc]) => {
     const lab = document.createElement("label"); lab.className = "tog";
     lab.innerHTML = '<span><b></b><small></small></span><input type="checkbox" role="switch">';
-    lab.querySelector("b").textContent = title; lab.querySelector("small").textContent = desc;
+    lab.querySelector("b").textContent = t(title); lab.querySelector("small").textContent = t(desc);
     const inp = lab.querySelector("input"); inp.checked = !!SET[k];
     inp.addEventListener("change", () => { SET[k] = inp.checked; saveSettings(); applyChrome(); });
     $(box).appendChild(lab);
   });
-  document.querySelectorAll("#unitSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.u === SET.unit)));
+  renderSeg("unitSeg", "u", SET.unit);
+  renderSeg("themeSeg", "th", SET.theme);
+  const lg = $("langSeg"); lg.innerHTML = "";
+  LANGS.forEach(l => {
+    const b = document.createElement("button"); b.type = "button"; b.lang = l.code; b.dir = l.dir;
+    b.setAttribute("aria-pressed", String(l.code === LANG));
+    b.textContent = l.name;
+    if (!l.ready) { b.disabled = true; const s = document.createElement("small"); s.textContent = " · " + (l.soon || t("set.langSoon")); b.appendChild(s); }
+    else b.addEventListener("click", () => { if (l.code === LANG) return; SET.lang = l.code; saveSettings(); setLanguage(SET.lang); renderAll(); });
+    lg.appendChild(b);
+  });
   if (typeof renderCal === "function") renderCal();
 }
 document.querySelectorAll("#unitSeg button").forEach(b => b.addEventListener("click", () => { SET.unit = b.dataset.u; saveSettings(); renderSettings(); }));
+document.querySelectorAll("#themeSeg button").forEach(b => b.addEventListener("click", () => { SET.theme = b.dataset.th; saveSettings(); applyTheme(); renderSeg("themeSeg", "th", SET.theme); }));
 
 function readFile(input, cb) {
   const f = input.files && input.files[0]; input.value = "";
   if (!f) return;
-  if (f.size > 2e6) { cb(new Error("That file is too large.")); return; }
+  if (f.size > 2e6) { cb(new Error(t("err.fileLarge"))); return; }
   const r = new FileReader();
-  r.onload = () => { try { cb(null, JSON.parse(r.result)); } catch (e) { cb(new Error("That file isn't valid JSON.")); } };
-  r.onerror = () => cb(new Error("Couldn't read the file."));
+  r.onload = () => { try { cb(null, JSON.parse(r.result)); } catch (e) { cb(new Error(t("err.json"))); } };
+  r.onerror = () => cb(new Error(t("err.read")));
   r.readAsText(f);
 }
 $("progFile").addEventListener("change", e => readFile(e.target, (err, raw) => {
@@ -531,11 +609,12 @@ $("progFile").addEventListener("change", e => readFile(e.target, (err, raw) => {
   try { p = normalizeProgram(raw, false); } catch (x) { showMsg("progMsg", x.message, true); return; }
   if (PROGRAMS.some(q => q.builtin && q.id === p.id)) { p.id = p.id + "-custom"; raw = Object.assign({}, raw, { id: p.id }); }
   const existing = progById(p.id);
-  if (existing && !confirm("Replace your imported program \"" + existing.name + "\" with this file? Logged weights are kept.")) return;
+  if (existing && !confirm(t("prog.replaceConfirm", { name: existing.name }))) return;
   store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== p.id).concat([Object.assign({}, raw, { id: p.id })]));
   PROGRAMS = PROGRAMS.filter(q => q.id !== p.id).concat([p]);
+  delete LOGS[p.id];
   setProgram(p.id);
-  showMsg("progMsg", "Imported \"" + p.name + "\" and switched to it.");
+  showMsg("progMsg", t("prog.importedMsg", { name: p.name }));
   renderSettings();
 }));
 
@@ -547,44 +626,48 @@ function download(name, text, type) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 const stamp = () => new Date().toISOString().slice(0, 10);
-function allKeys() { const out = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("ll-")) out.push(k); } return out; }
+function allKeys() { const out = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(PREFIX)) out.push(k); } return out; }
 
 $("expJson").addEventListener("click", () => {
-  const data = {}; allKeys().forEach(k => { data[k] = load(k, null); });
-  download("lift-ledger-backup-" + stamp() + ".json", JSON.stringify({ app: "lift-ledger", format: 1, exported: new Date().toISOString(), data }, null, 2), "application/json");
-  showMsg("dataMsg", "Backup downloaded.");
+  const data = {}; allKeys().forEach(k => { data["ll-" + k.slice(PREFIX.length)] = load(k, null); });
+  download("lift-ledger-backup-" + stamp() + ".json", JSON.stringify({ app: "lift-ledger", format: 2, exported: new Date().toISOString(), data }, null, 2), "application/json");
+  showMsg("dataMsg", t("data.backupDone"));
 });
 $("expCsv").addEventListener("click", () => {
   const q = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
   const rows = [["program", "week", "phase", "day", "session", "exercise_no", "planned_exercise", "exercise", "set", "weight", "unit", "target_reps", "target_rpe", "day_done"]];
   PROGRAMS.forEach(p => {
-    const L = logsFor(p.id);
+    const L = logsFor(p);
     for (let w = 1; w <= p.weeks; w++) {
-      const ph = p.phases.find(x => w >= x.from && w <= x.to) || p.phases[p.phases.length - 1];
+      const wk = L["w" + w]; if (!wk) continue;
+      const ph = phaseFor(p, w);
       ph.days.forEach((day, d) => day.forEach((ex, i) => {
-        const e = L["w" + w] && L["w" + w][d + "-" + i]; if (!e || !e.s) return;
+        const e = wk.ex && wk.ex[ex.id]; if (!e || !e.s) return;
         e.s.slice(0, ex.sets).forEach((v, s) => {
           if (v === "" || v === undefined) return;
-          rows.push([p.name, w, ph.name, d + 1, p.dayNames[d], i + 1, ex.name, e.alt || ex.name, s + 1, v, SET.unit, ex.reps, ex.rpe, L["w" + w]["done" + d] ? "yes" : "no"]);
+          rows.push([p.name, w, ph.name, d + 1, p.dayNames[d], i + 1, ex.name, e.alt || ex.name, s + 1, v, SET.unit, ex.reps, ex.rpe, wk.done && wk.done[ph.dayIds[d]] ? "yes" : "no"]);
         });
       }));
     }
   });
-  download("lift-ledger-sets-" + stamp() + ".csv", rows.map(r => r.map(q).join(",")).join("\n") + "\n", "text/csv");
-  showMsg("dataMsg", rows.length > 1 ? "Exported " + (rows.length - 1) + " logged sets." : "No logged sets yet, so the CSV only has headers.");
+  download("lift-ledger-sets-" + stamp() + ".csv", "﻿" + rows.map(r => r.map(q).join(",")).join("\n") + "\n", "text/csv");
+  showMsg("dataMsg", rows.length > 1 ? tn("data.csvDone", rows.length - 1) : t("data.csvEmpty"));
 });
 $("impFile").addEventListener("change", e => readFile(e.target, (err, raw) => {
   if (err) { showMsg("dataMsg", err.message, true); return; }
-  if (!raw || raw.app !== "lift-ledger" || !raw.data || typeof raw.data !== "object") { showMsg("dataMsg", "That isn't a Lift Ledger backup file.", true); return; }
-  if (!confirm("Replace all data on this device with this backup? Anything not in the backup will be lost.")) return;
+  if (!raw || raw.app !== "lift-ledger" || !raw.data || typeof raw.data !== "object") { showMsg("dataMsg", t("data.notBackup"), true); return; }
+  if (!confirm(t("data.restoreConfirm"))) return;
   allKeys().forEach(k => localStorage.removeItem(k));
-  Object.entries(raw.data).forEach(([k, v]) => { if (k.startsWith("ll-")) store(k, v); });
+  Object.entries(raw.data).forEach(([k, v]) => { const m = /^llb?-(.+)$/.exec(k); if (m) store(PREFIX + m[1], v); });
   location.reload();
 }));
-$("setReset").addEventListener("click", () => { SET = Object.assign({}, SET_DEFAULT); saveSettings(); renderAll(); showMsg("dataMsg", "Screen settings reset. Your data wasn't touched."); });
+$("setReset").addEventListener("click", () => {
+  SET = Object.assign({}, SET_DEFAULT, { lang: SET.lang });
+  saveSettings(); applyTheme(); renderAll(); showMsg("dataMsg", t("data.resetDone"));
+});
 $("eraseAll").addEventListener("click", () => {
-  if (!confirm("Erase all workouts, programs, calorie details and settings on this device?")) return;
-  if (!confirm("This can't be undone. Erase everything?")) return;
+  if (!confirm(t("data.eraseConfirm1"))) return;
+  if (!confirm(t("data.eraseConfirm2"))) return;
   allKeys().forEach(k => localStorage.removeItem(k));
   location.reload();
 });
@@ -596,6 +679,7 @@ function applyChrome() {
   if (!SET.calTab && appMode === "cal") appMode = "workout";
 }
 function renderAll() {
+  applyI18n();
   if (!P) return;
   if (!openedOnce) { if (SET.smartOpen || !(view.week >= 1 && view.week <= STATS() && view.day < DPW())) view = currentSpot(); saveView(); }
   openedOnce = true;
@@ -609,8 +693,8 @@ function renderAll() {
   ["weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"].forEach(id => { $(id).hidden = mode !== "workout"; });
   $("cal").hidden = mode !== "cal";
   $("settings").hidden = mode !== "settings";
-  if (mode === "cal") { $("appTitle").textContent = "Calories"; $("phase").textContent = "Calorie calculator"; if (typeof renderCal === "function") renderCal(); return; }
-  if (mode === "settings") { $("appTitle").textContent = "Settings"; $("phase").textContent = "Your preferences"; renderSettings(); return; }
+  if (mode === "cal") { $("appTitle").textContent = t("cal.title"); $("phase").textContent = t("cal.subtitle"); if (typeof renderCal === "function") renderCal(); return; }
+  if (mode === "settings") { $("appTitle").textContent = t("set.title"); $("phase").textContent = t("set.subtitle"); renderSettings(); return; }
   $("appTitle").textContent = P.name;
   $("footProg").textContent = P.schedule || "";
   const prog = view.week === STATS();
@@ -634,10 +718,21 @@ async function loadBuiltins() {
   const raws = await Promise.all(idx.programs.map(f => fetch("programs/" + f).then(r => r.json())));
   return raws.map(r => normalizeProgram(r, true));
 }
+setLanguage(SET.lang);
+applyTheme();
+applyI18n();
+/* Ask the browser to keep this app's data even when the phone is low on storage (no prompt on most browsers) */
+if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => {});
+/* Mark the test version so it's never mistaken for the main app */
+if (PREFIX === "llb-") {
+  document.title = "Lift Ledger · " + t("beta.tag");
+  const tag = document.createElement("span"); tag.className = "betatag"; tag.dataset.i18n = "beta.tag"; tag.textContent = t("beta.tag");
+  $("appTitle").after(tag);
+}
 (async () => {
   let builtins = [];
   try { builtins = await loadBuiltins(); }
-  catch (e) { $("loading").textContent = "Couldn't load the built-in programs. If you opened index.html straight from your files, serve the folder with a local web server instead (see the README)."; }
+  catch (e) { $("loading").textContent = t("err.loadPrograms"); }
   const customs = [];
   load(KEY.custom, []).forEach(r => { try { const p = normalizeProgram(r, false); if (!builtins.some(b => b.id === p.id)) customs.push(p); } catch (e) {} });
   PROGRAMS = builtins.concat(customs);
