@@ -143,6 +143,16 @@ test("last week's weights show on the next week", async ({ page }) => {
   await week(page, 2);
   await day(page, 1);
   await expect(page.locator(".ex").first().locator(".last")).toContainText("80");
+  await expect(firstSet(page)).toHaveAttribute("placeholder", "80");   // last time's weight is the grey hint
+  await expect(firstSet(page)).toHaveValue("");
+});
+
+test("the workout screen can keep the phone awake, and it's a setting", async ({ page }) => {
+  await settingsPage(page, "workout");
+  const tog = page.locator(".tog", { hasText: "Keep screen on" }).locator("input");
+  await expect(tog).toBeChecked();
+  await tog.click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem(PREFIX + "settings")).awake)).toBe(false);
 });
 
 test("swapping an exercise only changes that week", async ({ page }) => {
@@ -270,9 +280,9 @@ test("dark mode can be chosen in settings and is remembered", async ({ page }) =
 test("'Match phone' follows the phone's dark setting", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
-  expect(await bodyBg(page)).toBe("rgb(13, 16, 22)");
+  expect(await bodyBg(page)).toBe("rgb(15, 15, 14)");
   await page.emulateMedia({ colorScheme: "light" });
-  expect(await bodyBg(page)).toBe("rgb(238, 241, 245)");
+  expect(await bodyBg(page)).toBe("rgb(246, 245, 242)");
 });
 
 test("every screen's text comes from the strings file", async ({ page }) => {

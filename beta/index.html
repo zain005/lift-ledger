@@ -104,7 +104,7 @@
       <p class="note"><span data-i18n="cal.detailsIn">Your weight, height and weekly routine are in</span> <button type="button" class="linkbtn" id="calToSet" data-i18n="nav.settings">Settings</button>.</p>
 
       <div class="panel hero">
-        <div class="k" style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)" data-i18n="cal.heroLabel">Your usual week, on average</div>
+        <div class="k" style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="cal.heroLabel">Your usual week, on average</div>
         <div class="big"><b id="cPct">–</b><span id="cBand">–</span></div>
         <p id="cHero1"></p>
         <p id="cHero2"></p>
@@ -330,14 +330,14 @@
     <div class="panel share-card">
       <b id="shName"></b>
       <small id="shSummary"></small>
-      <div class="qr-box" id="shQrBox"><div id="shQr"></div><p class="note" data-i18n="share.qrNote">Let the person scan this with their phone camera.</p></div>
-      <p class="note" id="shQrTooBig" hidden data-i18n="share.qrTooBig">This program is too big for a QR code. Share the link instead.</p>
       <button type="button" class="addbtn" id="shNative" data-i18n="share.send">Send link</button>
       <div class="btnrow share-btns">
         <button type="button" class="ghostbtn" id="shCopy" data-i18n="share.copy">Copy link</button>
         <button type="button" class="ghostbtn" id="shFile" data-i18n="share.file">Save as file</button>
       </div>
       <p class="msg" id="shMsg" hidden></p>
+      <div class="qr-box" id="shQrBox"><div id="shQr"></div><p class="note" data-i18n="share.qrNote">Let the person scan this with their phone camera.</p></div>
+      <p class="note" id="shQrTooBig" hidden data-i18n="share.qrTooBig">This program is too big for a QR code. Share the link instead.</p>
       <input class="share-link" id="shLink" readonly data-i18n-aria="share.linkAria">
       <p class="note" data-i18n="share.privacy">The program travels inside the link itself, so nothing is uploaded. Anyone with the link can add it to their phone, and it then works offline.</p>
     </div>

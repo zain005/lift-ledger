@@ -33,6 +33,14 @@ These were agreed before building. Change them here first if they change.
 **Weeks**
 - The workout page has no week selector for now. It always opens on the next session to do, and Stats shows the whole program. A separate week feature is planned and will be designed before it's built. The builder has no week control either; programs use 8 weeks until then.
 
+**Look and feel ("Ledger" design)**
+- Chosen from the UI research (November 2026): calm paper-and-ink surfaces, hairline rules, one warm signal colour for actions, sentence-case headings, tabular figures for every number. Light and dark themes both meet WCAG AA contrast.
+- One font family for both scripts: IBM Plex Sans and IBM Plex Sans Arabic (OFL), bundled. The Arabic files load only when Arabic text appears.
+- Status always pairs colour with a word or icon: done is green, skipped is amber (never alarm red), records are gold.
+- Last time's weight shows in grey inside each set box as the number to beat. The screen stays awake while the workout page is open (a setting, on by default).
+- Next, from the same research, to discuss before building: tick a set to log it (prefilled from last time) with a rest timer; a short first-launch question (kg or lb) leading straight into Day 1; "just today" vs "update program" when swapping; free charts per exercise, a records list and "2 of 3 days this week" in Stats; "Add as a copy" option when importing an updated program.
+- On release to the main app: update the README credits (IBM Plex replaces Barlow; add fflate and qrcode-generator).
+
 **Data safety**
 - Days and exercises have permanent ids, and logs are stored by id (log format v2), so reordering or editing a program never moves logged weights to the wrong exercise. Older logs are converted automatically, and an untouched copy of the original is kept.
 

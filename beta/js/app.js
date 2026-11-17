@@ -12,13 +12,14 @@ const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>';
 
 /* ---------- settings ---------- */
-const SET_DEFAULT = { videos: true, cues: true, last: true, rpeBox: true, smartOpen: true, calTab: true, unit: "kg", theme: "system", lang: "en" };
+const SET_DEFAULT = { videos: true, cues: true, last: true, rpeBox: true, awake: true, smartOpen: true, calTab: true, unit: "kg", theme: "system", lang: "en" };
 let SET = Object.assign({}, SET_DEFAULT, load(KEY.set, {}));
 const SET_ITEMS = [
   ["setWorkout", "videos", "set.videos", "set.videosDesc"],
   ["setWorkout", "cues", "set.cues", "set.cuesDesc"],
   ["setWorkout", "last", "set.last", "set.lastDesc"],
   ["setWorkout", "rpeBox", "set.rpeBox", "set.rpeBoxDesc"],
+  ["setWorkout", "awake", "set.awake", "set.awakeDesc"],
   ["setApp", "smartOpen", "set.smartOpen", "set.smartOpenDesc"],
   ["setApp", "calTab", "set.calTab", "set.calTabDesc"]
 ];
@@ -351,6 +352,7 @@ function renderList() {
 
     if (SET.cues && cue && !e.alt) { const c = document.createElement("p"); c.className = "cue"; c.textContent = cue; card.append(c); }
 
+    const lt = SET.last ? lastTime(w, d, ex) : null;
     const setsEl = document.createElement("div"); setsEl.className = "sets";
     for (let s = 0; s < sets; s++) {
       const id = "w" + w + "d" + d + "e" + i + "s" + s;
@@ -359,6 +361,7 @@ function renderList() {
       wrap.querySelector("label").textContent = ex.setReps ? t("sets.nReps", { n: s + 1, r: ex.setReps[s] }) : t("sets.n", { n: s + 1 });
       wrap.querySelector(".unit").textContent = unitLabel();
       const inp = wrap.querySelector("input");
+      if (lt && lt.s[s]) inp.placeholder = fmt(lt.s[s]);          // last time's weight, in grey, as the target to match
       inp.value = (e.s && e.s[s]) || "";
       inp.classList.toggle("empty", !inp.value);
       inp.addEventListener("input", () => {
@@ -372,7 +375,6 @@ function renderList() {
     }
     card.append(setsEl);
 
-    const lt = SET.last ? lastTime(w, d, ex) : null;
     if (lt) {
       const p = document.createElement("p"); p.className = "last";
       p.append(t(lt.actual !== shown ? "last.withName" : "last.plain", { w: lt.week, name: lt.actual }) + " ");
@@ -766,7 +768,18 @@ function applyChrome() {
   $("modeWorkout").hidden = !P;
   if (!SET.calTab && appMode === "cal") appMode = "home";
   if (!P && appMode === "workout") appMode = "home";
+  syncWakeLock();
 }
+/* Keep the screen on while the workout page is open, so the phone doesn't lock between sets */
+let wakeLock = null;
+async function syncWakeLock() {
+  const want = !!(SET.awake && P && appMode === "workout" && document.visibilityState === "visible" && navigator.wakeLock);
+  try {
+    if (want && !wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); }
+    else if (!want && wakeLock) { const l = wakeLock; wakeLock = null; await l.release(); }
+  } catch (e) { wakeLock = null; }
+}
+document.addEventListener("visibilitychange", syncWakeLock);
 const WORKOUT_PARTS = ["statsBtn", "weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"];
 function renderAll() {
   applyI18n();
