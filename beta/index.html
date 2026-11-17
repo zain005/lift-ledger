@@ -29,7 +29,7 @@
       <button type="button" class="statsbtn" id="statsBtn" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-6 4 3 7-9"/></svg><span data-i18n="stats.short">Stats</span></button>
     </div>
     <div class="weekbar" id="weekbar" hidden>
-      <button type="button" class="weektoggle" id="weekToggle" aria-expanded="false" aria-controls="weeks" hidden>
+      <button type="button" class="weektoggle" id="weekToggle" aria-expanded="false" aria-controls="weeks">
         <span class="wt-text"><b id="wtMain"></b><small id="wtSub"></small></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
@@ -206,6 +206,20 @@
         <div class="seg two" id="langSeg" role="group" data-i18n-aria="set.language"></div>
       </div>
       </div>
+      <div class="subpage" data-page="pro" hidden>
+      <div class="panel">
+        <h3 data-i18n="pro.title">Pro mode</h3>
+        <p class="sub" data-i18n="pro.intro">For lifters and coaches who plan training week by week. Everything stays free.</p>
+        <ul class="pro-list">
+          <li data-i18n="pro.weeks">Plan programs by week: up to 12 weeks, each with its own days and exercises</li>
+          <li data-i18n="pro.weekPicker">See and log any week of your program</li>
+          <li data-i18n="pro.calories">The calorie calculator</li>
+          <li data-i18n="pro.coach">Coaches: send a program as a Pro program</li>
+          <li data-i18n="pro.all">See every program, even when following a coach</li>
+        </ul>
+        <label class="tog pro-tog"><span><b data-i18n="pro.switch">Pro mode</b><small data-i18n="pro.switchDesc">Turn off any time. Nothing you've logged is lost; Pro parts are just hidden.</small></span><input type="checkbox" role="switch" id="proToggle"></label>
+      </div>
+      </div>
       <div class="subpage" data-page="library" hidden>
       <div class="panel">
         <h3 data-i18n="lib.title">Exercise library</h3>
@@ -377,6 +391,10 @@
     <div class="panel">
       <div class="fld"><label for="bdName" data-i18n="bd.name">Program name</label><input id="bdName" maxlength="40" autocomplete="off" data-i18n-ph="bd.namePh"></div>
     </div>
+    <div class="bd-weekbox" id="bdWeekBox" hidden>
+      <div class="bd-weektabs" id="bdWeekTabs" role="group" data-i18n-aria="nav.weekAria"></div>
+      <p class="note" id="bdWeeksNote"></p>
+    </div>
     <div class="bd-daytabs" id="bdDayTabs" role="group" data-i18n-aria="nav.dayAria"></div>
     <p class="note bd-daysnote" id="bdDaysNote"></p>
     <div class="panel">
@@ -387,9 +405,10 @@
       <ul class="bd-exlist" id="bdExList"></ul>
       <button type="button" class="addbtn" id="bdAdd" data-i18n="bd.add">+ Add exercise</button>
       <button type="button" class="linkbtn danger-link" id="bdDelDay" data-i18n="bd.deleteDay">Delete this day</button>
+      <button type="button" class="linkbtn danger-link" id="bdDelWeek" hidden data-i18n="bd.deleteWeek">Delete this week</button>
     </div>
     <div class="panel">
-      <h3 data-i18n="bd.musclesTitle">Weekly sets per muscle</h3>
+      <h3 id="bdMusclesTitle" data-i18n="bd.musclesTitle">Weekly sets per muscle</h3>
       <p class="sub" data-i18n="bd.musclesSub">Each set counts fully for the main muscle and half for the others it works. As a rough guide, 6–20 sets a week suits most people.</p>
       <div class="bd-muscles" id="bdMuscles"></div>
     </div>

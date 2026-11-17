@@ -12,8 +12,9 @@ const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>';
 
 /* ---------- settings ---------- */
-const SET_DEFAULT = { videos: true, cues: true, last: true, rpeBox: true, awake: true, smartOpen: true, calTab: true, unit: "kg", theme: "system", lang: "en" };
-let SET = Object.assign({}, SET_DEFAULT, load(KEY.set, {}));
+const SET_DEFAULT = { pro: false, follow: "", videos: true, cues: true, last: true, rpeBox: true, awake: true, smartOpen: true, calTab: true, unit: "kg", theme: "system", lang: "en" };
+const SAVED_SET = load(KEY.set, {}) || {};
+let SET = Object.assign({}, SET_DEFAULT, SAVED_SET);
 const SET_ITEMS = [
   ["setWorkout", "videos", "set.videos", "set.videosDesc"],
   ["setWorkout", "cues", "set.cues", "set.cuesDesc"],
@@ -21,7 +22,7 @@ const SET_ITEMS = [
   ["setWorkout", "rpeBox", "set.rpeBox", "set.rpeBoxDesc"],
   ["setWorkout", "awake", "set.awake", "set.awakeDesc"],
   ["setApp", "smartOpen", "set.smartOpen", "set.smartOpenDesc"],
-  ["setApp", "calTab", "set.calTab", "set.calTabDesc"]
+  ["setApp", "calTab", "set.calTab", "set.calTabDesc", "pro"]
 ];
 function saveSettings() { store(KEY.set, SET); }
 
@@ -576,6 +577,11 @@ function doneCount(p) {
   return [n, p.repeat ? 0 : tot];
 }
 const doneText = (n, tot) => tot ? t("prog.done", { n, total: tot }) : tn("prog.doneN", n);
+/* Someone who already uses the calorie calculator or has trained past week 1 starts in Pro, so nothing disappears */
+function usesProFeatures() {
+  if (typeof detailsComplete === "function" && detailsComplete()) return true;
+  return PROGRAMS.some(p => { const L = logsFor(p); return Object.keys(L).some(k => { const m = /^w(\d+)$/.exec(k); return m && +m[1] > 1 && L[k] && ((L[k].ex && Object.keys(L[k].ex).length) || (L[k].done && Object.keys(L[k].done).length)); }); });
+}
 function hasLogs(p) {
   const L = logsFor(p);
   return Object.keys(L).some(k => /^w\d+$/.test(k) && L[k] && ((L[k].ex && Object.keys(L[k].ex).length) || (L[k].done && Object.keys(L[k].done).length)));
@@ -654,17 +660,19 @@ function renderSeg(id, key, value) {
 let setPage = "";
 const SET_PAGES = [
   ["language", "set.language", () => (LANGS.find(l => l.code === LANG) || LANGS[0]).name],
+  ["pro", "pro.title", () => t(SET.pro ? "pro.on" : "pro.off")],
   ["appearance", "set.look", () => t({ light: "set.themeLight", dark: "set.themeDark" }[SET.theme] || "set.themeSystem")],
   ["workout", "set.workoutScreen", () => t("set.workoutSum", { unit: unitLabel() })],
   ["app", "set.app", () => t(SET.calTab ? "set.appSum" : "set.appSumNoCal")],
-  ["details", "set.details", () => typeof detailsSummary === "function" ? detailsSummary() : ""],
+  ["details", "set.details", () => typeof detailsSummary === "function" ? detailsSummary() : "", "pro"],
   ["library", "lib.title", () => typeof LIBRARY !== "undefined" ? tn("lib.count", LIBRARY.exercises.length + CUSTOM_EX.length) : ""],
   ["data", "data.title", () => t("data.sum")]
 ];
 function openSetPage(page) { setPage = page; appMode = "settings"; renderAll(); window.scrollTo({ top: 0 }); }
 function renderSettings() {
   const list = $("setList"); list.innerHTML = "";
-  SET_PAGES.forEach(([page, title, sum]) => {
+  SET_PAGES.forEach(([page, title, sum, needs]) => {
+    if (needs === "pro" && !SET.pro) return;
     const b = document.createElement("button"); b.type = "button"; b.className = "setrow"; b.dataset.page = page;
     b.innerHTML = '<span><b></b><small></small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
     b.querySelector("b").textContent = t(title); b.querySelector("small").textContent = sum();
@@ -677,7 +685,9 @@ function renderSettings() {
   const cur = SET_PAGES.find(x => x[0] === setPage);
   $("phase").textContent = cur ? t(cur[1]) : t("set.subtitle");
   ["setWorkout", "setApp"].forEach(id => { $(id).innerHTML = ""; });
-  SET_ITEMS.forEach(([box, k, title, desc]) => {
+  $("proToggle").checked = !!SET.pro;
+  SET_ITEMS.forEach(([box, k, title, desc, needs]) => {
+    if (needs === "pro" && !SET.pro) return;
     const lab = document.createElement("label"); lab.className = "tog";
     lab.innerHTML = '<span><b></b><small></small></span><input type="checkbox" role="switch">';
     lab.querySelector("b").textContent = t(title); lab.querySelector("small").textContent = t(desc);
@@ -785,10 +795,14 @@ $("eraseAll").addEventListener("click", () => {
 
 /* ---------- frame ---------- */
 let appMode = "home", openedOnce = false;
+/* Pro mode unlocks weeks and the calorie calculator; with it off they're hidden, never deleted */
+const calOn = () => !!(SET.pro && SET.calTab);
 function applyChrome() {
-  $("modeCal").hidden = !SET.calTab;
+  document.body.dataset.pro = SET.pro ? "1" : "";
+  $("modeCal").hidden = !calOn();
   $("modeWorkout").hidden = !P;
-  if (!SET.calTab && appMode === "cal") appMode = "home";
+  if (!calOn() && appMode === "cal") appMode = "home";
+  if (!SET.pro && setPage === "details") setPage = "";
   if (!P && appMode === "workout") appMode = "home";
   syncWakeLock();
 }
@@ -802,7 +816,7 @@ async function syncWakeLock() {
   } catch (e) { wakeLock = null; }
 }
 document.addEventListener("visibilitychange", syncWakeLock);
-const WORKOUT_PARTS = ["statsBtn", "weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"];
+const WORKOUT_PARTS = ["statsBtn", "weekbar", "weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"];
 function renderAll() {
   applyI18n();
   if (!PROGRAMS.length) return;
@@ -834,6 +848,11 @@ function renderAll() {
 /* The workout tab always opens the current week (there's no week picker); stats stay one tap away */
 const go = m => () => { if (m === "settings") setPage = ""; if (m === "workout" && P) view = currentSpot(); appMode = m; weeksOpen = false; renderAll(); window.scrollTo({ top: 0 }); };
 $("modeHome").addEventListener("click", go("home"));
+$("proToggle").addEventListener("change", e => {
+  SET.pro = e.target.checked; saveSettings();
+  weeksOpen = false; if (P && view.week !== STATS()) view = currentSpot();
+  renderAll();
+});
 $("modeWorkout").addEventListener("click", go("workout"));
 $("modeCal").addEventListener("click", go("cal"));
 $("modeSet").addEventListener("click", go("settings"));
@@ -873,6 +892,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const v = load(KEY.view, null);
   if (v && v.week >= 1 && v.day >= 0) view = { week: v.week, day: v.day };
   await libLoad;
+  if (!("pro" in SAVED_SET)) { SET.pro = usesProFeatures(); saveSettings(); }
   renderAll();
   if (typeof readShareHash === "function") readShareHash();
   if (typeof showInstallTip === "function") showInstallTip(false);

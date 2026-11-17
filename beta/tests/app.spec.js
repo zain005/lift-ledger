@@ -29,7 +29,15 @@ const day = (page, n) => page.locator(".day").nth(n - 1).click();
 const settingsPage = async (page, name) => { await page.click("#modeSet"); await page.click(`.setrow[data-page="${name}"]`); };
 const firstSet = page => page.locator(".ex").first().locator(".set input").first();
 const noSideScroll = page => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+/* Weeks and calories live in Pro mode, which is off by default */
+const proOn = async page => {
+  if (await page.evaluate(() => SET.pro)) return;
+  await settingsPage(page, "pro");
+  await page.locator("#proToggle").click();
+  await expect(page.locator("#proToggle")).toBeChecked();
+};
 const fillDetails = async page => {
+  await proOn(page);
   await settingsPage(page, "details");
   await page.fill("#pWeight", "80"); await page.fill("#pHeight", "180"); await page.fill("#pAge", "30");
 };
@@ -49,6 +57,7 @@ test("first launch is a clean Home page with nothing chosen", async ({ page }) =
 });
 
 test("calorie details start blank, with a setup prompt", async ({ page }) => {
+  await proOn(page);
   await page.click("#modeCal");
   await expect(page.locator("#calSetup")).toBeVisible();
   await expect(page.locator("#calBody")).toBeHidden();
@@ -92,12 +101,15 @@ test("the workout page has no week selector, just the days and Stats", async ({ 
 test("Settings is a short list, and each item opens its own page", async ({ page }) => {
   await page.click("#modeSet");
   await expect(page.locator(".setrow")).toHaveCount(7);
+  await expect(page.locator('.setrow[data-page="details"]')).toHaveCount(0);   // personal details belong to Pro
   await expect(page.locator("#settings .subpage:visible")).toHaveCount(0);
   await page.click('.setrow[data-page="appearance"]');
   await expect(page.locator('.subpage[data-page="appearance"]')).toBeVisible();
   await expect(page.locator("#setList")).toBeHidden();
   await page.click("#setBack");
   await expect(page.locator("#setList")).toBeVisible();
+  await proOn(page);
+  await page.click("#setBack");
   await expect(page.locator('.setrow[data-page="details"] small')).toHaveText("Not set yet");
 });
 
@@ -108,6 +120,7 @@ test("makes no requests to other sites", async ({ page }) => {
   const origin = new URL(page.url()).origin;
   page.on("request", r => { if (new URL(r.url()).origin !== origin) external.push(r.url()); });
   await page.reload();
+  await proOn(page);
   await start(page);
   await page.click("#modeCal");
   await page.click("#modeSet");
@@ -237,6 +250,7 @@ test("backup restores everything", async ({ page }) => {
 });
 
 test("settings hide tips and the calories tab", async ({ page }) => {
+  await proOn(page);
   await start(page);
   await expect(page.locator(".cue").first()).toBeVisible();
   await settingsPage(page, "workout");
@@ -286,6 +300,7 @@ test("'Match phone' follows the phone's dark setting", async ({ page }) => {
 });
 
 test("every screen's text comes from the strings file", async ({ page }) => {
+  await proOn(page);
   await page.click("#modeCal");
   await start(page);
   await firstSet(page).fill("40");
@@ -295,7 +310,8 @@ test("every screen's text comes from the strings file", async ({ page }) => {
   await page.click("#modeCal");
   await page.selectOption("#uSel", "egg"); await page.fill("#uAmt", "3"); await page.click("#uAdd");
   await page.selectOption("#aSel", "steps"); await page.fill("#aV1", "5000"); await page.click("#aAdd");
-  for (const p of ["language", "appearance", "workout", "app", "details", "library", "data"]) { await settingsPage(page, p); }
+  await page.click("#modeWorkout"); await page.click("#weekToggle");
+  for (const p of ["language", "pro", "appearance", "workout", "app", "details", "library", "data"]) { await settingsPage(page, p); }
   await page.click("#modeHome");
 });
 

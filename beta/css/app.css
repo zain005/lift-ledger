@@ -594,7 +594,7 @@ body.sheet-open .tabbar { display: none; }
 .title-row { align-items: center; }
 .title-row .statsbtn { margin-inline-start: auto; flex-direction: row; display: flex; gap: 6px; min-width: 0; padding: 6px 12px; min-height: 36px; font-size: 13px; }
 .title-row .statsbtn[hidden] { display: none; }
-#weekbar { display: none !important; }
+body:not([data-pro="1"]) #weekbar { display: none !important; }      /* the week picker is a Pro feature */
 
 /* ---------- Sharing ---------- */
 .own-acts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -671,3 +671,15 @@ button:active:not(:disabled) { opacity: .72; }
 #shQr { box-shadow: none; border: 1px solid var(--line); }
 @media (max-width: 380px) { .own-acts .ghostbtn { white-space: normal; font-size: 13px; line-height: 1.2; } }
 .sessgrid .cell.none { background: transparent; border-color: transparent; }
+.pro-list { margin: 0; padding-inline-start: 20px; display: grid; gap: 6px; color: var(--ink); font-size: 14.5px; }
+.pro-list li::marker { color: var(--accent); }
+.pro-tog { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 2px; }
+/* Builder: weeks (Pro) sit above the days */
+.bd-weekbox { display: grid; gap: 6px; }
+.bd-weekbox[hidden] { display: none; }
+.bd-weektabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.bd-weektabs::-webkit-scrollbar { display: none; }
+.bd-weektab { appearance: none; flex: none; min-height: 40px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.bd-weektab[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.bd-weektab.empty:not([aria-pressed="true"]) { border-color: var(--miss); }
+.bd-weektab.add { border-style: dashed; color: var(--accent); border-color: var(--accent); }

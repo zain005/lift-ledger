@@ -1,13 +1,18 @@
 /* Lift Ledger: program builder.
-   A program is one week of training days (1 to 7), repeated week after week.
+   Without Pro, a program is one week of training days (1 to 7) that repeats with no end.
+   In Pro, a program is Week → Days → Exercises: up to 12 weeks, each with its own 1–7 days. "Add week" copies the
+   week before (same ids, so "last time" and logs line up week to week) and the coach changes what's different.
    Each exercise is a list of sets; each set is one box holding its target reps (or seconds).
    Programs are saved as program files (the same format as imports) under KEY.custom.
    Every day and exercise keeps a permanent id, so editing a program never moves logged weights. */
 "use strict";
 
-const BD = { draft: null, day: 0, editingId: null };
+const BD = { draft: null, week: 0, day: 0, editingId: null };
 const rid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
-const MAX_DAYS = 7, MAX_EX = 15, MAX_SETS = 5, DEFAULT_WEEKS = 8;
+const MAX_DAYS = 7, MAX_EX = 15, MAX_SETS = 5, MAX_WEEKS = 12;
+const curDays = () => BD.draft.weeks[BD.week].days;
+const showWeeks = () => !!(SET.pro || BD.draft.weeks.length > 1);
+const clone = o => JSON.parse(JSON.stringify(o));
 
 function blankDay(n) { return { id: "d" + rid(), name: t("day.n", { n }), exercises: [] }; }
 /* A new exercise starts with one set, using the low end of its usual rep range */
@@ -24,26 +29,30 @@ function musclesOf(x) {
 const isMine = x => x.ref && typeof CUSTOM_EX !== "undefined" && CUSTOM_EX.some(c => c.id === x.ref);
 
 /* ---------- open / close ---------- */
-function openBuilder(programId) {
-  BD.editingId = programId || null; BD.day = 0;
-  if (programId) {
-    const raw = load(KEY.custom, []).find(r => slug(r.id || r.name) === programId);
-    if (!raw) return;
-    BD.draft = {
-      name: raw.name || "", weeks: Math.min(12, Math.max(1, +raw.weeks || DEFAULT_WEEKS)),
-      days: (raw.days || []).map((d, di) => {
+function draftDays(days) {
+  return (days || []).map((d, di) => {
         const dayId = sid(d.id) || "d" + (di + 1);
-        return { id: dayId, name: d.name || t("day.n", { n: di + 1 }),
-          exercises: (d.exercises || []).map((e, ei) => {
+    return { id: dayId, name: d.name || t("day.n", { n: di + 1 }),
+      exercises: (d.exercises || []).map((e, ei) => {
             const n = Math.max(1, Math.min(10, Math.floor(+e.sets) || 1));
             const setReps = Array.isArray(e.setReps) && e.setReps.length === n ? e.setReps.map(String) : Array(n).fill(String(e.reps || ""));
             return { id: sid(e.id) || dayId + "e" + (ei + 1), ref: e.ref || "", name: e.name, setReps, rpe: e.rpe || "", cue: e.cue || "",
                      timed: !!e.timed, perSide: !!e.perSide, primary: e.primary || "", secondary: e.secondary || [] };
           }) };
-      })
-    };
+      });
+}
+function openBuilder(programId) {
+  BD.editingId = programId || null; BD.week = 0; BD.day = 0;
+  if (programId) {
+    const raw = load(KEY.custom, []).find(r => slug(r.id || r.name) === programId);
+    if (!raw) return;
+    // A week-by-week program keeps one block per week; anything else is edited as one week
+    const weekly = raw.weekly && Array.isArray(raw.phases) && raw.phases.length > 1;
+    const weeks = weekly ? raw.phases.slice().sort((a, b) => (a.weeks[0] || 0) - (b.weeks[0] || 0)).map(ph => ({ days: draftDays(ph.days || raw.days) }))
+                         : [{ days: draftDays(raw.days) }];
+    BD.draft = { name: raw.name || "", weeks: weeks.slice(0, MAX_WEEKS) };
   } else {
-    BD.draft = { name: "", weeks: DEFAULT_WEEKS, days: [blankDay(1)] };
+    BD.draft = { name: "", weeks: [{ days: [blankDay(1)] }] };
   }
   $("bdTitle").textContent = t(programId ? "bd.editTitle" : "bd.newTitle");
   showMsg("bdMsg", "");
@@ -52,15 +61,43 @@ function openBuilder(programId) {
   document.body.classList.add("sheet-open");
 }
 function closeBuilder() { $("builder").hidden = true; if ($("picker").hidden) document.body.classList.remove("sheet-open"); }
-function builderDirty() { return BD.draft && (BD.draft.name.trim() || BD.draft.days.some(d => d.exercises.length)); }
+function builderDirty() { return BD.draft && (BD.draft.name.trim() || BD.draft.weeks.some(w => w.days.some(d => d.exercises.length))); }
 
 /* ---------- render ---------- */
+function renderWeekTabs() {
+  const W = BD.draft.weeks;
+  $("bdWeekBox").hidden = !showWeeks();
+  $("bdDelWeek").hidden = !showWeeks() || W.length < 2;
+  if (!showWeeks()) return;
+  const tabs = $("bdWeekTabs"); tabs.innerHTML = "";
+  W.forEach((wk, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "bd-weektab"; b.setAttribute("aria-pressed", String(i === BD.week));
+    b.textContent = t("week.n", { n: i + 1 });
+    if (wk.days.some(d => !d.exercises.length)) b.classList.add("empty");
+    b.addEventListener("click", () => { BD.week = i; BD.day = 0; renderBuilder(); });
+    tabs.appendChild(b);
+  });
+  if (W.length < MAX_WEEKS) {
+    const add = document.createElement("button"); add.type = "button"; add.className = "bd-weektab add"; add.id = "bdAddWeek";
+    add.textContent = t("bd.addWeek");
+    add.addEventListener("click", () => {
+      W.push({ days: clone(W[W.length - 1].days) });      // a copy of the last week, same ids
+      BD.week = W.length - 1; BD.day = 0; renderBuilder();
+      showMsg("bdMsg", t("bd.weekCopied", { n: W.length, from: W.length - 1 }));
+    });
+    tabs.appendChild(add);
+  }
+  $("bdWeeksNote").textContent = W.length > 1 ? tn("bd.weeksNote", W.length, { max: MAX_WEEKS }) : t("bd.weeksNoteOne", { max: MAX_WEEKS });
+}
 function renderBuilder() {
   const D = BD.draft;
   if (document.activeElement !== $("bdName")) $("bdName").value = D.name;
-  if (BD.day >= D.days.length) BD.day = D.days.length - 1;
+  if (BD.week >= D.weeks.length) BD.week = D.weeks.length - 1;
+  const days = curDays();
+  if (BD.day >= days.length) BD.day = days.length - 1;
+  renderWeekTabs();
   const tabs = $("bdDayTabs"); tabs.innerHTML = "";
-  D.days.forEach((d, i) => {
+  days.forEach((d, i) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "bd-daytab"; b.setAttribute("aria-pressed", String(i === BD.day));
     b.innerHTML = "<span></span><small></small>";
     b.querySelector("span").textContent = t("day.n", { n: i + 1 });
@@ -69,23 +106,23 @@ function renderBuilder() {
     b.addEventListener("click", () => { BD.day = i; renderBuilder(); });
     tabs.appendChild(b);
   });
-  if (D.days.length < MAX_DAYS) {
+  if (days.length < MAX_DAYS) {
     const add = document.createElement("button"); add.type = "button"; add.className = "bd-daytab add"; add.id = "bdAddDay";
     add.innerHTML = '<span aria-hidden="true">+</span><small></small>';
     add.querySelector("small").textContent = t("bd.addDay");
-    add.addEventListener("click", () => { D.days.push(blankDay(D.days.length + 1)); BD.day = D.days.length - 1; renderBuilder(); });
+    add.addEventListener("click", () => { days.push(blankDay(days.length + 1)); BD.day = days.length - 1; renderBuilder(); });
     tabs.appendChild(add);
   }
-  $("bdDaysNote").textContent = tn("bd.daysNote", D.days.length, { max: MAX_DAYS });
+  $("bdDaysNote").textContent = tn(showWeeks() ? "bd.daysNoteWeek" : "bd.daysNote", days.length, { max: MAX_DAYS, w: BD.week + 1 });
   renderBuilderDay();
   renderMuscleCheck();
 }
 
 function renderBuilderDay() {
-  const D = BD.draft, d = D.days[BD.day];
+  const days = curDays(), d = days[BD.day];
   if (document.activeElement !== $("bdDayName")) $("bdDayName").value = d.name;
-  $("bdDayUp").disabled = BD.day === 0; $("bdDayDown").disabled = BD.day === D.days.length - 1;
-  $("bdDelDay").hidden = D.days.length < 2;
+  $("bdDayUp").disabled = BD.day === 0; $("bdDayDown").disabled = BD.day === days.length - 1;
+  $("bdDelDay").hidden = days.length < 2;
   const ul = $("bdExList"); ul.innerHTML = "";
   if (!d.exercises.length) { const li = document.createElement("li"); li.className = "none"; li.textContent = t("bd.noEx"); ul.appendChild(li); }
   d.exercises.forEach((x, i) => {
@@ -157,18 +194,19 @@ function moveItem(arr, i, dir) { const j = i + dir; if (j < 0 || j >= arr.length
 
 /* An edited "my exercise" updates every place this draft uses it */
 function applyExerciseEdit(e) {
-  BD.draft.days.forEach(d => d.exercises.forEach(x => {
+  BD.draft.weeks.forEach(wk => wk.days.forEach(d => d.exercises.forEach(x => {
     if (x.ref !== e.id) return;
     x.name = e.name; x.primary = e.primary || ""; x.secondary = e.secondary || [];
     x.timed = !!e.timed; x.perSide = !!e.perSide;
-  }));
+  })));
 }
 
 /* Weekly hard sets per muscle: each set counts fully for the main muscle and half for the others */
 function renderMuscleCheck() {
   const tally = {};
   (typeof LIBRARY !== "undefined" ? LIBRARY.muscles : []).forEach(m => { tally[m] = 0; });
-  BD.draft.days.forEach(d => d.exercises.forEach(x => {
+  $("bdMusclesTitle").textContent = showWeeks() ? t("bd.musclesTitleW", { n: BD.week + 1 }) : t("bd.musclesTitle");
+  curDays().forEach(d => d.exercises.forEach(x => {
     const n = x.setReps.length, m = musclesOf(x);
     if (m.primary) tally[m.primary] = (tally[m.primary] || 0) + n;
     m.secondary.forEach(s => { tally[s] = (tally[s] || 0) + n / 2; });
@@ -186,24 +224,30 @@ function renderMuscleCheck() {
 
 /* ---------- edits ---------- */
 $("bdName").addEventListener("input", e => { BD.draft.name = e.target.value.slice(0, 40); $("bdName").classList.remove("bad"); });
-$("bdDayName").addEventListener("input", e => { BD.draft.days[BD.day].name = e.target.value.slice(0, 30); });
+$("bdDayName").addEventListener("input", e => { curDays()[BD.day].name = e.target.value.slice(0, 30); });
+$("bdDelWeek").addEventListener("click", () => {
+  const W = BD.draft.weeks; if (W.length < 2) return;
+  if (!confirm(t("bd.removeWeekConfirm", { n: BD.week + 1 }))) return;
+  W.splice(BD.week, 1); BD.week = Math.max(0, BD.week - 1); BD.day = 0; renderBuilder();
+});
 $("bdDelDay").addEventListener("click", () => {
-  const days = BD.draft.days; if (days.length < 2) return;
+  const days = curDays(); if (days.length < 2) return;
   const d = days[BD.day];
   if (d.exercises.length && !confirm(t("bd.removeDayConfirm", { name: d.name }))) return;
   days.splice(BD.day, 1); BD.day = Math.max(0, BD.day - 1); renderBuilder();
 });
-$("bdDayUp").addEventListener("click", () => { moveItem(BD.draft.days, BD.day, -1); BD.day--; renderBuilder(); });
-$("bdDayDown").addEventListener("click", () => { moveItem(BD.draft.days, BD.day, 1); BD.day++; renderBuilder(); });
+$("bdDayUp").addEventListener("click", () => { moveItem(curDays(), BD.day, -1); BD.day--; renderBuilder(); });
+$("bdDayDown").addEventListener("click", () => { moveItem(curDays(), BD.day, 1); BD.day++; renderBuilder(); });
 $("bdAdd").addEventListener("click", () => {
-  const d = BD.draft.days[BD.day];
+  const d = curDays()[BD.day];
   openPicker({ onPick: e => { d.exercises.push(exFromLibrary(e)); renderBuilder(); requestAnimationFrame(() => { const l = $("bdExList").lastElementChild; if (l && l.scrollIntoView) l.scrollIntoView({ block: "center" }); }); } });
 });
 $("bdClose").addEventListener("click", () => { if (builderDirty() && !confirm(t("bd.discardConfirm"))) return; closeBuilder(); });
 
 /* ---------- save ---------- */
-function builderError(key, vars, dayIndex, selector) {
+function builderError(key, vars, dayIndex, selector, weekIndex) {
   showMsg("bdMsg", t(key, vars), true);
+  if (weekIndex !== undefined && weekIndex !== BD.week) { BD.week = weekIndex; BD.day = dayIndex || 0; renderBuilder(); }
   if (dayIndex !== undefined && dayIndex !== BD.day) { BD.day = dayIndex; renderBuilder(); }
   if (dayIndex !== undefined && !selector) $("bdDayTabs").scrollIntoView({ block: "start" });
   if (selector) { const el = document.querySelector(selector); if (el) { el.classList.add("bad"); el.focus({ preventScroll: true }); el.scrollIntoView({ block: "center" }); } }
@@ -212,15 +256,19 @@ function builderError(key, vars, dayIndex, selector) {
 function validateDraft() {
   const D = BD.draft;
   if (!D.name.trim()) return builderError("bd.errName", null, undefined, "#bdName");
-  for (let i = 0; i < D.days.length; i++) {
-    const d = D.days[i];
-    if (!d.exercises.length) return builderError("bd.errEmptyDay", { n: i + 1 }, i);
-    for (const x of d.exercises) {
-      for (let s = 0; s < x.setReps.length; s++) {
-        const r = cleanReps(x.setReps[s]);
-        if (!r) return builderError(x.timed ? "bd.errSeconds" : "bd.errReps", { name: x.name, n: i + 1, set: s + 1 }, i,
-          '.bd-ex[data-id="' + x.id + '"] .bd-set:nth-child(' + (s + 1) + ') input');
-        x.setReps[s] = r;
+  const many = D.weeks.length > 1;
+  for (let w = 0; w < D.weeks.length; w++) {
+    const days = D.weeks[w].days;
+    for (let i = 0; i < days.length; i++) {
+      const d = days[i];
+      if (!d.exercises.length) return builderError(many ? "bd.errEmptyDayW" : "bd.errEmptyDay", { n: i + 1, w: w + 1 }, i, undefined, w);
+      for (const x of d.exercises) {
+        for (let s = 0; s < x.setReps.length; s++) {
+          const r = cleanReps(x.setReps[s]);
+          if (!r) return builderError(x.timed ? "bd.errSeconds" : "bd.errReps", { name: x.name, n: i + 1, set: s + 1 }, i,
+            '.bd-ex[data-id="' + x.id + '"] .bd-set:nth-child(' + (s + 1) + ') input', w);
+          x.setReps[s] = r;
+        }
       }
     }
   }
@@ -230,10 +278,7 @@ $("bdSave").addEventListener("click", () => {
   if (!validateDraft()) return;
   const D = BD.draft;
   const id = BD.editingId || "my-" + rid();
-  const raw = {
-    format: 2, id, name: D.name.trim(), weeks: D.weeks, builder: true,
-    description: tn("prog.daysWeek", D.days.length),
-    days: D.days.map((d, i) => ({ id: d.id, name: d.name.trim() || t("day.n", { n: i + 1 }),
+  const dayFile = days => days.map((d, i) => ({ id: d.id, name: d.name.trim() || t("day.n", { n: i + 1 }),
       exercises: d.exercises.map(x => {
         const m = musclesOf(x), same = x.setReps.every(r => r === x.setReps[0]);
         const e = { id: x.id, name: x.name, sets: x.setReps.length, reps: same ? x.setReps[0] : x.setReps.join(" / ") };
@@ -246,8 +291,15 @@ $("bdSave").addEventListener("click", () => {
         if (m.primary) e.primary = m.primary;
         if (m.secondary.length) e.secondary = m.secondary;
         return e;
-      }) }))
-  };
+      }) }));
+  // One week repeats with no end; two or more weeks are a fixed plan that ends with "Program complete"
+  const nw = D.weeks.length, first = dayFile(D.weeks[0].days);
+  const raw = nw > 1
+    ? { format: 2, id, name: D.name.trim(), weeks: nw, weekly: true, builder: true,
+        description: tn("prog.nWeeks", nw) + " · " + tn("prog.daysWeek", D.weeks[0].days.length),
+        days: first, phases: D.weeks.map((wk, i) => ({ name: "", weeks: [i + 1, i + 1], days: i ? dayFile(wk.days) : first })) }
+    : { format: 2, id, name: D.name.trim(), weeks: 1, repeat: true, builder: true,
+        description: tn("prog.daysWeek", D.weeks[0].days.length), days: first };
   let p;
   try { p = normalizeProgram(raw, false); } catch (err) { showMsg("bdMsg", err.message, true); return; }
   store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== id).concat([raw]));
