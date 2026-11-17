@@ -7,7 +7,7 @@
 
 const BD = { draft: null, day: 0, editingId: null };
 const rid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
-const MAX_DAYS = 7, MAX_EX = 15, MAX_SETS = 10, DEFAULT_WEEKS = 8;
+const MAX_DAYS = 7, MAX_EX = 15, MAX_SETS = 5, DEFAULT_WEEKS = 8;
 
 function blankDay(n) { return { id: "d" + rid(), name: t("day.n", { n }), exercises: [] }; }
 /* A new exercise starts with one set, using the low end of its usual rep range */
@@ -35,7 +35,7 @@ function openBuilder(programId) {
         const dayId = sid(d.id) || "d" + (di + 1);
         return { id: dayId, name: d.name || t("day.n", { n: di + 1 }),
           exercises: (d.exercises || []).map((e, ei) => {
-            const n = Math.max(1, Math.min(MAX_SETS, Math.floor(+e.sets) || 1));
+            const n = Math.max(1, Math.min(10, Math.floor(+e.sets) || 1));
             const setReps = Array.isArray(e.setReps) && e.setReps.length === n ? e.setReps.map(String) : Array(n).fill(String(e.reps || ""));
             return { id: sid(e.id) || dayId + "e" + (ei + 1), ref: e.ref || "", name: e.name, setReps, rpe: e.rpe || "", cue: e.cue || "",
                      timed: !!e.timed, perSide: !!e.perSide, primary: e.primary || "", secondary: e.secondary || [] };

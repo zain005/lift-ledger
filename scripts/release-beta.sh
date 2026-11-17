@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ver="${1:?Give the new main-app version number, e.g. 3}"
-for item in index.html css js programs data icons fonts; do
+for item in index.html css js programs data vendor icons fonts; do
   rm -rf "./$item"; cp -R "beta/$item" "./$item"
 done
 cp beta/tests/*.spec.js tests/

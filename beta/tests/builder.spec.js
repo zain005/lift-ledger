@@ -71,6 +71,16 @@ test("each exercise starts with one set box; + adds sets, − removes them", asy
   await expect(exCard(page, 1).locator(".bd-set")).toHaveCount(3);
 });
 
+test("an exercise can have at most 5 sets", async ({ page }) => {
+  await page.click("#homeCreate");
+  await addExercise(page, "barbell bench press");
+  for (let i = 0; i < 4; i++) await exCard(page, 1).locator(".setbtn.plus").click();
+  await expect(exCard(page, 1).locator(".bd-set")).toHaveCount(5);
+  await expect(exCard(page, 1).locator(".setbtn.plus")).toHaveCount(0);
+  await exCard(page, 1).locator(".setbtn.minus").click();
+  await expect(exCard(page, 1).locator(".setbtn.plus")).toHaveCount(1);
+});
+
 test("build a program and train with it, set by set", async ({ page }) => {
   await page.click("#homeCreate");
   await page.fill("#bdName", "Ahmed plan");
@@ -100,13 +110,16 @@ test("build a program and train with it, set by set", async ({ page }) => {
   expect(raw.days[0].exercises[0]).toMatchObject({ ref: "bench-press", sets: 3, setReps: ["12", "10", "8"], primary: "chest" });
 });
 
-test("Home shows my program first, with Edit and Delete right below it", async ({ page }) => {
+test("Home shows my program first, with Share, Edit and Delete right below it", async ({ page }) => {
   await page.click("#homeCreate");
   await page.fill("#bdName", "Mine");
   await addExercise(page, "push-up");
   await page.click("#bdSave");
   const order = await page.evaluate(() => [...document.querySelectorAll("#homeContinue > *")].map(e => e.id || e.className));
   expect(order).toEqual(["homeGo", "own-acts"]);
+  const acts = await page.locator(".own-acts button").evaluateAll(b => b.map(x => x.dataset.act));
+  expect(acts).toEqual(["share", "edit", "delete"]);
+  await expect(page.locator('.own-acts [data-act="share"]')).toHaveText("Share");
   await expect(page.locator('.own-acts [data-act="edit"]')).toHaveText("Edit program");
   await expect(page.locator('.own-acts [data-act="delete"]')).toHaveText("Delete program");
   page.once("dialog", d => d.accept());

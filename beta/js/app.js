@@ -96,7 +96,7 @@ function normalizeProgram(raw, builtin) {
     };
   }).sort((a, b) => a.from - b.from);
   return {
-    id: slug(raw.id) || slug(name), name, builtin: !!builtin, byBuilder: !!raw.builder,
+    id: slug(raw.id) || slug(name), name, builtin: !!builtin, byBuilder: !!raw.builder, shared: !!raw.shared,
     description: str(raw.description, 200), schedule: str(raw.schedule, 300), weeks,
     dayIds: baseDays.map(d => d.id), dayNames: baseDays.map(d => d.name), dayShort: baseDays.map(d => d.short),
     phases
@@ -289,7 +289,7 @@ function renderDays() {
 
 function renderHead() {
   const done = isDayDone(view.week, view.day), missed = isMissed(view.week, view.day);
-  $("dayTitle").textContent = t("day.title", { w: view.week, name: P.dayNames[view.day] });
+  $("dayTitle").textContent = P.dayNames[view.day];
   const st = $("dayStatus");
   st.hidden = !(done || missed);
   st.className = "status " + (done ? "done" : "missed");
@@ -575,7 +575,9 @@ function ownActions(p) {
   ed.addEventListener("click", () => openBuilder(p.id));
   const rm = document.createElement("button"); rm.type = "button"; rm.className = "ghostbtn danger"; rm.textContent = t("prog.remove"); rm.dataset.act = "delete";
   rm.addEventListener("click", () => deleteProgram(p));
-  acts.append(ed, rm);
+  const sh = document.createElement("button"); sh.type = "button"; sh.className = "ghostbtn share"; sh.textContent = t("share.button"); sh.dataset.act = "share";
+  sh.addEventListener("click", () => openShare(p.id));
+  acts.append(sh, ed, rm);
   return acts;
 }
 function programCard(p) {
@@ -585,7 +587,7 @@ function programCard(p) {
   b.innerHTML = '<span><b></b><small class="desc"></small><small class="meta"></small></span><span class="act"></span>';
   b.querySelector("b").textContent = p.name;
   b.querySelector(".desc").textContent = p.description || tn("prog.daysWeek", p.dayNames.length);
-  b.querySelector(".meta").textContent = (p.builtin ? tn("prog.weeks", p.weeks) + " · " + tn("prog.daysWeek", p.dayNames.length) : t(p.byBuilder ? "prog.mine" : "prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
+  b.querySelector(".meta").textContent = (p.builtin ? tn("prog.daysWeek", p.dayNames.length) : t(p.byBuilder ? "prog.mine" : p.shared ? "prog.shared" : "prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
   b.querySelector(".act").textContent = t(cur ? "home.open" : started ? "home.resume" : "home.start");
   b.addEventListener("click", () => { if (!cur) setProgram(p.id); openWorkout(); });
   return b;
@@ -601,7 +603,7 @@ function renderHome() {
       '<svg class="c-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
     c.querySelector(".c-k").textContent = t(finished ? "home.finished" : P.builtin ? "home.continue" : "home.yourProgram");
     c.querySelector(".c-name").textContent = P.name;
-    c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("home.next", { name: t("day.title", { w: spot.week, name: P.dayNames[spot.day] }) });
+    c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("home.next", { name: P.dayNames[spot.day] });
     c.querySelector(".c-meta").textContent = t("prog.done", { n, total: tot });
     c.addEventListener("click", () => openWorkout(spot));
     hc.appendChild(c);
@@ -765,7 +767,7 @@ function applyChrome() {
   if (!SET.calTab && appMode === "cal") appMode = "home";
   if (!P && appMode === "workout") appMode = "home";
 }
-const WORKOUT_PARTS = ["weekbar", "weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"];
+const WORKOUT_PARTS = ["statsBtn", "weeks", "days", "rpe", "dayHead", "list", "dayDone", "progress", "emptyWarn", "foot"];
 function renderAll() {
   applyI18n();
   if (!PROGRAMS.length) return;
@@ -794,7 +796,8 @@ function renderAll() {
   if (prog) { renderProgress(); return; }
   renderDays(); renderList(); renderHead();
 }
-const go = m => () => { if (m === "settings") setPage = ""; if (m === "workout" && P) view = view.week ? view : currentSpot(); appMode = m; weeksOpen = false; renderAll(); window.scrollTo({ top: 0 }); };
+/* The workout tab always opens the current week (there's no week picker); stats stay one tap away */
+const go = m => () => { if (m === "settings") setPage = ""; if (m === "workout" && P) view = currentSpot(); appMode = m; weeksOpen = false; renderAll(); window.scrollTo({ top: 0 }); };
 $("modeHome").addEventListener("click", go("home"));
 $("modeWorkout").addEventListener("click", go("workout"));
 $("modeCal").addEventListener("click", go("cal"));
@@ -836,4 +839,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (v && v.week >= 1 && v.day >= 0) view = { week: v.week, day: v.day };
   await libLoad;
   renderAll();
+  if (typeof readShareHash === "function") readShareHash();
+  if (typeof showInstallTip === "function") showInstallTip(false);
 });

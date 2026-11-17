@@ -23,7 +23,8 @@ const start = async (page, id = "full-body-3") => {
   await expect(page.locator(".ex").first()).toBeVisible();
 };
 const cont = async page => { await page.click("#homeGo"); await expect(page.locator(".ex").first()).toBeVisible(); };
-const week = async (page, n) => { await page.click("#weekToggle"); await page.locator(".wk").nth(n - 1).click(); };
+/* The week selector is off the workout page for now; tests move between weeks the way the app does internally */
+const week = (page, n) => page.evaluate(w => goWeek(w), n);
 const day = (page, n) => page.locator(".day").nth(n - 1).click();
 const settingsPage = async (page, name) => { await page.click("#modeSet"); await page.click(`.setrow[data-page="${name}"]`); };
 const firstSet = page => page.locator(".ex").first().locator(".set input").first();
@@ -64,31 +65,28 @@ test("calorie details start blank, with a setup prompt", async ({ page }) => {
 test("starting a program opens it, and Home then offers Continue", async ({ page }) => {
   await start(page);
   await expect(page.locator("#appTitle")).toHaveText("Full Body");
-  await expect(page.locator("#dayTitle")).toHaveText("Wk 1 · Full Body A");
-  await expect(page.locator("#wtMain")).toHaveText("Week 1 of 8");
+  await expect(page.locator("#dayTitle")).toHaveText("Full Body A");
   await expect(page.locator(".day")).toHaveCount(3);
   expect(await noSideScroll(page)).toBe(true);
   for (const box of await page.locator(".set input").all()) await box.fill("20");
   await page.click("#dayDone");
   await page.click("#modeHome");
   await expect(page.locator("#homeHeadline")).toHaveText("Welcome back");
-  await expect(page.locator("#homeGo")).toContainText("Wk 1 · Full Body B");
+  await expect(page.locator("#homeGo")).toContainText("Next: Full Body B");
   await expect(page.locator('.home-card[data-id="full-body-3"] .act')).toHaveText("Open");
   await page.reload();
   await expect(page.locator("#home")).toBeVisible();              // every launch opens on Home
   await cont(page);
-  await expect(page.locator("#dayTitle")).toHaveText("Wk 1 · Full Body B");
+  await expect(page.locator("#dayTitle")).toHaveText("Full Body B");
 });
 
-test("the week selector folds away and opens on demand", async ({ page }) => {
+test("the workout page has no week selector, just the days and Stats", async ({ page }) => {
   await start(page);
-  await expect(page.locator("#weeks")).toBeHidden();
-  await page.click("#weekToggle");
-  await expect(page.locator("#weeks")).toBeVisible();
-  await expect(page.locator(".wk")).toHaveCount(8);
-  await page.locator(".wk").nth(2).click();
-  await expect(page.locator("#weeks")).toBeHidden();
-  await expect(page.locator("#wtMain")).toHaveText("Week 3 of 8");
+  await expect(page.locator("#weekbar")).toBeHidden();
+  await expect(page.locator("#weekToggle")).toBeHidden();
+  await expect(page.locator(".wk:visible")).toHaveCount(0);
+  await expect(page.locator(".day")).toHaveCount(3);
+  await expect(page.locator("#statsBtn")).toBeVisible();
 });
 
 test("Settings is a short list, and each item opens its own page", async ({ page }) => {
@@ -127,7 +125,7 @@ test("logged weights and done days survive a reload", async ({ page }) => {
   await page.reload();
   await cont(page);
   // A done day with empty sets is where Continue goes
-  await expect(page.locator("#dayTitle")).toHaveText("Wk 1 · Full Body A");
+  await expect(page.locator("#dayTitle")).toHaveText("Full Body A");
   await expect(page.locator(".ex").first().locator(".set input").nth(1)).toHaveValue("62.5");
   await expect(page.locator(".day").first()).toHaveClass(/complete/);
 });
@@ -137,7 +135,6 @@ test("a skipped session is marked missed", async ({ page }) => {
   await day(page, 2);
   await page.click("#dayDone");
   await expect(page.locator(".day").first()).toHaveClass(/missed/);
-  await expect(page.locator("#weekToggle")).toHaveClass(/has-missed/);
 });
 
 test("last week's weights show on the next week", async ({ page }) => {
@@ -194,7 +191,7 @@ test("imports a valid program and rejects a broken one", async ({ page }) => {
   await expect(page.locator("#homeGo")).toContainText("Test Plan");
   await cont(page);
   await expect(page.locator("#appTitle")).toHaveText("Test Plan");
-  await expect(page.locator(".wk")).toHaveCount(4);
+  expect(await page.evaluate(() => NW())).toBe(4);
   await expect(page.locator(".ex .set")).toHaveCount(2);
 
   await page.click("#modeHome");
@@ -283,7 +280,6 @@ test("every screen's text comes from the strings file", async ({ page }) => {
   await start(page);
   await firstSet(page).fill("40");
   await page.click("#dayDone");
-  await page.click("#weekToggle");
   await page.click("#statsBtn");
   await fillDetails(page);
   await page.click("#modeCal");
@@ -307,7 +303,6 @@ test("right-to-left layout fits the screen on every page", async ({ page }) => {
   await page.evaluate(() => { document.documentElement.dir = "rtl"; renderAll(); });
   const fits = () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
   expect(await fits()).toBe(true);
-  await page.click("#weekToggle"); expect(await fits()).toBe(true);
   await page.click("#statsBtn"); expect(await fits()).toBe(true);
   await page.click("#modeHome"); expect(await fits()).toBe(true);
   await fillDetails(page); expect(await fits()).toBe(true);

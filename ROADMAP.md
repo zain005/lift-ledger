@@ -10,8 +10,8 @@ Each step ships first to the **test version** at [zain005.github.io/lift-ledger/
 |---|---|---|
 | 1 | Groundwork: dark mode, translation system, right-to-left layout, permanent exercise ids | **Released** |
 | 2 | Exercise library: 171 exercises, search and filters, "My exercises" | **In test version** |
-| 3 | Program builder: days, exercises from the library, sets and reps, copy a preset, weekly sets per muscle, edit safely | **In test version** (phases and different reps per set come later) |
-| 4 | Sharing programs | Planned |
+| 3 | Program builder: 1–7 days, exercises from the library or added by hand, one box per set (up to 5) with its own reps, weekly sets per muscle, edit safely | **In test version** (phases come later) |
+| 4 | Sharing programs: link, QR code and file; update keeps the trainee's weights; home-screen tip | **In test version** (backup reminders and a one-screen "Full program" view come later) |
 | 5 | Arabic | Planned |
 
 ## Decisions
@@ -29,6 +29,9 @@ These were agreed before building. Change them here first if they change.
 - Users can add their own exercises (they must pick a primary muscle); these are saved to "My exercises" for reuse.
 - Sets and reps are required. Reps can be a number or a range, the same for every set by default, with an optional per-set mode (12 / 10 / 8). Exercises can be timed (seconds), per side, or bodyweight. Effort (RPE) and notes are optional.
 - All library content is original. Built-in programs must never copy a paid program.
+
+**Weeks**
+- The workout page has no week selector for now. It always opens on the next session to do, and Stats shows the whole program. A separate week feature is planned and will be designed before it's built. The builder has no week control either; programs use 8 weeks until then.
 
 **Data safety**
 - Days and exercises have permanent ids, and logs are stored by id (log format v2), so reordering or editing a program never moves logged weights to the wrong exercise. Older logs are converted automatically, and an untouched copy of the original is kept.

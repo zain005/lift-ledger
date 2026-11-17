@@ -74,7 +74,7 @@ test("swap an exercise for any library exercise, starting with the same muscle",
   await page.reload();
   await page.click("#homeGo");
   await expect(page.locator(".ex").first().locator("h3")).toContainText("Pendulum Squat");
-  await page.click("#weekToggle"); await page.locator(".wk").nth(1).click(); await page.locator(".day").first().click();
+  await page.evaluate(() => goWeek(2)); await page.locator(".day").first().click();
   await expect(page.locator(".ex").first().locator("h3")).toContainText("Back Squat");
 });
 
