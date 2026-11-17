@@ -344,6 +344,7 @@
     <div class="panel share-card">
       <b id="shName"></b>
       <small id="shSummary"></small>
+      <label class="tog sh-pro" id="shProRow" hidden><span><b data-i18n="share.proSwitch">Send as Pro program</b><small data-i18n="share.proDesc">Your trainee gets weeks and the calorie calculator, and can see other programs too.</small></span><input type="checkbox" role="switch" id="shPro"></label>
       <button type="button" class="addbtn" id="shNative" data-i18n="share.send">Send link</button>
       <div class="btnrow share-btns">
         <button type="button" class="ghostbtn" id="shCopy" data-i18n="share.copy">Copy link</button>
@@ -365,8 +366,10 @@
       <div class="panel share-card">
         <b id="imName"></b>
         <small id="imSummary"></small>
+        <span class="tag pro-tag" id="imPro" hidden data-i18n="share.proTag">Pro program</span>
         <ul class="im-days" id="imDays"></ul>
         <p class="note" id="imUpdateNote" hidden data-i18n="share.updateNote">You already have this program. Updating it keeps all the weights you've logged.</p>
+        <div class="im-changes" id="imChanges" hidden><b data-i18n="share.changesTitle">What changed</b><ul id="imChangeList"></ul></div>
         <button type="button" class="addbtn" id="imAdd"></button>
         <button type="button" class="ghostbtn" id="imCancel" data-i18n="lib.cancel">Cancel</button>
         <p class="note" data-i18n="share.inNote">The program is saved on this phone and works offline. You won't need the link again.</p>

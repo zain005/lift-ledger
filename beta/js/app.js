@@ -594,17 +594,25 @@ function deleteProgram(p) {
   store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== p.id));
   PROGRAMS = PROGRAMS.filter(x => x !== p);
   if (P && P.id === p.id) forgetProgram();
+  if (SET.follow === p.id) { SET.follow = ""; saveSettings(); }
   renderAll();
 }
+/* Buttons under a program: your own get Share, Edit, Delete; a coach's program can only be removed;
+   a ready-made one can be shared */
 function ownActions(p) {
   const acts = document.createElement("div"); acts.className = "own-acts";
+  const shareBtn = () => { const b = document.createElement("button"); b.type = "button"; b.className = "ghostbtn share"; b.textContent = t("share.button"); b.dataset.act = "share"; b.addEventListener("click", () => openShare(p.id)); return b; };
+  if (p.builtin) { acts.classList.add("one"); acts.append(shareBtn()); return acts; }
+  if (p.shared) {
+    const rm = document.createElement("button"); rm.type = "button"; rm.className = "ghostbtn danger"; rm.textContent = t("prog.remove"); rm.dataset.act = "delete";
+    rm.addEventListener("click", () => deleteProgram(p));
+    acts.classList.add("one"); acts.append(rm); return acts;
+  }
   const ed = document.createElement("button"); ed.type = "button"; ed.className = "ghostbtn"; ed.textContent = t("prog.edit"); ed.dataset.act = "edit";
   ed.addEventListener("click", () => openBuilder(p.id));
   const rm = document.createElement("button"); rm.type = "button"; rm.className = "ghostbtn danger"; rm.textContent = t("prog.remove"); rm.dataset.act = "delete";
   rm.addEventListener("click", () => deleteProgram(p));
-  const sh = document.createElement("button"); sh.type = "button"; sh.className = "ghostbtn share"; sh.textContent = t("share.button"); sh.dataset.act = "share";
-  sh.addEventListener("click", () => openShare(p.id));
-  acts.append(sh, ed, rm);
+  acts.append(shareBtn(), ed, rm);
   return acts;
 }
 function programCard(p) {
@@ -620,8 +628,12 @@ function programCard(p) {
   return b;
 }
 function renderHome() {
+  const trainee = traineeView();
   $("homeHeadline").textContent = t(P ? "home.welcomeBack" : "home.welcome");
-  $("homeSub").textContent = t(P ? "home.subBack" : "home.subNew");
+  $("homeSub").textContent = t(trainee ? "home.subTrainee" : P ? "home.subBack" : "home.subNew");
+  // A trainee on a coach's program sees just that program: nothing to choose, build or import
+  ["homeCreate", "homeChooseH", "homeProgs"].forEach(id => { $(id).hidden = trainee; });
+  document.querySelector("#home .home-links").hidden = trainee;
   const hc = $("homeContinue"); hc.innerHTML = "";
   if (P) {
     const spot = currentSpot(), [n, tot] = doneCount(P), finished = spot.week === STATS();
@@ -631,16 +643,17 @@ function renderHome() {
     const c = document.createElement("button"); c.type = "button"; c.className = "continue" + (finished ? " complete" : ""); c.id = "homeGo";
     c.innerHTML = '<span class="c-k"></span><b class="c-name"></b><span class="c-next"></span><span class="meter"><i style="width:' + Math.round(frac * 100) + '%"></i></span><span class="c-meta"></span>' +
       '<svg class="c-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-    c.querySelector(".c-k").textContent = t(finished ? "home.finished" : P.builtin ? "home.continue" : "home.yourProgram");
+    c.querySelector(".c-k").textContent = t(finished ? "home.finished" : P.id === SET.follow ? "home.fromCoach" : P.builtin ? "home.continue" : "home.yourProgram");
     c.querySelector(".c-name").textContent = P.name;
     c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("home.next", { name: dayName(spot.week, spot.day) });
     c.querySelector(".c-meta").textContent = tot ? doneText(n, tot) : t("home.thisWeek", { n: wDone, total: DPW(spot.week) });
     c.addEventListener("click", () => openWorkout(spot));
     hc.appendChild(c);
-    if (!P.builtin) hc.appendChild(ownActions(P));
+    if (finished) { const n2 = document.createElement("p"); n2.className = "note complete-note"; n2.textContent = t(P.id === SET.follow ? "home.completeCoach" : "home.completeOwn"); hc.appendChild(n2); }
+    if (!trainee) hc.appendChild(ownActions(P));
   }
   // my other programs
-  const mine = PROGRAMS.filter(p => !p.builtin && !(P && p.id === P.id));
+  const mine = trainee ? [] : PROGRAMS.filter(p => !p.builtin && !(P && p.id === P.id));
   $("homeMineH").hidden = !mine.length;
   const mg = $("homeMine"); mg.innerHTML = "";
   mine.forEach(p => { const w = document.createElement("div"); w.className = "pcard-wrap"; w.append(programCard(p), ownActions(p)); mg.appendChild(w); });
@@ -652,7 +665,12 @@ function renderHome() {
 $("homeCreate").addEventListener("click", () => openBuilder(null));
 
 function showMsg(id, text, err) { const m = $(id); m.hidden = !text; m.textContent = text || ""; m.classList.toggle("err", !!err); }
-function setProgram(id) { useProgram(id); view = currentSpot(); saveView(); }
+function setProgram(id) {
+  useProgram(id); view = currentSpot(); saveView();
+  if (SET.follow && SET.follow !== id) { SET.follow = ""; saveSettings(); }   // choosing another program stops following the coach's
+}
+/* A trainee following a coach's normal program sees only that program; Pro shows everything */
+const traineeView = () => !!(!SET.pro && SET.follow && P && P.id === SET.follow);
 
 function renderSeg(id, key, value) {
   document.querySelectorAll("#" + id + " button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset[key] === value)));

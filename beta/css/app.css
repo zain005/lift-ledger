@@ -683,3 +683,14 @@ button:active:not(:disabled) { opacity: .72; }
 .bd-weektab[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
 .bd-weektab.empty:not([aria-pressed="true"]) { border-color: var(--miss); }
 .bd-weektab.add { border-style: dashed; color: var(--accent); border-color: var(--accent); }
+.home-links[hidden], #homeCreate[hidden] { display: none; }
+.own-acts.one { grid-template-columns: minmax(0, 1fr); }
+.complete-note { margin: 0 2px; }
+.pro-tag { justify-self: start; color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.pro-tag[hidden] { display: none; }
+.sh-pro { border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px 12px; }
+.sh-pro[hidden] { display: none; }
+.im-changes { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px 12px; }
+.im-changes[hidden] { display: none; }
+.im-changes ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 14px; }
+.im-days li.more { color: var(--muted); font-size: 13px; background: transparent; border-style: dashed; }

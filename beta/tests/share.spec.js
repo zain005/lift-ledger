@@ -56,7 +56,7 @@ test("a trainer shares a program and the trainee gets exactly the same program",
   await expect(coach.locator("#shSummary")).toHaveText("2 days a week · 3 exercises");
   await expect(coach.locator("#shQr svg")).toBeVisible();
   const link = await coach.locator("#shLink").inputValue();
-  expect(link).toMatch(/#p=1\.[\w-]+\.[0-9a-z]+$/);
+  expect(link).toMatch(/#p=2\.[\w-]+\.[0-9a-z]+$/);
   expect(link.length).toBeLessThan(1200);
   expect(await coach.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
@@ -98,7 +98,7 @@ test("a cut-off or unknown link is reported, never half-imported", async ({ brow
   await expect(trainee.locator("#importSheet")).toBeHidden();
   expect(await trainee.evaluate(() => localStorage.getItem(PREFIX + "programs-custom"))).toBeNull();
 
-  await trainee.goto(link.replace("#p=1.", "#p=9."));
+  await trainee.goto(link.replace("#p=2.", "#p=9."));
   await expect(trainee.locator("#imErrText")).toContainText("newer version");
   await clean(coach); await clean(trainee);
 });
@@ -128,15 +128,15 @@ test("sharing an updated program keeps the trainee's logged weights", async ({ b
   await clean(coach); await clean(trainee);
 });
 
-test("built-in programs have no share button; my own program does", async ({ page }) => {
+test("a ready-made program can be shared too (Share only); my own has Share, Edit and Delete", async ({ page }) => {
   watch(page);
   await page.goto("./");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.locator('.home-card[data-id="full-body-3"]').click();
   await page.click("#modeHome");
-  await expect(page.locator('.own-acts [data-act="share"]')).toHaveCount(0);
+  expect(await page.locator(".own-acts button").evaluateAll(b => b.map(x => x.dataset.act))).toEqual(["share"]);
   await buildProgram(page);
-  await expect(page.locator('.own-acts [data-act="share"]')).toBeVisible();
+  expect(await page.locator("#homeContinue .own-acts button").evaluateAll(b => b.map(x => x.dataset.act))).toEqual(["share", "edit", "delete"]);
   await clean(page);
 });
