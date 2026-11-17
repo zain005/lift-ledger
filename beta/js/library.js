@@ -28,8 +28,8 @@ function normText(s) {
     .replace(/[^a-z0-9؀-ۿ]+/g, " ").trim();
 }
 function searchText(e) {
-  const muscles = [e.primary].concat(e.secondary || []).map(muscleName).join(" ");
-  return normText([e.name, e.terms || "", muscles, equipName(e.equipment), e.id.replace(/-/g, " ")].join(" "));
+  const muscles = [e.primary].concat(e.secondary || []).filter(Boolean).map(muscleName).join(" ");
+  return normText([e.name, e.terms || "", muscles, e.equipment ? equipName(e.equipment) : "", e.id.replace(/-/g, " ")].join(" "));
 }
 function searchExercises(query, muscle, equip, mineOnly) {
   const words = normText(query).split(" ").filter(Boolean);
@@ -48,7 +48,9 @@ function searchExercises(query, muscle, equip, mineOnly) {
   return out.map(x => x[1]);
 }
 function exMeta(e) {
-  const bits = [muscleName(e.primary), equipName(e.equipment)];
+  const bits = [];
+  if (e.primary) bits.push(muscleName(e.primary));
+  if (e.equipment) bits.push(equipName(e.equipment));
   if (e.timed) bits.push(t("lib.timed"));
   if (e.perSide) bits.push(t("lib.perSide"));
   return bits.join(" · ");
@@ -59,6 +61,7 @@ const PK = { muscle: "", equip: "", mine: false, onPick: null, editing: null };
 
 function openPicker(opts) {
   opts = opts || {};
+  PK.afterSave = null;
   PK.muscle = opts.muscle || ""; PK.equip = ""; PK.mine = false; PK.onPick = opts.onPick || null; PK.editing = null;
   $("pkTitle").textContent = t(PK.onPick ? "lib.pickTitle" : "lib.title");
   $("pkSearch").value = "";
@@ -67,7 +70,6 @@ function openPicker(opts) {
   $("picker").hidden = false;
   document.body.classList.add("sheet-open");
   revealActiveChip();
-  $("pkSearch").focus({ preventScroll: true });
 }
 function closePicker() { $("picker").hidden = true; if ($("builder").hidden) document.body.classList.remove("sheet-open"); PK.onPick = null; }
 
@@ -119,6 +121,16 @@ function renderPickerList() {
   if (!res.length) { const li = document.createElement("li"); li.className = "none"; li.textContent = t("lib.noResults"); ul.appendChild(li); }
 }
 
+/* Open just the edit form for one of my exercises (used by the builder). onSaved gets the updated exercise. */
+function editMyExercise(id, onSaved) {
+  const ex = CUSTOM_EX.find(x => x.id === id); if (!ex) return false;
+  PK.onPick = null; PK.afterSave = onSaved;
+  $("pkTitle").textContent = t("lib.editTitle");
+  $("picker").hidden = false; document.body.classList.add("sheet-open");
+  openForm(ex);
+  return true;
+}
+
 /* ---------- my exercises ---------- */
 function openForm(ex) {
   PK.editing = ex || null;
@@ -126,7 +138,7 @@ function openForm(ex) {
   $("pkFormTitle").textContent = t(ex ? "lib.editTitle" : "lib.addTitle");
   $("fxName").value = ex ? ex.name : ($("pkSearch").value || "");
   const pm = $("fxPrimary"); pm.innerHTML = "";
-  const o0 = document.createElement("option"); o0.value = ""; o0.textContent = t("lib.choose"); pm.appendChild(o0);
+  const o0 = document.createElement("option"); o0.value = ""; o0.textContent = t("lib.notSet"); pm.appendChild(o0);
   LIBRARY.muscles.forEach(m => { const o = document.createElement("option"); o.value = m; o.textContent = muscleName(m); pm.appendChild(o); });
   pm.value = ex ? ex.primary : (PK.muscle || "");
   const sec = new Set(ex ? ex.secondary || [] : []);
@@ -137,8 +149,9 @@ function openForm(ex) {
   });
   syncSecondary();
   const eq = $("fxEquip"); eq.innerHTML = "";
+  const e0 = document.createElement("option"); e0.value = ""; e0.textContent = t("lib.notSet"); eq.appendChild(e0);
   LIBRARY.equipment.forEach(q => { const o = document.createElement("option"); o.value = q; o.textContent = equipName(q); eq.appendChild(o); });
-  eq.value = ex ? ex.equipment : (PK.equip || "dumbbell");
+  eq.value = ex ? (ex.equipment || "") : (PK.equip || "");
   $("fxTimed").checked = !!(ex && ex.timed);
   $("fxSide").checked = !!(ex && ex.perSide);
   $("fxBw").checked = !!(ex && ex.bodyweight);
@@ -146,7 +159,6 @@ function openForm(ex) {
   syncFormReps();
   $("fxDelete").hidden = !ex;
   showMsg("fxMsg", "");
-  $("fxName").focus({ preventScroll: true });
 }
 /* The main muscle isn't offered again as an "other" muscle */
 function syncSecondary() {
@@ -154,7 +166,7 @@ function syncSecondary() {
   $("fxSecondary").querySelectorAll(".chip").forEach(c => { c.hidden = c.dataset.m === pm; if (c.hidden) c.setAttribute("aria-pressed", "false"); });
 }
 function syncFormReps() { $("fxRepsL").textContent = t($("fxTimed").checked ? "lib.seconds" : "lib.reps"); }
-function closeForm() { $("pkForm").hidden = true; $("pkBrowse").hidden = false; PK.editing = null; renderPickerFilters(); renderPickerList(); }
+function closeForm() { if (PK.afterSave) { PK.afterSave = null; closePicker(); return; } $("pkForm").hidden = true; $("pkBrowse").hidden = false; PK.editing = null; renderPickerFilters(); renderPickerList(); }
 function saveCustom() { store(LIB_KEY, CUSTOM_EX); }
 
 $("fxTimed").addEventListener("change", syncFormReps);
@@ -165,7 +177,6 @@ $("fxSave").addEventListener("click", () => {
   const primary = $("fxPrimary").value;
   const reps = cleanReps($("fxReps").value);
   if (!name) { showMsg("fxMsg", t("lib.errName"), true); $("fxName").focus(); return; }
-  if (!primary) { showMsg("fxMsg", t("lib.errMuscle"), true); $("fxPrimary").focus(); return; }
   if (!reps) { showMsg("fxMsg", t($("fxTimed").checked ? "lib.errSeconds" : "lib.errReps"), true); $("fxReps").focus(); return; }
   const secondary = [...$("fxSecondary").querySelectorAll('.chip[aria-pressed="true"]')].map(c => c.dataset.m).filter(m => m !== primary);
   const ex = {
@@ -175,6 +186,7 @@ $("fxSave").addEventListener("click", () => {
   };
   if (PK.editing) CUSTOM_EX = CUSTOM_EX.map(x => x.id === ex.id ? ex : x); else CUSTOM_EX.unshift(ex);
   saveCustom();
+  if (PK.afterSave) { const cb = PK.afterSave; PK.afterSave = null; closePicker(); cb(ex); return; }
   if (PK.onPick && !PK.editing) { const cb = PK.onPick; closePicker(); cb(ex); return; }
   closeForm();
 });

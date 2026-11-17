@@ -69,7 +69,8 @@ function normalizeProgram(raw, builtin) {
           seenEx.add(exId);
           const video = str(e.video, 300);
           return {
-            id: exId, ref: sid(e.ref), name: en, sets, reps: str(e.reps, 12) || "", type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
+            id: exId, ref: sid(e.ref), name: en, sets, reps: str(e.reps, 60) || "",
+            setReps: Array.isArray(e.setReps) && e.setReps.length === sets ? e.setReps.map(r => str(r, 7)) : null, type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
             alts: Array.isArray(e.alts) ? e.alts.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
             timed: !!e.timed, perSide: !!e.perSide,
             primary: str(e.primary, 20), secondary: Array.isArray(e.secondary) ? e.secondary.map(m => str(m, 20)).slice(0, 8) : [],
@@ -355,7 +356,7 @@ function renderList() {
       const id = "w" + w + "d" + d + "e" + i + "s" + s;
       const wrap = document.createElement("div"); wrap.className = "set";
       wrap.innerHTML = '<label for="' + id + '"></label><div class="field"><input id="' + id + '" type="text" inputmode="decimal" autocomplete="off" placeholder="0"><span class="unit"></span></div>';
-      wrap.querySelector("label").textContent = t("sets.n", { n: s + 1 });
+      wrap.querySelector("label").textContent = ex.setReps ? t("sets.nReps", { n: s + 1, r: ex.setReps[s] }) : t("sets.n", { n: s + 1 });
       wrap.querySelector(".unit").textContent = unitLabel();
       const inp = wrap.querySelector("input");
       inp.value = (e.s && e.s[s]) || "";
@@ -436,7 +437,7 @@ function computeStats() {
       dayList(w, d).forEach((ex, i) => {
         const e = peek(w, d, i); if (!e || !e.s) return;
         const ws = e.s.slice(0, ex.sets).map(num).filter(Boolean); if (!ws.length) return;
-        vol += ws.reduce((a, b) => a + b, 0) * (parseInt(ex.reps, 10) || 0);
+        vol += e.s.slice(0, ex.sets).reduce((a, v, k) => a + num(v) * (parseInt(ex.setReps ? ex.setReps[k] : ex.reps, 10) || 0), 0);
         const actual = e.alt || ex.name;
         const L = lifts[actual] || (lifts[actual] = { name: actual, pts: {} });
         L.pts[w] = Math.max(L.pts[w] || 0, ...ws);
@@ -561,6 +562,34 @@ function hasLogs(p) {
 function openWorkout(spot) { appMode = "workout"; view = spot || currentSpot(); saveView(); renderAll(); window.scrollTo({ top: 0 }); }
 function forgetProgram() { P = null; logs = {}; try { localStorage.removeItem(KEY.prog); } catch (e) {} }
 
+function deleteProgram(p) {
+  if (!confirm(t("prog.removeConfirm", { name: p.name }))) return;
+  store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== p.id));
+  PROGRAMS = PROGRAMS.filter(x => x !== p);
+  if (P && P.id === p.id) forgetProgram();
+  renderAll();
+}
+function ownActions(p) {
+  const acts = document.createElement("div"); acts.className = "own-acts";
+  const ed = document.createElement("button"); ed.type = "button"; ed.className = "ghostbtn"; ed.textContent = t("prog.edit"); ed.dataset.act = "edit";
+  ed.addEventListener("click", () => openBuilder(p.id));
+  const rm = document.createElement("button"); rm.type = "button"; rm.className = "ghostbtn danger"; rm.textContent = t("prog.remove"); rm.dataset.act = "delete";
+  rm.addEventListener("click", () => deleteProgram(p));
+  acts.append(ed, rm);
+  return acts;
+}
+function programCard(p) {
+  const cur = P && p.id === P.id, [n, tot] = doneCount(p), started = !cur && hasLogs(p);
+  const b = document.createElement("button"); b.type = "button"; b.className = "pcard home-card"; b.dataset.id = p.id;
+  b.setAttribute("aria-pressed", String(!!cur));
+  b.innerHTML = '<span><b></b><small class="desc"></small><small class="meta"></small></span><span class="act"></span>';
+  b.querySelector("b").textContent = p.name;
+  b.querySelector(".desc").textContent = p.description || tn("prog.daysWeek", p.dayNames.length);
+  b.querySelector(".meta").textContent = (p.builtin ? tn("prog.weeks", p.weeks) + " · " + tn("prog.daysWeek", p.dayNames.length) : t(p.byBuilder ? "prog.mine" : "prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
+  b.querySelector(".act").textContent = t(cur ? "home.open" : started ? "home.resume" : "home.start");
+  b.addEventListener("click", () => { if (!cur) setProgram(p.id); openWorkout(); });
+  return b;
+}
 function renderHome() {
   $("homeHeadline").textContent = t(P ? "home.welcomeBack" : "home.welcome");
   $("homeSub").textContent = t(P ? "home.subBack" : "home.subNew");
@@ -570,44 +599,23 @@ function renderHome() {
     const c = document.createElement("button"); c.type = "button"; c.className = "continue"; c.id = "homeGo";
     c.innerHTML = '<span class="c-k"></span><b class="c-name"></b><span class="c-next"></span><span class="meter"><i style="width:' + Math.round(n / tot * 100) + '%"></i></span><span class="c-meta"></span>' +
       '<svg class="c-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-    c.querySelector(".c-k").textContent = t(finished ? "home.finished" : "home.continue");
+    c.querySelector(".c-k").textContent = t(finished ? "home.finished" : P.builtin ? "home.continue" : "home.yourProgram");
     c.querySelector(".c-name").textContent = P.name;
-    c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("day.title", { w: spot.week, name: P.dayNames[spot.day] });
+    c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("home.next", { name: t("day.title", { w: spot.week, name: P.dayNames[spot.day] }) });
     c.querySelector(".c-meta").textContent = t("prog.done", { n, total: tot });
     c.addEventListener("click", () => openWorkout(spot));
     hc.appendChild(c);
+    if (!P.builtin) hc.appendChild(ownActions(P));
   }
-  $("homeChooseH").textContent = t(P ? "home.switch" : "home.orPreset");
+  // my other programs
+  const mine = PROGRAMS.filter(p => !p.builtin && !(P && p.id === P.id));
+  $("homeMineH").hidden = !mine.length;
+  const mg = $("homeMine"); mg.innerHTML = "";
+  mine.forEach(p => { const w = document.createElement("div"); w.className = "pcard-wrap"; w.append(programCard(p), ownActions(p)); mg.appendChild(w); });
+  // ready-made programs
+  $("homeChooseH").textContent = t("home.orPreset");
   const pg = $("homeProgs"); pg.innerHTML = "";
-  PROGRAMS.forEach(p => {
-    const cur = P && p.id === P.id, [n, tot] = doneCount(p), started = !cur && hasLogs(p);
-    const wrap = document.createElement("div"); wrap.className = "pcard-wrap";
-    const b = document.createElement("button"); b.type = "button"; b.className = "pcard home-card"; b.dataset.id = p.id;
-    b.setAttribute("aria-pressed", String(!!cur));
-    b.innerHTML = '<span><b></b><small class="desc"></small><small class="meta"></small></span><span class="act"></span>';
-    b.querySelector("b").textContent = p.name;
-    b.querySelector(".desc").textContent = p.description || tn("prog.daysWeek", p.dayNames.length);
-    b.querySelector(".meta").textContent = tn("prog.weeks", p.weeks) + " · " + tn("prog.daysWeek", p.dayNames.length) + (p.builtin ? "" : " · " + t(p.byBuilder ? "prog.mine" : "prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
-    b.querySelector(".act").textContent = t(cur ? "home.open" : started ? "home.resume" : "home.start");
-    b.addEventListener("click", () => { if (!cur) setProgram(p.id); openWorkout(); });
-    wrap.appendChild(b);
-    if (!p.builtin) {
-      const acts = document.createElement("div"); acts.className = "pcard-acts";
-      const ed = document.createElement("button"); ed.type = "button"; ed.className = "linkbtn"; ed.textContent = t("prog.edit");
-      ed.addEventListener("click", () => openBuilder(p.id));
-      acts.appendChild(ed);
-      const rm = document.createElement("button"); rm.type = "button"; rm.className = "linkbtn"; rm.textContent = t("prog.remove");
-      rm.addEventListener("click", () => {
-        if (!confirm(t("prog.removeConfirm", { name: p.name }))) return;
-        store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== p.id));
-        PROGRAMS = PROGRAMS.filter(x => x !== p);
-        if (cur) forgetProgram();
-        renderAll();
-      });
-      acts.appendChild(rm); wrap.appendChild(acts);
-    }
-    pg.appendChild(wrap);
-  });
+  PROGRAMS.filter(p => p.builtin).forEach(p => pg.appendChild(programCard(p)));
 }
 $("homeCreate").addEventListener("click", () => openBuilder(null));
 

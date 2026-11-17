@@ -84,8 +84,6 @@ test("add, find, edit and delete my own exercise", async ({ page }) => {
   await page.click("#fxSave");
   await expect(page.locator("#fxMsg")).toContainText("name");
   await page.fill("#fxName", "Landmine Squat");
-  await page.click("#fxSave");
-  await expect(page.locator("#fxMsg")).toContainText("main muscle");
   await page.selectOption("#fxPrimary", "quads");
   await expect(page.locator('#fxSecondary .chip[data-m="quads"]')).toBeHidden();
   await page.fill("#fxReps", "abc");

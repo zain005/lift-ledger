@@ -54,6 +54,8 @@
         <span class="plus" aria-hidden="true">+</span>
         <span><b data-i18n="home.create">Create my own program</b><small data-i18n="home.createSub">Choose your training days, then add exercises from the library.</small></span>
       </button>
+      <h3 class="sect" id="homeMineH" data-i18n="home.mine" hidden>My programs</h3>
+      <div class="progs" id="homeMine"></div>
       <h3 class="sect" id="homeChooseH"></h3>
       <div class="progs" id="homeProgs"></div>
       <div class="home-links">
@@ -320,20 +322,11 @@
       <h2 id="bdTitle"></h2>
       <button type="button" class="sheet-x" id="bdClose" data-i18n-aria="lib.close">×</button>
     </div>
-    <div class="panel" id="bdStart">
-      <h3 data-i18n="bd.startFrom">Start from</h3>
-      <div class="chips chips-wrap" id="bdStartChips"></div>
-      <p class="note" data-i18n="bd.startNote">Copying a ready-made program gives you your own version to change. The original stays as it is.</p>
-    </div>
     <div class="panel">
       <div class="fld"><label for="bdName" data-i18n="bd.name">Program name</label><input id="bdName" maxlength="40" autocomplete="off" data-i18n-ph="bd.namePh"></div>
-      <div class="fgrid">
-        <div class="fld"><label id="bdWeeksL"></label><div class="stepper big"><button type="button" id="bdWeeksDec" data-i18n-aria="bd.fewerWeeks">−</button><output id="bdWeeks"></output><button type="button" id="bdWeeksInc" data-i18n-aria="bd.moreWeeks">+</button></div></div>
-        <div class="fld"><label id="bdDaysL"></label><div class="stepper big"><button type="button" id="bdDaysDec" data-i18n-aria="bd.fewerDays">−</button><output id="bdDays"></output><button type="button" id="bdDaysInc" data-i18n-aria="bd.moreDays">+</button></div></div>
-      </div>
-      <p class="note" data-i18n="bd.weekNote">You plan one week. It repeats for the number of weeks you choose.</p>
     </div>
     <div class="bd-daytabs" id="bdDayTabs" role="group" data-i18n-aria="nav.dayAria"></div>
+    <p class="note bd-daysnote" id="bdDaysNote"></p>
     <div class="panel">
       <div class="bd-dayhead">
         <div class="fld"><label for="bdDayName" data-i18n="bd.dayName">Day name</label><input id="bdDayName" maxlength="30" autocomplete="off" data-i18n-ph="bd.dayNamePh"></div>
@@ -341,6 +334,7 @@
       </div>
       <ul class="bd-exlist" id="bdExList"></ul>
       <button type="button" class="addbtn" id="bdAdd" data-i18n="bd.add">+ Add exercise</button>
+      <button type="button" class="linkbtn danger-link" id="bdDelDay" data-i18n="bd.deleteDay">Delete this day</button>
     </div>
     <div class="panel">
       <h3 data-i18n="bd.musclesTitle">Weekly sets per muscle</h3>
