@@ -33,12 +33,22 @@ These were agreed before building. Change them here first if they change.
 **Weeks**
 - The workout page has no week selector for now. It always opens on the next session to do, and Stats shows the whole program. A separate week feature is planned and will be designed before it's built. The builder has no week control either; programs use 8 weeks until then.
 
+**Pro mode and coaching (agreed 17 November 2026)**
+- The whole app stays free. "Pro mode" is a switch in Settings, off by default, that anyone can turn on or off at any time.
+- Pro unlocks weeks and the calorie calculator. With Pro off, the Calories tab and personal details are hidden (never deleted).
+- Weeks in Pro: a program is Week → Days → Exercises. Up to 12 weeks; each week has 1–7 days and can differ from the others. "Add week" copies the previous week so a coach only changes what's different.
+- A program built without Pro is one week that repeats with no end. A program with 2 or more weeks ends with "Program complete" and stays there until a new program or link arrives.
+- Coaches: a "Pro program" switch on the Share screen, shown only to coaches who have Pro on, off by default; it works for ready-made programs too. A trainee who opens a Pro program gets Pro switched on.
+- Trainees who open a normal program see only that program: no ready-made list, no "Create my own", no edit or share. Turning Pro on shows the full app; that's also how a trainee stops following.
+- Updates: the coach edits the same program and sends a new link (the program keeps a hidden permanent id). The trainee sees what changed and chooses Update or Keep current version; logged weights are always kept. A different program replaces the followed one; the old one and its history are kept, hidden.
+- Existing users who already use calories or weeks are switched to Pro automatically, so nothing they use disappears.
+
 **Look and feel ("Ledger" design)**
 - Chosen from the UI research (November 2026): calm paper-and-ink surfaces, hairline rules, one warm signal colour for actions, sentence-case headings, tabular figures for every number. Light and dark themes both meet WCAG AA contrast.
 - One font family for both scripts: IBM Plex Sans and IBM Plex Sans Arabic (OFL), bundled. The Arabic files load only when Arabic text appears.
 - Status always pairs colour with a word or icon: done is green, skipped is amber (never alarm red), records are gold.
 - Last time's weight shows in grey inside each set box as the number to beat. The screen stays awake while the workout page is open (a setting, on by default).
-- Next, from the same research, to discuss before building: tick a set to log it (prefilled from last time) with a rest timer; a short first-launch question (kg or lb) leading straight into Day 1; "just today" vs "update program" when swapping; free charts per exercise, a records list and "2 of 3 days this week" in Stats; "Add as a copy" option when importing an updated program.
+- Next, from the same research, to discuss before building: tick a set to log it (prefilled from last time) with a rest timer; a short first-launch question (kg or lb) leading straight into Day 1; "just today" vs "update program" when swapping; free charts per exercise, a records list and "2 of 3 days this week" in Stats.
 - On release to the main app: update the README credits (IBM Plex replaces Barlow; add fflate and qrcode-generator).
 
 **Data safety**

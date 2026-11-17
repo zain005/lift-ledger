@@ -126,6 +126,8 @@ const STRINGS = {
     "set.details": "Your details", "set.detailsSub": "Used by the calorie calculator only.",
 
     "prog.daysWeek": { one: "{n} day a week", other: "{n} days a week" },
+    "prog.doneN": { one: "{n} session done", other: "{n} sessions done" }, "home.thisWeek": "This week: {n} of {total} days",
+    "stats.weeksTrained": { one: "{n} week trained", other: "{n} weeks trained" }, "week.n": "Week {n}",
     "prog.imported": "imported", "prog.current": "current", "prog.done": "{n} of {total} sessions done",
     "prog.remove": "Delete program", "prog.removeConfirm": "Delete “{name}”? This removes the program from your list.",
     "prog.replaceConfirm": "Replace your imported program “{name}” with this file? Logged weights are kept.",

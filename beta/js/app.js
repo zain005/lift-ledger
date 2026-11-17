@@ -88,16 +88,17 @@ function normalizeProgram(raw, builtin) {
     const from = Math.max(1, Math.floor(+w[0] || 1)), to = Math.min(weeks, Math.floor(+w[w.length - 1] || weeks));
     if (to < from) fail("err.phaseRange", { n: pi + 1 });
     const days = ph.days ? parseDays(ph.days, t("err.where.phase", { n: pi + 1 })) : baseDays;
-    if (days.length !== baseDays.length) fail("err.phaseDays", { n: pi + 1 });
     const rpe = ph.rpe && typeof ph.rpe === "object" ? ph.rpe : {};
     return {
       name: str(ph.name, 30), from, to,
-      dayIds: days.map(d => d.id),
+      dayIds: days.map(d => d.id), dayNames: days.map(d => d.name), dayShort: days.map(d => d.short),
       days: days.map(d => d.exercises.map(e => Object.assign({}, e, { rpe: e.rpe || str(rpe[e.type], 16) })))
     };
   }).sort((a, b) => a.from - b.from);
   return {
     id: slug(raw.id) || slug(name), name, builtin: !!builtin, byBuilder: !!raw.builder, shared: !!raw.shared,
+    repeat: weeks === 1 && !!raw.repeat,          // a one-week program that repeats with no end
+    weekly: !!raw.weekly,                         // built week by week in Pro (each week is its own block)
     description: str(raw.description, 200), schedule: str(raw.schedule, 300), weeks,
     dayIds: baseDays.map(d => d.id), dayNames: baseDays.map(d => d.name), dayShort: baseDays.map(d => d.short),
     phases
@@ -111,13 +112,24 @@ let logs = {};
 let view = { week: 1, day: 0 };
 
 const progById = id => PROGRAMS.find(p => p.id === id);
-const DPW = () => P.dayNames.length;
-const NW = () => P.weeks;
+/* A repeating program has as many weeks as you've trained, plus the next one; others have a fixed length */
+function nwOf(p, L) {
+  if (!p.repeat) return p.weeks;
+  let hi = 0;
+  Object.keys(L || {}).forEach(k => { const m = /^w(\d+)$/.exec(k); if (m && L[k] && L[k].done && Object.keys(L[k].done).length) hi = Math.max(hi, +m[1]); });
+  return Math.max(1, hi + 1);
+}
+const NW = () => nwOf(P, logs);
 const phaseFor = (p, w) => p.phases.find(x => w >= x.from && w <= x.to) || p.phases[p.phases.length - 1];
 const phaseOf = w => phaseFor(P, w);
 const phaseNum = w => P.phases.indexOf(phaseOf(w)) + 1;
 const dayList = (w, d) => phaseOf(w).days[d];
 const dayIdOf = (w, d) => phaseOf(w).dayIds[d];
+const DPW = w => phaseOf(w).days.length;          // each week can have its own number of days
+const dayName = (w, d) => phaseOf(w).dayNames[d];
+/* Sessions are numbered in program order across weeks that may have different numbers of days */
+function weekStart(w) { let n = 0; for (let v = 1; v < w; v++) n += DPW(v); return n; }
+const totalSessions = () => weekStart(NW() + 1);
 const STATS = () => NW() + 1;   // the Stats "week"
 
 /* Logs saved before version 2 were keyed by position ("day-exercise" and "done<day>").
@@ -169,14 +181,14 @@ function saveView() { store(KEY.view, view); }
 
 /* ---------- derived state ---------- */
 function isDayDone(w, d) { const wk = weekLog(w); return !!(wk && wk.done[dayIdOf(w, d)]); }
-function weekComplete(w) { return range(DPW()).every(d => isDayDone(w, d)); }
+function weekComplete(w) { return range(DPW(w)).every(d => isDayDone(w, d)); }
 /* A session is missed when it isn't done but a later session (in program order) is. */
 function lastDoneIndex() {
-  let last = -1; const D = DPW();
-  for (let w = 1; w <= NW(); w++) for (let d = 0; d < D; d++) if (isDayDone(w, d)) last = (w - 1) * D + d;
+  let last = -1, start = 0;
+  for (let w = 1; w <= NW(); w++) { const D = DPW(w); for (let d = 0; d < D; d++) if (isDayDone(w, d)) last = start + d; start += D; }
   return last;
 }
-function isMissed(w, d) { return !isDayDone(w, d) && (w - 1) * DPW() + d < lastDoneIndex(); }
+function isMissed(w, d) { return !isDayDone(w, d) && weekStart(w) + d < lastDoneIndex(); }
 /* A done day with any set left empty */
 function dayHasGaps(w, d) {
   if (!isDayDone(w, d)) return false;
@@ -184,19 +196,19 @@ function dayHasGaps(w, d) {
 }
 /* Which day a week opens on: first day needing attention, otherwise the next day not done, otherwise Day 1 */
 function smartDay(w) {
-  const D = DPW();
+  const D = DPW(w);
   for (let d = 0; d < D; d++) if (isMissed(w, d) || dayHasGaps(w, d)) return d;
   for (let d = 0; d < D; d++) if (!isDayDone(w, d)) return d;
   return 0;
 }
-function weekHasMissed(w) { return range(DPW()).some(d => isMissed(w, d) || dayHasGaps(w, d)); }
+function weekHasMissed(w) { return range(DPW(w)).some(d => isMissed(w, d) || dayHasGaps(w, d)); }
 /* Where the app opens: earliest done day with empty sets, otherwise the session after the latest done one */
 function currentSpot() {
-  const D = DPW();
-  for (let w = 1; w <= NW(); w++) for (let d = 0; d < D; d++) if (dayHasGaps(w, d)) return { week: w, day: d };
+  for (let w = 1; w <= NW(); w++) for (let d = 0; d < DPW(w); d++) if (dayHasGaps(w, d)) return { week: w, day: d };
   const last = lastDoneIndex();
-  if (last >= NW() * D - 1) return { week: STATS(), day: 0 };
-  const w = Math.floor((last + 1) / D) + 1;
+  if (!P.repeat && last >= totalSessions() - 1) return { week: STATS(), day: 0 };   // program complete
+  let i = last + 1, w = 1;
+  while (w < NW() && i >= DPW(w)) { i -= DPW(w); w++; }
   return { week: w, day: smartDay(w) };
 }
 /* Most recent earlier week with this exercise logged: same exercise id first, then the same name on any day */
@@ -235,11 +247,12 @@ let weeksOpen = false;
 function renderWeeks() {
   const el = $("weeks"); el.innerHTML = "";
   const cols = [];
-  P.phases.forEach((ph, pi) => { if (pi) cols.push("6px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
+  if (P.weekly || P.repeat) cols.push("repeat(" + NW() + ", minmax(0, 1fr))");
+  else P.phases.forEach((ph, pi) => { if (pi) cols.push("6px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
   el.style.gridTemplateColumns = cols.join(" ");
   let anyMissed = false;
   for (let w = 1; w <= NW(); w++) {
-    if (P.phases.some((ph, pi) => pi && ph.from === w)) { const g = document.createElement("span"); g.className = "gap"; g.setAttribute("aria-hidden", "true"); el.appendChild(g); }
+    if (!P.weekly && !P.repeat && P.phases.some((ph, pi) => pi && ph.from === w)) { const g = document.createElement("span"); g.className = "gap"; g.setAttribute("aria-hidden", "true"); el.appendChild(g); }
     const b = document.createElement("button");
     const wc = weekComplete(w), wm = weekHasMissed(w);
     if (wm) anyMissed = true;
@@ -259,15 +272,15 @@ function renderWeeks() {
   $("phase").textContent = "";
   if (isStats) { $("wtMain").textContent = t("stats.title"); $("wtSub").textContent = t("week.choose"); return; }
   const ph = phaseOf(view.week);
-  $("wtMain").textContent = t("week.ofN", { n: view.week, total: NW() });
-  $("wtSub").textContent = P.phases.length > 1 ? t("phase.n", { n: phaseNum(view.week) }) + (ph.name ? " · " + ph.name : "") : ph.name;
+  $("wtMain").textContent = P.repeat ? t("week.n", { n: view.week }) : t("week.ofN", { n: view.week, total: NW() });
+  $("wtSub").textContent = P.weekly || P.repeat ? "" : P.phases.length > 1 ? t("phase.n", { n: phaseNum(view.week) }) + (ph.name ? " · " + ph.name : "") : ph.name;
 }
 $("weekToggle").addEventListener("click", () => { weeksOpen = !weeksOpen; renderWeeks(); });
 $("statsBtn").addEventListener("click", () => { weeksOpen = false; goWeek(view.week === STATS() ? currentSpot().week : STATS()); });
 
 function renderDays() {
   const el = $("days"); el.innerHTML = "";
-  const D = DPW();
+  const D = DPW(view.week), ph = phaseOf(view.week);
   el.style.gridTemplateColumns = "repeat(" + D + ", minmax(0, 1fr))";
   el.classList.toggle("many", D > 4);
   for (let d = 0; d < D; d++) {
@@ -277,8 +290,8 @@ function renderDays() {
     if (gaps) b.title = t("day.gapsTitle");
     b.setAttribute("aria-pressed", String(d === view.day));
     const status = done ? t("status.done") : missed ? t("status.missed") : t("status.todo");
-    b.setAttribute("aria-label", t("day.n", { n: d + 1 }) + ", " + P.dayNames[d] + ", " + status);
-    const sh = P.dayShort[d];
+    b.setAttribute("aria-label", t("day.n", { n: d + 1 }) + ", " + ph.dayNames[d] + ", " + status);
+    const sh = ph.dayShort[d];
     const sub = sh ? (done ? "✓ " : "") + sh : (done ? "✓ " + status : status);
     b.innerHTML = "<span></span><small></small>";
     b.querySelector("span").textContent = (D > 4 ? t("day.shortN", { n: d + 1 }) : t("day.n", { n: d + 1 }));
@@ -290,7 +303,7 @@ function renderDays() {
 
 function renderHead() {
   const done = isDayDone(view.week, view.day), missed = isMissed(view.week, view.day);
-  $("dayTitle").textContent = P.dayNames[view.day];
+  $("dayTitle").textContent = dayName(view.week, view.day);
   const st = $("dayStatus");
   st.hidden = !(done || missed);
   st.className = "status " + (done ? "done" : "missed");
@@ -431,10 +444,10 @@ const fmtW = n => (Math.round(n * 10) / 10).toString();
 
 function computeStats() {
   let done = 0, missed = 0;
-  const weekVol = [], lifts = {}, D = DPW();
+  const weekVol = [], lifts = {};
   for (let w = 1; w <= NW(); w++) {
     let vol = 0;
-    for (let d = 0; d < D; d++) {
+    for (let d = 0; d < DPW(w); d++) {
       if (isDayDone(w, d)) done++; else if (isMissed(w, d)) missed++;
       dayList(w, d).forEach((ex, i) => {
         const e = peek(w, d, i); if (!e || !e.s) return;
@@ -493,7 +506,8 @@ function volumeChart(weekVol) {
 }
 
 function renderProgress() {
-  const st = computeStats(), el = $("progress"), D = DPW(), total = NW() * D, U = escAttr(unitLabel());
+  const st = computeStats(), el = $("progress"), total = totalSessions(), U = escAttr(unitLabel());
+  let D = 0; for (let w = 1; w <= NW(); w++) D = Math.max(D, DPW(w));
   const pct = Math.round(st.done / total * 100);
   const best = st.weekVol.map((v, i) => [v, i]).filter(([v]) => v > 0).reduce((b, c) => (c[0] > (b ? b[0] : -1) ? c : b), null);
   const gains = st.liftList.filter(l => l.weeks.length > 1);
@@ -501,21 +515,24 @@ function renderProgress() {
   const T = k => escAttr(t(k));
 
   let h = '<h2 id="progTitle"></h2><div class="tiles">' +
-    '<div class="tile"><div class="k">' + T("stats.sessions") + '</div><div class="v">' + st.done + '<small> / ' + total + '</small></div><div class="meter"><i style="width:' + pct + '%"></i></div><div class="s">' + escAttr(t("stats.pctProgram", { pct })) + '</div></div>' +
+    (P.repeat ? '<div class="tile"><div class="k">' + T("stats.sessions") + '</div><div class="v">' + st.done + '</div><div class="s">' + escAttr(tn("stats.weeksTrained", NW() - 1)) + '</div></div>'
+      : '<div class="tile"><div class="k">' + T("stats.sessions") + '</div><div class="v">' + st.done + '<small> / ' + total + '</small></div><div class="meter"><i style="width:' + pct + '%"></i></div><div class="s">' + escAttr(t("stats.pctProgram", { pct })) + '</div></div>') +
     '<div class="tile"><div class="k">' + T("stats.missed") + '</div><div class="v">' + st.missed + '</div><div class="s">' + T(st.missed ? "stats.missedSome" : "stats.missedNone") + '</div></div>' +
     '<div class="tile"><div class="k">' + T("stats.volume") + '</div><div class="v">' + fmtKg(st.totalVol) + '<small> ' + U + '</small></div><div class="s">' + T("stats.volumeDesc") + '</div></div>' +
     '<div class="tile"><div class="k">' + T("stats.up") + '</div><div class="v">' + ups + '<small> / ' + gains.length + '</small></div><div class="s">' + T(gains.length ? "stats.upDesc" : "stats.upNone") + '</div></div>' +
     '</div>';
 
-  const cols = ["22px"];
-  P.phases.forEach((ph, pi) => { if (pi) cols.push("4px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
-  const isBreak = w => P.phases.some((ph, pi) => pi && ph.from === w);
+  const cols = ["22px"], blocks = !P.weekly && !P.repeat;
+  if (blocks) P.phases.forEach((ph, pi) => { if (pi) cols.push("4px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
+  else cols.push("repeat(" + NW() + ", minmax(0, 1fr))");
+  const isBreak = w => blocks && P.phases.some((ph, pi) => pi && ph.from === w);
   h += '<div class="panel"><h3>' + T("stats.byWeek") + '</h3><div class="sessgrid" style="grid-template-columns:' + cols.join(" ") + '"><span></span>';
   for (let w = 1; w <= NW(); w++) { if (isBreak(w)) h += '<span></span>'; h += '<span class="lbl">' + escAttr(t("week.chartN", { n: w })) + '</span>'; }
   for (let d = 0; d < D; d++) {
     h += '<span class="lbl">' + escAttr(t("day.shortN", { n: d + 1 })) + '</span>';
     for (let w = 1; w <= NW(); w++) {
       if (isBreak(w)) h += '<span></span>';
+      if (d >= DPW(w)) { h += '<span class="cell none"></span>'; continue; }     // this week has fewer days
       const dn = isDayDone(w, d), ms = isMissed(w, d);
       h += '<span class="cell' + (dn ? ' done' : ms ? ' missed' : '') + '" title="' + escAttr(t("stats.cellTitle", { w, d: d + 1, status: t(dn ? "status.done" : ms ? "status.missed" : "status.todo") })) + '">' + (dn ? '✓' : ms ? '✕' : '') + '</span>';
     }
@@ -548,15 +565,17 @@ function renderProgress() {
 }
 
 /* ---------- settings page ---------- */
+/* [sessions done, sessions in the program]; a repeating program has no total */
 function doneCount(p) {
-  const L = logsFor(p), D = p.dayNames.length; let n = 0;
-  for (let w = 1; w <= p.weeks; w++) {
-    const wk = L["w" + w]; if (!wk) continue;
-    const ph = phaseFor(p, w);
-    for (let d = 0; d < D; d++) if (wk.done && wk.done[ph.dayIds[d]]) n++;
+  const L = logsFor(p), nw = nwOf(p, L); let n = 0, tot = 0;
+  for (let w = 1; w <= nw; w++) {
+    const ph = phaseFor(p, w), wk = L["w" + w];
+    tot += ph.dayIds.length;
+    if (wk && wk.done) ph.dayIds.forEach(id => { if (wk.done[id]) n++; });
   }
-  return [n, p.weeks * D];
+  return [n, p.repeat ? 0 : tot];
 }
+const doneText = (n, tot) => tot ? t("prog.done", { n, total: tot }) : tn("prog.doneN", n);
 function hasLogs(p) {
   const L = logsFor(p);
   return Object.keys(L).some(k => /^w\d+$/.test(k) && L[k] && ((L[k].ex && Object.keys(L[k].ex).length) || (L[k].done && Object.keys(L[k].done).length)));
@@ -589,7 +608,7 @@ function programCard(p) {
   b.innerHTML = '<span><b></b><small class="desc"></small><small class="meta"></small></span><span class="act"></span>';
   b.querySelector("b").textContent = p.name;
   b.querySelector(".desc").textContent = p.description || tn("prog.daysWeek", p.dayNames.length);
-  b.querySelector(".meta").textContent = (p.builtin ? tn("prog.daysWeek", p.dayNames.length) : t(p.byBuilder ? "prog.mine" : p.shared ? "prog.shared" : "prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
+  b.querySelector(".meta").textContent = (p.builtin ? tn("prog.daysWeek", p.dayNames.length) : t(p.byBuilder ? "prog.mine" : p.shared ? "prog.shared" : "prog.imported")) + (started ? " · " + doneText(n, tot) : "");
   b.querySelector(".act").textContent = t(cur ? "home.open" : started ? "home.resume" : "home.start");
   b.addEventListener("click", () => { if (!cur) setProgram(p.id); openWorkout(); });
   return b;
@@ -600,13 +619,16 @@ function renderHome() {
   const hc = $("homeContinue"); hc.innerHTML = "";
   if (P) {
     const spot = currentSpot(), [n, tot] = doneCount(P), finished = spot.week === STATS();
-    const c = document.createElement("button"); c.type = "button"; c.className = "continue"; c.id = "homeGo";
-    c.innerHTML = '<span class="c-k"></span><b class="c-name"></b><span class="c-next"></span><span class="meter"><i style="width:' + Math.round(n / tot * 100) + '%"></i></span><span class="c-meta"></span>' +
+    // A repeating program shows this week; a program with an end shows the whole program
+    const wDone = finished ? 0 : range(DPW(spot.week)).filter(d => isDayDone(spot.week, d)).length;
+    const frac = tot ? n / tot : wDone / DPW(spot.week);
+    const c = document.createElement("button"); c.type = "button"; c.className = "continue" + (finished ? " complete" : ""); c.id = "homeGo";
+    c.innerHTML = '<span class="c-k"></span><b class="c-name"></b><span class="c-next"></span><span class="meter"><i style="width:' + Math.round(frac * 100) + '%"></i></span><span class="c-meta"></span>' +
       '<svg class="c-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
     c.querySelector(".c-k").textContent = t(finished ? "home.finished" : P.builtin ? "home.continue" : "home.yourProgram");
     c.querySelector(".c-name").textContent = P.name;
-    c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("home.next", { name: P.dayNames[spot.day] });
-    c.querySelector(".c-meta").textContent = t("prog.done", { n, total: tot });
+    c.querySelector(".c-next").textContent = finished ? t("home.seeProgress") : t("home.next", { name: dayName(spot.week, spot.day) });
+    c.querySelector(".c-meta").textContent = tot ? doneText(n, tot) : t("home.thisWeek", { n: wDone, total: DPW(spot.week) });
     c.addEventListener("click", () => openWorkout(spot));
     hc.appendChild(c);
     if (!P.builtin) hc.appendChild(ownActions(P));
@@ -727,14 +749,14 @@ $("expCsv").addEventListener("click", () => {
   const rows = [["program", "week", "phase", "day", "session", "exercise_no", "planned_exercise", "exercise", "set", "weight", "unit", "target_reps", "target_rpe", "day_done"]];
   PROGRAMS.forEach(p => {
     const L = logsFor(p);
-    for (let w = 1; w <= p.weeks; w++) {
+    for (let w = 1, nw = nwOf(p, L); w <= nw; w++) {
       const wk = L["w" + w]; if (!wk) continue;
       const ph = phaseFor(p, w);
       ph.days.forEach((day, d) => day.forEach((ex, i) => {
         const e = wk.ex && wk.ex[ex.id]; if (!e || !e.s) return;
         e.s.slice(0, ex.sets).forEach((v, s) => {
           if (v === "" || v === undefined) return;
-          rows.push([p.name, w, ph.name, d + 1, p.dayNames[d], i + 1, ex.name, e.alt || ex.name, s + 1, v, SET.unit, ex.reps, ex.rpe, wk.done && wk.done[ph.dayIds[d]] ? "yes" : "no"]);
+          rows.push([p.name, w, ph.name, d + 1, ph.dayNames[d], i + 1, ex.name, e.alt || ex.name, s + 1, v, SET.unit, ex.reps, ex.rpe, wk.done && wk.done[ph.dayIds[d]] ? "yes" : "no"]);
         });
       }));
     }
@@ -784,8 +806,8 @@ const WORKOUT_PARTS = ["statsBtn", "weeks", "days", "rpe", "dayHead", "list", "d
 function renderAll() {
   applyI18n();
   if (!PROGRAMS.length) return;
-  if (P && !openedOnce) { if (SET.smartOpen || !(view.week >= 1 && view.week <= STATS() && view.day < DPW())) view = currentSpot(); saveView(); openedOnce = true; }
-  if (P && (view.week > STATS() || view.day >= DPW())) view = currentSpot();
+  if (P && !openedOnce) { if (SET.smartOpen || !(view.week >= 1 && view.week <= STATS() && view.day < DPW(view.week))) view = currentSpot(); saveView(); openedOnce = true; }
+  if (P && (view.week > STATS() || view.day >= DPW(view.week))) view = currentSpot();
   applyChrome();
   const mode = appMode;
   document.body.dataset.mode = mode;

@@ -670,3 +670,4 @@ button:active:not(:disabled) { opacity: .72; }
 .tab { position: relative; }
 #shQr { box-shadow: none; border: 1px solid var(--line); }
 @media (max-width: 380px) { .own-acts .ghostbtn { white-space: normal; font-size: 13px; line-height: 1.2; } }
+.sessgrid .cell.none { background: transparent; border-color: transparent; }
