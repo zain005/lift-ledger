@@ -50,12 +50,12 @@
         <p class="sub" id="homeSub"></p>
       </div>
       <div id="homeContinue"></div>
+      <button type="button" class="create-hl" id="homeCreate">
+        <span class="plus" aria-hidden="true">+</span>
+        <span><b data-i18n="home.create">Create my own program</b><small data-i18n="home.createSub">Choose your training days, then add exercises from the library.</small></span>
+      </button>
       <h3 class="sect" id="homeChooseH"></h3>
       <div class="progs" id="homeProgs"></div>
-      <button type="button" class="pcard create" id="homeCreate">
-        <span class="plus" aria-hidden="true">+</span>
-        <span><b data-i18n="home.create">Create my own program</b><small data-i18n="home.createSub">Pick your days and exercises, or start from a preset.</small><span class="tag soon" data-i18n="home.soon">Coming next</span></span>
-      </button>
       <div class="home-links">
         <label class="linkbtn" for="progFile" data-i18n="home.import">Import a program file</label>
         <input type="file" id="progFile" accept=".json,application/json" hidden>
@@ -314,6 +314,46 @@
   <button type="button" class="tab" id="modeSet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="nav.settings">Settings</span></button>
 </nav>
 
+<div class="sheet" id="builder" role="dialog" aria-modal="true" aria-labelledby="bdTitle" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <h2 id="bdTitle"></h2>
+      <button type="button" class="sheet-x" id="bdClose" data-i18n-aria="lib.close">×</button>
+    </div>
+    <div class="panel" id="bdStart">
+      <h3 data-i18n="bd.startFrom">Start from</h3>
+      <div class="chips chips-wrap" id="bdStartChips"></div>
+      <p class="note" data-i18n="bd.startNote">Copying a ready-made program gives you your own version to change. The original stays as it is.</p>
+    </div>
+    <div class="panel">
+      <div class="fld"><label for="bdName" data-i18n="bd.name">Program name</label><input id="bdName" maxlength="40" autocomplete="off" data-i18n-ph="bd.namePh"></div>
+      <div class="fgrid">
+        <div class="fld"><label id="bdWeeksL"></label><div class="stepper big"><button type="button" id="bdWeeksDec" data-i18n-aria="bd.fewerWeeks">−</button><output id="bdWeeks"></output><button type="button" id="bdWeeksInc" data-i18n-aria="bd.moreWeeks">+</button></div></div>
+        <div class="fld"><label id="bdDaysL"></label><div class="stepper big"><button type="button" id="bdDaysDec" data-i18n-aria="bd.fewerDays">−</button><output id="bdDays"></output><button type="button" id="bdDaysInc" data-i18n-aria="bd.moreDays">+</button></div></div>
+      </div>
+      <p class="note" data-i18n="bd.weekNote">You plan one week. It repeats for the number of weeks you choose.</p>
+    </div>
+    <div class="bd-daytabs" id="bdDayTabs" role="group" data-i18n-aria="nav.dayAria"></div>
+    <div class="panel">
+      <div class="bd-dayhead">
+        <div class="fld"><label for="bdDayName" data-i18n="bd.dayName">Day name</label><input id="bdDayName" maxlength="30" autocomplete="off" data-i18n-ph="bd.dayNamePh"></div>
+        <div class="bd-daymove"><button type="button" class="iconbtn" id="bdDayUp" data-i18n-aria="bd.dayEarlier">↑</button><button type="button" class="iconbtn" id="bdDayDown" data-i18n-aria="bd.dayLater">↓</button></div>
+      </div>
+      <ul class="bd-exlist" id="bdExList"></ul>
+      <button type="button" class="addbtn" id="bdAdd" data-i18n="bd.add">+ Add exercise</button>
+    </div>
+    <div class="panel">
+      <h3 data-i18n="bd.musclesTitle">Weekly sets per muscle</h3>
+      <p class="sub" data-i18n="bd.musclesSub">Each set counts fully for the main muscle and half for the others it works. As a rough guide, 6–20 sets a week suits most people.</p>
+      <div class="bd-muscles" id="bdMuscles"></div>
+    </div>
+    <div class="bd-foot">
+      <p class="msg" id="bdMsg" hidden></p>
+      <button type="button" class="addbtn" id="bdSave" data-i18n="bd.save">Save program</button>
+    </div>
+  </div>
+</div>
+
 <div class="sheet" id="picker" role="dialog" aria-modal="true" aria-labelledby="pkTitle" hidden>
   <div class="sheet-in">
     <div class="sheet-head">
@@ -337,7 +377,7 @@
         <div class="fld"><label for="fxPrimary" data-i18n="lib.primary">Main muscle</label><select id="fxPrimary"></select></div>
         <div class="fld"><label for="fxEquip" data-i18n="lib.equipment">Equipment</label><select id="fxEquip"></select></div>
       </div>
-      <div class="fld"><label data-i18n="lib.secondary">Other muscles it works (optional)</label><div class="chips wrap" id="fxSecondary"></div></div>
+      <div class="fld"><label data-i18n="lib.secondary">Other muscles it works (optional)</label><div class="chips chips-wrap" id="fxSecondary"></div></div>
       <div class="pk-checks">
         <label class="chk"><input type="checkbox" id="fxTimed"> <span data-i18n="lib.isTimed">Timed (seconds, not reps)</span></label>
         <label class="chk"><input type="checkbox" id="fxSide"> <span data-i18n="lib.isSide">One side at a time</span></label>
@@ -357,6 +397,7 @@
 <script src="js/i18n.js"></script>
 <script src="js/app.js"></script>
 <script src="js/library.js"></script>
+<script src="js/builder.js"></script>
 <script src="js/calories.js"></script>
 <script>
 if ("serviceWorker" in navigator && location.protocol !== "file:") {

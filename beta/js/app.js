@@ -71,6 +71,8 @@ function normalizeProgram(raw, builtin) {
           return {
             id: exId, ref: sid(e.ref), name: en, sets, reps: str(e.reps, 12) || "", type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
             alts: Array.isArray(e.alts) ? e.alts.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
+            timed: !!e.timed, perSide: !!e.perSide,
+            primary: str(e.primary, 20), secondary: Array.isArray(e.secondary) ? e.secondary.map(m => str(m, 20)).slice(0, 8) : [],
             video: /^https:\/\//.test(video) ? video : ""
           };
         })
@@ -93,7 +95,7 @@ function normalizeProgram(raw, builtin) {
     };
   }).sort((a, b) => a.from - b.from);
   return {
-    id: slug(raw.id) || slug(name), name, builtin: !!builtin,
+    id: slug(raw.id) || slug(name), name, builtin: !!builtin, byBuilder: !!raw.builder,
     description: str(raw.description, 200), schedule: str(raw.schedule, 300), weeks,
     dayIds: baseDays.map(d => d.id), dayNames: baseDays.map(d => d.name), dayShort: baseDays.map(d => d.short),
     phases
@@ -338,7 +340,8 @@ function renderList() {
     const pr = document.createElement("div"); pr.className = "presc";
     pr.innerHTML = '<span class="sr" dir="ltr"></span>' + (rpe ? '<span class="pill"></span>' : '') + (e.alt ? '<span class="tag"></span>' : '');
     pr.querySelector(".sr").innerHTML = sets + "<i>×</i>";
-    pr.querySelector(".sr").append(reps);
+    pr.querySelector(".sr").append(reps + (ex.timed ? " " + t("unit.sec") : ""));
+    if (ex.perSide) { const sd = document.createElement("span"); sd.className = "pill side"; sd.textContent = t("lib.perSide"); pr.querySelector(".sr").after(sd); }
     if (rpe) { const pl = pr.querySelector(".pill"); pl.textContent = t("rpe.pill", { rpe }); }
     if (e.alt) pr.querySelector(".tag").textContent = t("swap.tag");
     nm.append(pr);
@@ -574,7 +577,7 @@ function renderHome() {
     c.addEventListener("click", () => openWorkout(spot));
     hc.appendChild(c);
   }
-  $("homeChooseH").textContent = t(P ? "home.switch" : "home.choose");
+  $("homeChooseH").textContent = t(P ? "home.switch" : "home.orPreset");
   const pg = $("homeProgs"); pg.innerHTML = "";
   PROGRAMS.forEach(p => {
     const cur = P && p.id === P.id, [n, tot] = doneCount(p), started = !cur && hasLogs(p);
@@ -584,12 +587,15 @@ function renderHome() {
     b.innerHTML = '<span><b></b><small class="desc"></small><small class="meta"></small></span><span class="act"></span>';
     b.querySelector("b").textContent = p.name;
     b.querySelector(".desc").textContent = p.description || tn("prog.daysWeek", p.dayNames.length);
-    b.querySelector(".meta").textContent = tn("prog.weeks", p.weeks) + " · " + tn("prog.daysWeek", p.dayNames.length) + (p.builtin ? "" : " · " + t("prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
+    b.querySelector(".meta").textContent = tn("prog.weeks", p.weeks) + " · " + tn("prog.daysWeek", p.dayNames.length) + (p.builtin ? "" : " · " + t(p.byBuilder ? "prog.mine" : "prog.imported")) + (started ? " · " + t("prog.done", { n, total: tot }) : "");
     b.querySelector(".act").textContent = t(cur ? "home.open" : started ? "home.resume" : "home.start");
     b.addEventListener("click", () => { if (!cur) setProgram(p.id); openWorkout(); });
     wrap.appendChild(b);
     if (!p.builtin) {
       const acts = document.createElement("div"); acts.className = "pcard-acts";
+      const ed = document.createElement("button"); ed.type = "button"; ed.className = "linkbtn"; ed.textContent = t("prog.edit");
+      ed.addEventListener("click", () => openBuilder(p.id));
+      acts.appendChild(ed);
       const rm = document.createElement("button"); rm.type = "button"; rm.className = "linkbtn"; rm.textContent = t("prog.remove");
       rm.addEventListener("click", () => {
         if (!confirm(t("prog.removeConfirm", { name: p.name }))) return;
@@ -603,7 +609,7 @@ function renderHome() {
     pg.appendChild(wrap);
   });
 }
-$("homeCreate").disabled = true;
+$("homeCreate").addEventListener("click", () => openBuilder(null));
 
 function showMsg(id, text, err) { const m = $(id); m.hidden = !text; m.textContent = text || ""; m.classList.toggle("err", !!err); }
 function setProgram(id) { useProgram(id); view = currentSpot(); saveView(); }

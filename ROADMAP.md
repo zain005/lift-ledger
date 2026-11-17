@@ -10,7 +10,7 @@ Each step ships first to the **test version** at [zain005.github.io/lift-ledger/
 |---|---|---|
 | 1 | Groundwork: dark mode, translation system, right-to-left layout, permanent exercise ids | **Released** |
 | 2 | Exercise library: 171 exercises, search and filters, "My exercises" | **In test version** |
-| 3 | Program builder | Planned |
+| 3 | Program builder: days, exercises from the library, sets and reps, copy a preset, weekly sets per muscle, edit safely | **In test version** (phases and different reps per set come later) |
 | 4 | Sharing programs | Planned |
 | 5 | Arabic | Planned |
 

@@ -69,7 +69,7 @@ function openPicker(opts) {
   revealActiveChip();
   $("pkSearch").focus({ preventScroll: true });
 }
-function closePicker() { $("picker").hidden = true; document.body.classList.remove("sheet-open"); PK.onPick = null; }
+function closePicker() { $("picker").hidden = true; if ($("builder").hidden) document.body.classList.remove("sheet-open"); PK.onPick = null; }
 
 function chip(label, on, onClick) {
   const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label;
