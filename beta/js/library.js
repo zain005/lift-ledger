@@ -50,17 +50,20 @@ function searchText(e) {
 function searchExercises(query, muscle, equip, mineOnly) {
   const words = normText(query).split(" ").filter(Boolean);
   const out = [];
-  allExercises().forEach(e => {
+  allExercises().forEach((e, idx) => {
     if (mineOnly && !e.custom) return;
     if (muscle && e.primary !== muscle && !(e.secondary || []).includes(muscle)) return;
     if (equip && e.equipment !== equip) return;
     const hay = searchText(e), name = normText(e.name);
     if (words.some(w => !hay.includes(w))) return;
     let score = (e.primary === muscle ? 0 : 50) + (e.custom ? -5 : 0);
-    if (words.length) score += name.startsWith(words[0]) ? 0 : words.every(w => name.includes(w)) ? 10 : 30;
-    out.push([score, e]);
+    // "السكوات" and "سكوات" rank the same: compare without the Arabic article
+    const bare = x => x.replace(/(^| )ال(?=\S{2})/g, "$1"), bn = bare(name), w0 = bare(words[0] || "");
+    if (words.length) score += name.startsWith(words[0]) || bn.startsWith(w0) ? 0 : words.every(w => name.includes(w)) ? 10 : 30;
+    if (words.length > 1 && hay.includes(words.join(" "))) score -= 5;      // the whole phrase, in order
+    out.push([score, e, idx]);
   });
-  out.sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name));
+  out.sort((a, b) => a[0] - b[0] || a[2] - b[2]);      // ties keep library order: the most common exercises come first
   return out.map(x => x[1]);
 }
 function exMeta(e) {

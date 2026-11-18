@@ -396,6 +396,6 @@ test("language choice sits at the top of Settings", async ({ page }) => {
   await page.locator(".setrow").first().click();
   await expect(page.locator("#langSeg button")).toHaveCount(2);
   await expect(page.locator('#langSeg button[lang="en"]')).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator('#langSeg button[lang="ar"]')).toBeDisabled();
+  await expect(page.locator('#langSeg button[lang="ar"]')).toBeEnabled();
   await expect(page.locator('#langSeg button[lang="ar"]')).toContainText("العربية");
 });

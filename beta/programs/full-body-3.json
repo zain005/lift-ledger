@@ -2,12 +2,16 @@
   "format": 2,
   "id": "full-body-3",
   "name": "Full Body",
+  "name_ar": "الجسم الكامل",
   "description": "3 days a week. Most muscles trained two or three times a week; a good first program.",
+  "description_ar": "3 أيام في الأسبوع. تُدرَّب معظم العضلات مرتين أو ثلاثًا أسبوعيًا؛ برنامج أول ممتاز.",
   "schedule": "Train on 3 non-consecutive days, for example day on, day off.",
+  "schedule_ar": "تدرّب 3 أيام غير متتالية، مثلًا يوم تدريب ويوم راحة.",
   "weeks": 8,
   "phases": [
     {
       "name": "Foundation",
+      "name_ar": "التأسيس",
       "weeks": [
         1,
         4
@@ -20,6 +24,7 @@
     },
     {
       "name": "Build",
+      "name_ar": "البناء",
       "weeks": [
         5,
         8
@@ -35,7 +40,9 @@
     {
       "id": "fb-a",
       "name": "Full Body A",
+      "name_ar": "الجسم الكامل أ",
       "short": "A",
+      "short_ar": "أ",
       "exercises": [
         {
           "id": "fb-a1",
@@ -49,6 +56,11 @@
             "Hack squat",
             "Smith machine squat",
             "Leg press"
+          ],
+          "alts_ar": [
+            "الهاك سكوات",
+            "السكوات على جهاز سميث",
+            "ضغط الأرجل"
           ]
         },
         {
@@ -63,6 +75,11 @@
             "Barbell bench press",
             "Machine chest press",
             "Push-up"
+          ],
+          "alts_ar": [
+            "ضغط البنش بالبار",
+            "ضغط الصدر على الجهاز",
+            "الضغط"
           ]
         },
         {
@@ -77,6 +94,11 @@
             "Pull-up",
             "Assisted pull-up",
             "Single-arm cable pulldown"
+          ],
+          "alts_ar": [
+            "العقلة",
+            "العقلة بالمساعدة",
+            "السحب بالكيبل بذراع واحدة"
           ]
         },
         {
@@ -91,6 +113,11 @@
             "Dumbbell Romanian deadlift",
             "Stiff-leg deadlift",
             "45° back extension"
+          ],
+          "alts_ar": [
+            "الرفعة الرومانية بالدمبل",
+            "الرفعة بأرجل مستقيمة",
+            "تمديد الظهر 45°"
           ]
         },
         {
@@ -104,6 +131,10 @@
           "alts": [
             "Dumbbell lateral raise",
             "Machine lateral raise"
+          ],
+          "alts_ar": [
+            "الرفع الجانبي بالدمبل",
+            "الرفع الجانبي على الجهاز"
           ]
         },
         {
@@ -117,6 +148,10 @@
           "alts": [
             "EZ-bar curl",
             "Dumbbell curl"
+          ],
+          "alts_ar": [
+            "ثني الذراعين بالبار المتعرج",
+            "ثني الذراعين بالدمبل"
           ]
         }
       ]
@@ -124,7 +159,9 @@
     {
       "id": "fb-b",
       "name": "Full Body B",
+      "name_ar": "الجسم الكامل ب",
       "short": "B",
+      "short_ar": "ب",
       "exercises": [
         {
           "id": "fb-b1",
@@ -138,6 +175,11 @@
             "Hack squat",
             "Smith machine squat",
             "Goblet squat"
+          ],
+          "alts_ar": [
+            "الهاك سكوات",
+            "السكوات على جهاز سميث",
+            "سكوات الكأس (جوبلت)"
           ]
         },
         {
@@ -152,6 +194,11 @@
             "Machine shoulder press",
             "Standing overhead press",
             "Arnold press"
+          ],
+          "alts_ar": [
+            "ضغط الكتف على الجهاز",
+            "الضغط العسكري واقفًا",
+            "ضغط أرنولد"
           ]
         },
         {
@@ -166,6 +213,11 @@
             "Seated cable row",
             "Dumbbell row",
             "Machine row"
+          ],
+          "alts_ar": [
+            "التجديف بالكيبل جالسًا",
+            "التجديف بالدمبل بذراع واحدة",
+            "التجديف على الجهاز"
           ]
         },
         {
@@ -179,6 +231,10 @@
           "alts": [
             "Lying leg curl",
             "Nordic ham curl"
+          ],
+          "alts_ar": [
+            "ثني الأرجل مستلقيًا",
+            "الثني النوردي"
           ]
         },
         {
@@ -192,6 +248,10 @@
           "alts": [
             "Overhead dumbbell extension",
             "EZ-bar skull crusher"
+          ],
+          "alts_ar": [
+            "تمديد الترايسبس فوق الرأس بالدمبل",
+            "كسارة الجمجمة بالبار المتعرج"
           ]
         },
         {
@@ -206,6 +266,11 @@
             "Leg press calf raise",
             "Seated calf raise",
             "Single-leg calf raise"
+          ],
+          "alts_ar": [
+            "رفع السمانة على جهاز ضغط الأرجل",
+            "رفع السمانة جالسًا",
+            "رفع السمانة برجل واحدة"
           ]
         }
       ]
@@ -213,7 +278,9 @@
     {
       "id": "fb-c",
       "name": "Full Body C",
+      "name_ar": "الجسم الكامل ج",
       "short": "C",
+      "short_ar": "ج",
       "exercises": [
         {
           "id": "fb-c1",
@@ -223,10 +290,16 @@
           "reps": "8–10",
           "type": "compound",
           "cue": "Chin tucked, ribs down; drive through your heels and squeeze your glutes hard at the top.",
+          "cue_ar": "الذقن للداخل والأضلاع للأسفل؛ ادفع بكعبيك واعصر أردافك بقوة في الأعلى.",
           "alts": [
             "Machine hip thrust",
             "Glute bridge",
             "Cable pull-through"
+          ],
+          "alts_ar": [
+            "دفع الورك على الجهاز",
+            "جسر الأرداف",
+            "السحب بين الرجلين بالكيبل"
           ]
         },
         {
@@ -241,6 +314,11 @@
             "Incline barbell press",
             "Incline machine press",
             "Incline Smith press"
+          ],
+          "alts_ar": [
+            "ضغط البنش المائل بالبار",
+            "ضغط الصدر المائل على الجهاز",
+            "ضغط الصدر المائل على جهاز سميث"
           ]
         },
         {
@@ -254,6 +332,10 @@
           "alts": [
             "Lat pulldown",
             "Neutral-grip pull-up"
+          ],
+          "alts_ar": [
+            "السحب الأمامي",
+            "العقلة بقبضة متوازية"
           ]
         },
         {
@@ -264,10 +346,16 @@
           "reps": "8–10",
           "type": "compound",
           "cue": "Rear foot on a bench, lean your torso slightly forward and sink straight down. Do all reps, then switch legs.",
+          "cue_ar": "القدم الخلفية على مقعد، مِل بجذعك للأمام قليلًا وانزل مباشرة للأسفل. أكمل كل التكرارات ثم بدّل الرجل.",
           "alts": [
             "Walking lunge",
             "Reverse lunge",
             "Step-up"
+          ],
+          "alts_ar": [
+            "الطعن مع المشي",
+            "الطعن الخلفي",
+            "الصعود على الصندوق"
           ]
         },
         {
@@ -282,6 +370,11 @@
             "Reverse cable fly",
             "Face pull",
             "Bent-over dumbbell reverse fly"
+          ],
+          "alts_ar": [
+            "التفتيح العكسي بالكيبل",
+            "سحب الحبل للوجه",
+            "التفتيح العكسي بالدمبل منحنيًا"
           ]
         },
         {
@@ -295,6 +388,10 @@
           "alts": [
             "Machine crunch",
             "Weighted crunch"
+          ],
+          "alts_ar": [
+            "الطحن على الجهاز",
+            "الطحن بالوزن"
           ]
         }
       ]

@@ -13,7 +13,7 @@ Each step ships first to the **test version** at [zain005.github.io/lift-ledger/
 | 3 | Program builder: 1–7 days, exercises from the library or added by hand, one box per set (up to 5) with its own reps, weekly sets per muscle, edit safely | **In test version** (phases come later) |
 | 4 | Sharing programs: link, QR code and file; update keeps the trainee's weights; home-screen tip | **In test version** (backup reminders and a one-screen "Full program" view come later) |
 | 4b | Pro mode (weeks, calories) and coach → trainee programs | **In test version** |
-| 5 | Arabic | Planned |
+| 5 | Arabic: every screen, 171 exercises with tips and Arabic/gym search words, ready-made programs | **In test version** (native-speaker review next) |
 
 ## Decisions
 

@@ -91,7 +91,7 @@ const STRINGS = {
     "status.done": "Done", "status.missed": "Missed", "status.todo": "To do",
     "week.short": "WK", "week.aria": "Week {n}", "week.attention": "needs attention", "week.chartN": "W{n}",
     "phase.n": "Phase {n}",
-    "day.n": "Day {n}", "day.shortN": "D{n}", "day.title": "Wk {w} · {name}", "day.gapsTitle": "Some sets have no weight logged",
+    "day.n": "Day {n}", "day.shortN": "D{n}", "day.tabN": "D{n}", "day.title": "Wk {w} · {name}", "day.gapsTitle": "Some sets have no weight logged",
     "dayDone.mark": "Mark day {n} done", "dayDone.done": "Day {n} done", "dayDone.undo": "tap to undo",
     "warn.empty": { one: "{n} set has no weight logged. Fill in the red box (enter 0 for bodyweight).", other: "{n} sets have no weight logged. Fill in the red boxes (enter 0 for bodyweight)." },
     "sets.n": "Set {n}", "sets.nReps": "Set {n} · {r}", "unit.kg": "kg", "unit.lb": "lb",
@@ -131,7 +131,7 @@ const STRINGS = {
     "set.look": "Appearance", "set.langSoon": "coming soon", "set.theme": "Theme", "set.themeLight": "Light", "set.themeDark": "Dark", "set.themeSystem": "Match phone",
     "set.language": "Language",
     "set.workoutScreen": "Workout screen", "set.app": "App",
-    "set.videos": "Demo links", "set.videosDesc": "Exercise names link to the program's demo video, or a YouTube search.",
+    "set.videos": "Demo links", "set.videosDesc": "A play button beside each exercise opens its demo video, or a YouTube search.",
     "set.cues": "Exercise tips", "set.cuesDesc": "A short form cue under each exercise.",
     "set.last": "Last time", "set.lastDesc": "The weights you lifted the week before.",
     "set.rpeBox": "RPE explainer", "set.rpeBoxDesc": "The “What does RPE mean?” box above the workout.",
@@ -166,6 +166,9 @@ const STRINGS = {
     "err.where.program": "Program", "err.where.phase": "Phase {n}",
     "err.fileLarge": "That file is too large.", "err.json": "That file isn't valid JSON.", "err.read": "Couldn't read the file.",
 
+    "csv.program": "program", "csv.week": "week", "csv.phase": "phase", "csv.day": "day", "csv.session": "session", "csv.exercise_no": "exercise_no",
+    "csv.planned_exercise": "planned_exercise", "csv.exercise": "exercise", "csv.set": "set", "csv.weight": "weight", "csv.unit": "unit",
+    "csv.target_reps": "target_reps", "csv.target_rpe": "target_rpe", "csv.day_done": "day_done", "csv.yes": "yes", "csv.no": "no",
     "data.title": "Your data",
     "data.note": "Everything is stored in this browser on this device. Nothing is sent anywhere. Export a backup now and then, and before clearing your browser data.",
     "data.exportJson": "Export backup (.json)", "data.exportCsv": "Export sets (.csv)", "data.restore": "Restore backup",
@@ -270,7 +273,7 @@ const STRINGS = {
     "lib.deleteConfirm": "Delete “{name}” from your exercises? Programs that already use it keep their copy.",
     "lib.browse": "Browse exercises", "lib.summary": "{n} exercises for every muscle, plus {mine} of your own.",
     "lib.summaryNone": "{n} exercises for every muscle. Add your own from the list.",
-    "swap.library": "Choose from library…",
+    "swap.library": "Choose from library…", "swap.use": "Use", "swap.restore": "Restore",
     "food.amt.g": "{a} g", "food.amt.ml": "{a} ml", "food.amt.each": "{a} ×", "food.amt.scoop": "{a} scoop(s)", "food.amt.kcal": "{a} kcal"
   }
 };
@@ -279,7 +282,7 @@ const STRINGS = {
    until then it's listed but can't be picked. Names are written in their own language. */
 const LANGS = [
   { code: "en", name: "English", dir: "ltr", ready: true },
-  { code: "ar", name: "العربية", dir: "rtl", ready: false, soon: "قريبًا" }
+  { code: "ar", name: "العربية", dir: "rtl", ready: true }
 ];
 
 let LANG = "en";
@@ -292,7 +295,11 @@ function lookup(key) {
   MISSING.add(key);
   return key;
 }
-function fill(s, vars) { return vars ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)) : String(s); }
+/* In right-to-left text, numbers with signs, units or ranges ("+15%", "3×8", "−20%") are isolated as
+   left-to-right runs, so they read "+15%" and not "15%+". Values that contain Arabic letters are left alone. */
+const isRtl = () => (LANGS.find(l => l.code === LANG) || {}).dir === "rtl";
+const bidi = v => isRtl() && /\d/.test(String(v)) && /[+\-−–%×\/]/.test(String(v)) && !/[\u0600-\u06FF]/.test(String(v)) ? "\u2066" + v + "\u2069" : String(v);
+function fill(s, vars) { return vars ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? bidi(vars[k]) : m)) : String(s); }
 function t(key, vars) { const v = lookup(key); return fill(typeof v === "object" ? (v.other || "") : v, vars); }
 let pluralRules = new Intl.PluralRules("en");
 function tn(key, n, vars) {

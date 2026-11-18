@@ -158,7 +158,7 @@ function renderCalOutputs() {
     return f;
   };
   const bold = v => { const b = document.createElement("b"); b.textContent = r0(v); return b; };
-  tr([t("cal.col.day"), t("cal.col.maintain"), "−" + tp + "%", "+" + tp + "%"], "", true);
+  tr([t("cal.col.day"), t("cal.col.maintain"), bidi("−" + tp + "%"), bidi("+" + tp + "%")], "", true);
   if (R.nt) tr([first(t("cal.day.training"), R.nt, t("cal.day.trainingSub", { warm: r0(R.warm), lift: r0(R.lift) })), bold(R.days.training), r0(R.days.training * (1 - T)), r0(R.days.training * (1 + T))]);
   if (R.nc) tr([first(t("cal.day.cardio"), R.nc, t("cal.day.cardioSub", { card: r0(R.card) })), bold(R.days.cardio), r0(R.days.cardio * (1 - T)), r0(R.days.cardio * (1 + T))]);
   if (R.nr) tr([first(t("cal.day.rest"), R.nr, t("cal.day.restSub")), bold(R.days.rest), r0(R.days.rest * (1 - T)), r0(R.days.rest * (1 + T))]);
@@ -166,7 +166,7 @@ function renderCalOutputs() {
   setHtml($("rBaseOut"), R.hasDiet ? t("cal.usualTotals", { kcal: r0(R.base.kcal), p: r0(R.base.p), pkg: R.kg ? (R.base.p / R.kg).toFixed(1) : "–", f: r0(R.base.f), c: r0(R.base.c) }) : "");
   setHtml($("rWeekOut"), R.hasDiet ? t("cal.weekAvg", { kcal: r0(R.avgIn) }) + (+CAL.highDays ? t("cal.biggerDaysTotal", { kcal: r0(R.base.kcal + (+CAL.highExtra || 0)) }) : "") : "");
   $("wkNote").textContent = tn("cal.restLeft", R.nr);
-  $("pAgeNote").textContent = R.katch === null
+  $("pAgeNote").textContent = !detailsComplete() ? "" : R.katch === null
     ? t("cal.bmrNote", { bmr: r0(R.bmr) })
     : t("cal.bmrNoteBf", { lean: R.lean.toFixed(1), katch: r0(R.katch), mifflin: r0(R.mifflin), bmr: r0(R.bmr) });
   renderWhatIfResult(R);

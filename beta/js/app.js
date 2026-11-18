@@ -92,6 +92,7 @@ function normalizeProgram(raw, builtin) {
             id: exId, ref: sid(e.ref), name: tx.name, nameEn: tx.nameEn, sets, reps: str(e.reps, 60) || "",
             setReps: Array.isArray(e.setReps) && e.setReps.length === sets ? e.setReps.map(r => str(r, 7)) : null, type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(tx.cue, 300),
             alts: Array.isArray(altsRaw) ? altsRaw.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
+            altsEn: Array.isArray(e.alts) ? e.alts.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
             timed: !!e.timed, perSide: !!e.perSide,
             primary: str(e.primary, 20), secondary: Array.isArray(e.secondary) ? e.secondary.map(m => str(m, 20)).slice(0, 8) : [],
             video: /^https:\/\//.test(video) ? video : ""
@@ -313,7 +314,7 @@ function renderDays() {
     const sh = ph.dayShort[d];
     const sub = sh ? (done ? "✓ " : "") + sh : (done ? "✓ " + status : status);
     b.innerHTML = "<span></span><small></small>";
-    b.querySelector("span").textContent = (D > 4 ? t("day.shortN", { n: d + 1 }) : t("day.n", { n: d + 1 }));
+    b.querySelector("span").textContent = (D > 4 ? t("day.tabN", { n: d + 1 }) : t("day.n", { n: d + 1 }));
     b.querySelector("small").textContent = sub;
     b.addEventListener("click", () => { view.day = d; saveView(); renderAll(); window.scrollTo({ top: 0 }); });
     el.appendChild(b);
@@ -423,13 +424,14 @@ function renderList() {
       const ul = document.createElement("ul");
       [name].concat(alts).filter(s => s !== shown).forEach(s => {
         const li = document.createElement("li");
-        const btn = document.createElement("button"); btn.type = "button";
-        if (s === name) btn.className = "orig";
+        const btn = document.createElement("button"); btn.type = "button"; btn.dataset.use = t("swap.use");
+        if (s === name) { btn.className = "orig"; btn.dataset.restore = t("swap.restore"); }
         const lbl = document.createElement("span"); lbl.textContent = s + (s === name ? " " + t("swap.planned") : "");
         btn.appendChild(lbl);
         btn.addEventListener("click", () => { const en = entry(w, d, i); if (s === name) delete en.alt; else en.alt = s; persist(); renderList(); });
         li.appendChild(btn);
-        const vu = demoUrl(s, s === name ? ex.video : "");
+        const ai = alts.indexOf(s), enName = s === name ? ex.nameEn || s : ex.altsEn && ex.altsEn[ai] || s;
+        const vu = demoUrl(enName, s === name ? ex.video : "");          // demo searches use the English name
         if (vu) {
           const va = document.createElement("a"); va.href = vu; va.target = "_blank"; va.rel = "noopener";
           va.className = "vbtn"; va.innerHTML = PLAY_SVG; va.setAttribute("aria-label", t("demo.aria", { name: s }));
@@ -795,7 +797,7 @@ $("expJson").addEventListener("click", () => {
 });
 $("expCsv").addEventListener("click", () => {
   const q = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
-  const rows = [["program", "week", "phase", "day", "session", "exercise_no", "planned_exercise", "exercise", "set", "weight", "unit", "target_reps", "target_rpe", "day_done"]];
+  const rows = [["program", "week", "phase", "day", "session", "exercise_no", "planned_exercise", "exercise", "set", "weight", "unit", "target_reps", "target_rpe", "day_done"].map(k => t("csv." + k))];
   PROGRAMS.forEach(p => {
     const L = logsFor(p);
     for (let w = 1, nw = nwOf(p, L); w <= nw; w++) {
@@ -805,7 +807,7 @@ $("expCsv").addEventListener("click", () => {
         const e = wk.ex && wk.ex[ex.id]; if (!e || !e.s) return;
         e.s.slice(0, ex.sets).forEach((v, s) => {
           if (v === "" || v === undefined) return;
-          rows.push([p.name, w, ph.name, d + 1, ph.dayNames[d], i + 1, ex.name, e.alt || ex.name, s + 1, v, SET.unit, ex.reps, ex.rpe, wk.done && wk.done[ph.dayIds[d]] ? "yes" : "no"]);
+          rows.push([p.name, w, ph.name, d + 1, ph.dayNames[d], i + 1, ex.name, e.alt || ex.name, s + 1, v, unitLabel(), ex.reps, ex.rpe, t(wk.done && wk.done[ph.dayIds[d]] ? "csv.yes" : "csv.no")]);
         });
       }));
     }
