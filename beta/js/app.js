@@ -44,9 +44,25 @@ const fail = (key, vars) => { const e = new Error(t(key, vars)); throw e; };
 
 /* Turn a program file into the shape the app uses. Throws an Error with a readable message if it's invalid.
    Every day and exercise gets a permanent id; logs are stored by id, so reordering never moves history. */
+/* Translated text: a field "name_ar" (etc.) is used when the app is in that language */
+const LOC = () => LANG !== "en";
+const loc = (o, k) => (LOC() && o && typeof o[k + "_" + LANG] === "string" && o[k + "_" + LANG].trim()) || (o ? o[k] : "");
+/* Exercises from the library always show the library's name and tip in the app's language,
+   so a program built in Arabic reads in English on an English phone, and the other way round */
+function libText(e, en, cue) {
+  const lib = e.ref && typeof exById === "function" ? exById(sid(e.ref)) : null;
+  if (!lib || lib.custom) return { name: en, nameEn: "", cue };
+  const known = v => v && (v === lib.nameEn || Object.keys(lib).some(k => /^name_/.test(k) && lib[k] === v));
+  const knownCue = v => v && (v === lib.cueEn || Object.keys(lib).some(k => /^cue_/.test(k) && lib[k] === v));
+  return {
+    name: LOC() || known(en) && en !== lib.nameEn ? lib.name : en,
+    nameEn: LOC() ? lib.nameEn : "",
+    cue: typeof e["cue_" + LANG] === "string" && LOC() ? e["cue_" + LANG] : knownCue(cue) ? lib.cue : cue
+  };
+}
 function normalizeProgram(raw, builtin) {
   if (!raw || typeof raw !== "object") fail("err.notProgram");
-  const name = str(raw.name, 40).trim();
+  const name = str(loc(raw, "name"), 40).trim();
   if (!name) fail("err.noName");
   const weeks = raw.weeks === undefined ? 8 : Math.floor(+raw.weeks);
   if (!(weeks >= 1 && weeks <= 12)) fail("err.weeks");
@@ -60,7 +76,7 @@ function normalizeProgram(raw, builtin) {
       seenDay.add(dayId);
       const seenEx = new Set();
       return {
-        id: dayId, name: str(d.name, 30).trim() || t("day.n", { n: di + 1 }), short: str(d.short, 8).trim(),
+        id: dayId, name: str(loc(d, "name"), 30).trim() || t("day.n", { n: di + 1 }), short: str(loc(d, "short"), 12).trim(),
         exercises: d.exercises.map((e, ei) => {
           const en = e && str(e.name, 60).trim();
           if (!en) fail("err.exName", { where, day: di + 1, ex: ei + 1 });
@@ -70,10 +86,12 @@ function normalizeProgram(raw, builtin) {
           if (seenEx.has(exId)) fail("err.dupId", { id: exId });
           seenEx.add(exId);
           const video = str(e.video, 300);
+          const tx = libText(e, en, str(e.cue, 300));
+          const altsRaw = LOC() && Array.isArray(e["alts_" + LANG]) && Array.isArray(e.alts) && e["alts_" + LANG].length === e.alts.length ? e["alts_" + LANG] : e.alts;
           return {
-            id: exId, ref: sid(e.ref), name: en, sets, reps: str(e.reps, 60) || "",
-            setReps: Array.isArray(e.setReps) && e.setReps.length === sets ? e.setReps.map(r => str(r, 7)) : null, type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(e.cue, 300),
-            alts: Array.isArray(e.alts) ? e.alts.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
+            id: exId, ref: sid(e.ref), name: tx.name, nameEn: tx.nameEn, sets, reps: str(e.reps, 60) || "",
+            setReps: Array.isArray(e.setReps) && e.setReps.length === sets ? e.setReps.map(r => str(r, 7)) : null, type: str(e.type, 20), rpe: str(e.rpe, 16), cue: str(tx.cue, 300),
+            alts: Array.isArray(altsRaw) ? altsRaw.map(a => str(a, 60).trim()).filter(Boolean).slice(0, 8) : [],
             timed: !!e.timed, perSide: !!e.perSide,
             primary: str(e.primary, 20), secondary: Array.isArray(e.secondary) ? e.secondary.map(m => str(m, 20)).slice(0, 8) : [],
             video: /^https:\/\//.test(video) ? video : ""
@@ -91,7 +109,7 @@ function normalizeProgram(raw, builtin) {
     const days = ph.days ? parseDays(ph.days, t("err.where.phase", { n: pi + 1 })) : baseDays;
     const rpe = ph.rpe && typeof ph.rpe === "object" ? ph.rpe : {};
     return {
-      name: str(ph.name, 30), from, to,
+      name: str(loc(ph, "name"), 30), from, to,
       dayIds: days.map(d => d.id), dayNames: days.map(d => d.name), dayShort: days.map(d => d.short),
       days: days.map(d => d.exercises.map(e => Object.assign({}, e, { rpe: e.rpe || str(rpe[e.type], 16) })))
     };
@@ -100,7 +118,7 @@ function normalizeProgram(raw, builtin) {
     id: slug(raw.id) || slug(name), name, builtin: !!builtin, byBuilder: !!raw.builder, shared: !!raw.shared,
     repeat: weeks === 1 && !!raw.repeat,          // a one-week program that repeats with no end
     weekly: !!raw.weekly,                         // built week by week in Pro (each week is its own block)
-    description: str(raw.description, 200), schedule: str(raw.schedule, 300), weeks,
+    description: str(loc(raw, "description"), 200), schedule: str(loc(raw, "schedule"), 300), weeks,
     dayIds: baseDays.map(d => d.id), dayNames: baseDays.map(d => d.name), dayShort: baseDays.map(d => d.short),
     phases
   };
@@ -348,6 +366,7 @@ function renderList() {
     const nm = document.createElement("div"); nm.className = "ex-name";
     const h = document.createElement("h3"); h.textContent = shown;
     nm.append(h);
+    if (ex.nameEn && !e.alt) { const en = document.createElement("small"); en.className = "en-name"; en.lang = "en"; en.dir = "ltr"; en.textContent = ex.nameEn; nm.append(en); }
     if (e.alt) {
       const sw = document.createElement("p"); sw.className = "swapped";
       sw.append(t("swap.insteadOf") + " "); const b = document.createElement("b"); b.textContent = name; sw.append(b);
@@ -362,7 +381,7 @@ function renderList() {
     if (e.alt) pr.querySelector(".tag").textContent = t("swap.tag");
     nm.append(pr);
     top.append(num, nm);
-    const vurl = demoUrl(shown, e.alt ? "" : ex.video);
+    const vurl = demoUrl(!e.alt && ex.nameEn || shown, e.alt ? "" : ex.video);
     if (vurl) { top.classList.add("has-play"); top.append(playButton(shown, vurl)); }
     card.append(top);
 
@@ -726,7 +745,7 @@ function renderSettings() {
     b.setAttribute("aria-pressed", String(l.code === LANG));
     b.textContent = l.name;
     if (!l.ready) { b.disabled = true; const s = document.createElement("small"); s.textContent = " · " + (l.soon || t("set.langSoon")); b.appendChild(s); }
-    else b.addEventListener("click", () => { if (l.code === LANG) return; SET.lang = l.code; saveSettings(); setLanguage(SET.lang); renderAll(); });
+    else b.addEventListener("click", () => { if (l.code === LANG) return; SET.lang = l.code; saveSettings(); location.reload(); });
     lg.appendChild(b);
   });
   if (setPage === "details" && typeof renderCal === "function") renderCal();
@@ -901,6 +920,7 @@ if (PREFIX === "llb-") {
 document.addEventListener("DOMContentLoaded", async () => {
   let builtins = [];
   const libLoad = typeof loadLibrary === "function" ? loadLibrary() : Promise.resolve();
+  await libLoad;                     // programs take exercise names and tips from the library, in the app's language
   try { builtins = await loadBuiltins(); }
   catch (e) { $("loading").textContent = t("err.loadPrograms"); }
   const customs = [];

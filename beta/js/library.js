@@ -17,15 +17,31 @@ const equipName = q => t("equip." + q);
 async function loadLibrary() {
   try {
     const d = await fetch("data/exercises.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
-    if (d && Array.isArray(d.exercises)) { LIBRARY = d; LIB_READY = true; }
+    if (d && Array.isArray(d.exercises)) {
+      // Keep the English name and tip; in another language show the translation and search both
+      d.exercises.forEach(e => {
+        e.nameEn = e.name; e.cueEn = e.cue;
+        if (LANG !== "en") {
+          if (e["name_" + LANG]) e.name = e["name_" + LANG];
+          if (e["cue_" + LANG]) e.cue = e["cue_" + LANG];
+          e.terms = [e.terms, e["terms_" + LANG], e.nameEn].filter(Boolean).join(" ");
+        }
+      });
+      LIBRARY = d; LIB_READY = true;
+    }
   } catch (e) { LIB_READY = false; }
 }
 
 /* Search: case-insensitive, ignores accents and punctuation; every word typed must match somewhere. */
 function normText(s) {
-  return String(s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
-    .replace(/[ً-ْـ]/g, "")              // Arabic diacritics and tatweel, for step 5
-    .replace(/[^a-z0-9؀-ۿ]+/g, " ").trim();
+  return normDigits(String(s || "")).toLowerCase().normalize("NFKC")
+    .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")              // Arabic diacritics and tatweel
+    .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")        // آ أ إ ٱ → ا
+    .replace(/\u0629/g, "\u0647").replace(/\u0649/g, "\u064A")  // ة → ه, ى → ي
+    .replace(/\u0624/g, "\u0648").replace(/\u0626/g, "\u064A")  // ؤ → و, ئ → ي
+    .replace(/\u06A9/g, "\u0643").replace(/\u06CC/g, "\u064A")  // Persian ک ی typed on some keyboards
+    .replace(/[^a-z0-9\u0621-\u064A]+/g, " ").trim();
 }
 function searchText(e) {
   const muscles = [e.primary].concat(e.secondary || []).filter(Boolean).map(muscleName).join(" ");
@@ -106,6 +122,10 @@ function renderPickerList() {
     b.innerHTML = '<span class="pk-name"></span><span class="pk-meta"></span>';
     b.querySelector(".pk-name").textContent = e.name;
     b.querySelector(".pk-meta").textContent = exMeta(e);
+    if (LANG !== "en" && e.nameEn && e.nameEn !== e.name) {      // the English gym name, underneath
+      const en = document.createElement("span"); en.className = "pk-en"; en.lang = "en"; en.dir = "ltr"; en.textContent = e.nameEn;
+      b.querySelector(".pk-name").after(en);
+    }
     if (e.custom) { const tg = document.createElement("span"); tg.className = "tag"; tg.textContent = t("lib.mineTag"); b.querySelector(".pk-name").append(" ", tg); }
     b.addEventListener("click", () => {
       if (PK.onPick) { const cb = PK.onPick; closePicker(); cb(e); }
