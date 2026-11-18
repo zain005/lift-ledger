@@ -561,7 +561,7 @@ body.sheet-open .tabbar { display: none; }
 .bd-mrow.high .bar i { background: var(--miss); }
 .bd-mrow.zero { color: var(--muted); }
 .bd-mrow .mv { text-align: end; font-weight: 700; font-variant-numeric: tabular-nums; }
-.bd-foot { position: sticky; bottom: 0; z-index: 5; isolation: isolate; box-shadow: 0 -8px 16px var(--bg); display: grid; gap: 8px; background: var(--bg); padding: 10px 0 max(6px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.bd-foot { display: grid; gap: 8px; padding: 6px 0 max(10px, env(safe-area-inset-bottom)); }   /* Save sits at the very end, after everything else */
 .bd-foot .addbtn { height: 50px; font-size: 17px; }
 .pill.side { background: var(--surface-2); color: var(--muted); }
 
@@ -694,3 +694,10 @@ button:active:not(:disabled) { opacity: .72; }
 .im-changes[hidden] { display: none; }
 .im-changes ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 14px; }
 .im-days li.more { color: var(--muted); font-size: 13px; background: transparent; border-style: dashed; }
+
+/* Round play button for the demo video, at the end of the exercise header */
+.ex-top.has-play { grid-template-columns: auto 1fr auto; }
+.playbtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex: none; text-decoration: none; }
+.playbtn svg { width: 20px; height: 20px; margin-inline-start: 2px; }
+[dir="rtl"] .playbtn svg { margin-inline-start: 0; margin-inline-end: 2px; }      /* play keeps pointing right */
+.playbtn:active { opacity: .7; }

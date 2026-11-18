@@ -83,7 +83,7 @@ function renderWeekTabs() {
     add.addEventListener("click", () => {
       W.push({ days: clone(W[W.length - 1].days) });      // a copy of the last week, same ids
       BD.week = W.length - 1; BD.day = 0; renderBuilder();
-      showMsg("bdMsg", t("bd.weekCopied", { n: W.length, from: W.length - 1 }));
+      $("bdWeeksNote").textContent = t("bd.weekCopied", { n: W.length, from: W.length - 1 });   // said where they're looking
     });
     tabs.appendChild(add);
   }

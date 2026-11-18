@@ -232,11 +232,11 @@ function demoUrl(name, video) {
   if (!SET.videos) return null;
   return video || "https://www.youtube.com/results?search_query=" + encodeURIComponent(name + " exercise form");
 }
-function nameNode(n, url) {
-  if (!url) { const s = document.createElement("span"); s.textContent = n; return s; }
+/* A round play button beside the exercise name opens a demo video */
+function playButton(n, url) {
   const a = document.createElement("a");
-  a.href = url; a.target = "_blank"; a.rel = "noopener"; a.className = "vlink";
-  a.append(n + " "); a.insertAdjacentHTML("beforeend", PLAY_SVG);
+  a.href = url; a.target = "_blank"; a.rel = "noopener"; a.className = "playbtn";
+  a.insertAdjacentHTML("beforeend", PLAY_SVG);
   a.setAttribute("aria-label", t("demo.aria", { name: n }));
   return a;
 }
@@ -346,7 +346,7 @@ function renderList() {
     const top = document.createElement("div"); top.className = "ex-top";
     const num = document.createElement("div"); num.className = "num"; num.textContent = i + 1;
     const nm = document.createElement("div"); nm.className = "ex-name";
-    const h = document.createElement("h3"); h.appendChild(nameNode(shown, demoUrl(shown, e.alt ? "" : ex.video)));
+    const h = document.createElement("h3"); h.textContent = shown;
     nm.append(h);
     if (e.alt) {
       const sw = document.createElement("p"); sw.className = "swapped";
@@ -362,6 +362,8 @@ function renderList() {
     if (e.alt) pr.querySelector(".tag").textContent = t("swap.tag");
     nm.append(pr);
     top.append(num, nm);
+    const vurl = demoUrl(shown, e.alt ? "" : ex.video);
+    if (vurl) { top.classList.add("has-play"); top.append(playButton(shown, vurl)); }
     card.append(top);
 
     if (SET.cues && cue && !e.alt) { const c = document.createElement("p"); c.className = "cue"; c.textContent = cue; card.append(c); }

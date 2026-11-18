@@ -117,7 +117,7 @@ test("in Pro, weeks hold their own days; Add week copies the last one; the progr
   await addExercise(page, "barbell bench press");
   await page.click("#bdAddWeek");
   await expect(page.locator(".bd-weektab:not(.add)")).toHaveCount(2);
-  await expect(page.locator("#bdMsg")).toContainText("copy of week 1");
+  await expect(page.locator("#bdWeeksNote")).toContainText("copy of week 1");
   await expect(page.locator(".bd-ex")).toHaveCount(1);                      // week 2 starts as a copy
   await page.locator(".bd-ex").first().locator(".setbtn.plus").click();     // week 2: one more set
   await page.click("#bdAddDay");                                            // week 2: a second day
