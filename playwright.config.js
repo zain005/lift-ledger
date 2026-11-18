@@ -15,7 +15,7 @@ module.exports = defineConfig({
     serviceWorkers: "block"
   },
   webServer: {
-    command: "python3 -m http.server 4173",
+    command: (process.platform === "win32" ? "python" : "python3") + " -m http.server 4173",   // Windows calls it "python"
     url: "http://localhost:4173",
     reuseExistingServer: !process.env.CI,
     stdout: "ignore",

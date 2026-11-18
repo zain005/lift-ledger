@@ -8,7 +8,7 @@
   "homepage": "https://zain005.github.io/lift-ledger/",
   "repository": { "type": "git", "url": "https://github.com/zain005/lift-ledger.git" },
   "scripts": {
-    "start": "python3 -m http.server 4173",
+    "start": "node -e \"require('child_process').spawn(process.platform==='win32'?'python':'python3',['-m','http.server','4173'],{stdio:'inherit'})\"",
     "test": "playwright test"
   },
   "devDependencies": {
