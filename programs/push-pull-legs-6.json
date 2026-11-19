@@ -2,12 +2,16 @@
   "format": 2,
   "id": "push-pull-legs-6",
   "name": "Push Pull Legs",
+  "name_ar": "دفع سحب أرجل",
   "description": "6 days a week. Each muscle twice a week with shorter sessions.",
+  "description_ar": "6 أيام في الأسبوع. كل عضلة مرتين أسبوعيًا بحصص أقصر.",
   "schedule": "Pull, Push, Legs, Pull, Push, Legs, then a rest day. Rest after every three sessions if six in a row is too much.",
+  "schedule_ar": "سحب، دفع، أرجل، سحب، دفع، أرجل، ثم يوم راحة. استرح بعد كل ثلاث حصص إن كانت ست حصص متتالية كثيرة عليك.",
   "weeks": 8,
   "phases": [
     {
       "name": "Foundation",
+      "name_ar": "التأسيس",
       "weeks": [
         1,
         4
@@ -20,6 +24,7 @@
     },
     {
       "name": "Build",
+      "name_ar": "البناء",
       "weeks": [
         5,
         8
@@ -35,10 +40,13 @@
     {
       "id": "ppl-a",
       "name": "Pull A",
+      "name_ar": "سحب أ",
       "short": "Pull",
+      "short_ar": "سحب",
       "exercises": [
         {
           "id": "ppl-a1",
+          "ref": "chest-supported-row",
           "name": "Chest-Supported Row",
           "sets": 3,
           "reps": "8–10",
@@ -48,10 +56,16 @@
             "Seated cable row",
             "Dumbbell row",
             "Machine row"
+          ],
+          "alts_ar": [
+            "التجديف بالكيبل جالسًا",
+            "التجديف بالدمبل بذراع واحدة",
+            "التجديف على الجهاز"
           ]
         },
         {
           "id": "ppl-a2",
+          "ref": "lat-pulldown",
           "name": "Lat Pulldown",
           "sets": 3,
           "reps": "8–10",
@@ -61,10 +75,16 @@
             "Pull-up",
             "Assisted pull-up",
             "Single-arm cable pulldown"
+          ],
+          "alts_ar": [
+            "العقلة",
+            "العقلة بالمساعدة",
+            "السحب بالكيبل بذراع واحدة"
           ]
         },
         {
           "id": "ppl-a3",
+          "ref": "face-pull",
           "name": "Face Pull",
           "sets": 3,
           "reps": "12–15",
@@ -73,10 +93,15 @@
           "alts": [
             "Reverse pec deck",
             "Reverse cable fly"
+          ],
+          "alts_ar": [
+            "الفراشة العكسية",
+            "التفتيح العكسي بالكيبل"
           ]
         },
         {
           "id": "ppl-a4",
+          "ref": "barbell-curl",
           "name": "Barbell Curl",
           "sets": 3,
           "reps": "8–10",
@@ -86,10 +111,16 @@
             "EZ-bar curl",
             "Cable curl",
             "Dumbbell curl"
+          ],
+          "alts_ar": [
+            "ثني الذراعين بالبار المتعرج",
+            "ثني الذراعين بالكيبل",
+            "ثني الذراعين بالدمبل"
           ]
         },
         {
           "id": "ppl-a5",
+          "ref": "hammer-curl",
           "name": "Hammer Curl",
           "sets": 2,
           "reps": "10–12",
@@ -98,6 +129,10 @@
           "alts": [
             "Rope cable hammer curl",
             "Cross-body hammer curl"
+          ],
+          "alts_ar": [
+            "ثني المطرقة بالحبل",
+            "ثني المطرقة عبر الجسم"
           ]
         }
       ]
@@ -105,10 +140,13 @@
     {
       "id": "ppl-b",
       "name": "Push A",
+      "name_ar": "دفع أ",
       "short": "Push",
+      "short_ar": "دفع",
       "exercises": [
         {
           "id": "ppl-b1",
+          "ref": "bench-press",
           "name": "Barbell Bench Press",
           "sets": 3,
           "reps": "6–8",
@@ -118,10 +156,16 @@
             "Dumbbell bench press",
             "Machine chest press",
             "Smith machine bench press"
+          ],
+          "alts_ar": [
+            "ضغط الصدر بالدمبل",
+            "ضغط الصدر على الجهاز",
+            "ضغط البنش على جهاز سميث"
           ]
         },
         {
           "id": "ppl-b2",
+          "ref": "seated-db-shoulder-press",
           "name": "Seated Dumbbell Shoulder Press",
           "sets": 3,
           "reps": "8–10",
@@ -131,10 +175,16 @@
             "Machine shoulder press",
             "Standing overhead press",
             "Arnold press"
+          ],
+          "alts_ar": [
+            "ضغط الكتف على الجهاز",
+            "الضغط العسكري واقفًا",
+            "ضغط أرنولد"
           ]
         },
         {
           "id": "ppl-b3",
+          "ref": "cable-fly",
           "name": "Cable Fly",
           "sets": 2,
           "reps": "12–15",
@@ -143,10 +193,15 @@
           "alts": [
             "Pec deck",
             "Dumbbell fly"
+          ],
+          "alts_ar": [
+            "جهاز الفراشة",
+            "تفتيح الصدر بالدمبل"
           ]
         },
         {
           "id": "ppl-b4",
+          "ref": "db-lateral-raise",
           "name": "Dumbbell Lateral Raise",
           "sets": 3,
           "reps": "12–15",
@@ -155,10 +210,15 @@
           "alts": [
             "Cable lateral raise",
             "Machine lateral raise"
+          ],
+          "alts_ar": [
+            "الرفع الجانبي بالكيبل",
+            "الرفع الجانبي على الجهاز"
           ]
         },
         {
           "id": "ppl-b5",
+          "ref": "triceps-pressdown",
           "name": "Triceps Pressdown",
           "sets": 3,
           "reps": "10–12",
@@ -167,6 +227,10 @@
           "alts": [
             "Rope pressdown",
             "Dip machine"
+          ],
+          "alts_ar": [
+            "دفع الترايسبس بالحبل",
+            "المتوازي على الجهاز"
           ]
         }
       ]
@@ -174,10 +238,13 @@
     {
       "id": "ppl-c",
       "name": "Legs A",
+      "name_ar": "أرجل أ",
       "short": "Legs",
+      "short_ar": "أرجل",
       "exercises": [
         {
           "id": "ppl-c1",
+          "ref": "back-squat",
           "name": "Back Squat",
           "sets": 3,
           "reps": "6–8",
@@ -187,10 +254,16 @@
             "Hack squat",
             "Smith machine squat",
             "Leg press"
+          ],
+          "alts_ar": [
+            "الهاك سكوات",
+            "السكوات على جهاز سميث",
+            "ضغط الأرجل"
           ]
         },
         {
           "id": "ppl-c2",
+          "ref": "romanian-deadlift",
           "name": "Romanian Deadlift",
           "sets": 3,
           "reps": "8–10",
@@ -200,10 +273,16 @@
             "Dumbbell Romanian deadlift",
             "Stiff-leg deadlift",
             "45° back extension"
+          ],
+          "alts_ar": [
+            "الرفعة الرومانية بالدمبل",
+            "الرفعة بأرجل مستقيمة",
+            "تمديد الظهر 45°"
           ]
         },
         {
           "id": "ppl-c3",
+          "ref": "leg-extension",
           "name": "Leg Extension",
           "sets": 2,
           "reps": "12–15",
@@ -213,10 +292,16 @@
             "Sissy squat",
             "Reverse Nordic",
             "Goblet squat"
+          ],
+          "alts_ar": [
+            "السيسي سكوات",
+            "النوردي العكسي",
+            "سكوات الكأس (جوبلت)"
           ]
         },
         {
           "id": "ppl-c4",
+          "ref": "seated-leg-curl",
           "name": "Seated Leg Curl",
           "sets": 3,
           "reps": "10–12",
@@ -225,10 +310,15 @@
           "alts": [
             "Lying leg curl",
             "Nordic ham curl"
+          ],
+          "alts_ar": [
+            "ثني الأرجل مستلقيًا",
+            "الثني النوردي"
           ]
         },
         {
           "id": "ppl-c5",
+          "ref": "standing-calf-raise",
           "name": "Standing Calf Raise",
           "sets": 3,
           "reps": "10–12",
@@ -238,10 +328,16 @@
             "Leg press calf raise",
             "Seated calf raise",
             "Single-leg calf raise"
+          ],
+          "alts_ar": [
+            "رفع السمانة على جهاز ضغط الأرجل",
+            "رفع السمانة جالسًا",
+            "رفع السمانة برجل واحدة"
           ]
         },
         {
           "id": "ppl-c6",
+          "ref": "cable-crunch",
           "name": "Cable Crunch",
           "sets": 3,
           "reps": "10–12",
@@ -250,6 +346,10 @@
           "alts": [
             "Machine crunch",
             "Weighted crunch"
+          ],
+          "alts_ar": [
+            "الطحن على الجهاز",
+            "الطحن بالوزن"
           ]
         }
       ]
@@ -257,22 +357,31 @@
     {
       "id": "ppl-d",
       "name": "Pull B",
+      "name_ar": "سحب ب",
       "short": "Pull",
+      "short_ar": "سحب",
       "exercises": [
         {
           "id": "ppl-d1",
+          "ref": "pull-up",
           "name": "Pull-Up",
           "sets": 3,
           "reps": "6–10",
           "type": "compound",
           "cue": "Start from a dead hang and pull your chest toward the bar. Use assistance if you can't hit the reps.",
+          "cue_ar": "ابدأ من تعلّق كامل واسحب صدرك نحو البار. استخدم المساعدة إن لم تصل إلى التكرارات.",
           "alts": [
             "Assisted pull-up",
             "Lat pulldown"
+          ],
+          "alts_ar": [
+            "العقلة بالمساعدة",
+            "السحب الأمامي"
           ]
         },
         {
           "id": "ppl-d2",
+          "ref": "single-arm-cable-row",
           "name": "Single-Arm Cable Row",
           "sets": 3,
           "reps": "10–12",
@@ -282,10 +391,16 @@
             "Dumbbell row",
             "Seated cable row",
             "Chest-supported row"
+          ],
+          "alts_ar": [
+            "التجديف بالدمبل بذراع واحدة",
+            "التجديف بالكيبل جالسًا",
+            "التجديف على الجهاز مع إسناد الصدر"
           ]
         },
         {
           "id": "ppl-d3",
+          "ref": "reverse-pec-deck",
           "name": "Reverse Pec Deck",
           "sets": 3,
           "reps": "12–15",
@@ -295,10 +410,16 @@
             "Reverse cable fly",
             "Face pull",
             "Bent-over dumbbell reverse fly"
+          ],
+          "alts_ar": [
+            "التفتيح العكسي بالكيبل",
+            "سحب الحبل للوجه",
+            "التفتيح العكسي بالدمبل منحنيًا"
           ]
         },
         {
           "id": "ppl-d4",
+          "ref": "incline-db-curl",
           "name": "Incline Dumbbell Curl",
           "sets": 3,
           "reps": "10–12",
@@ -307,18 +428,28 @@
           "alts": [
             "Cable curl",
             "Dumbbell curl"
+          ],
+          "alts_ar": [
+            "ثني الذراعين بالكيبل",
+            "ثني الذراعين بالدمبل"
           ]
         },
         {
           "id": "ppl-d5",
+          "ref": "db-shrug",
           "name": "Dumbbell Shrug",
           "sets": 2,
           "reps": "12–15",
           "type": "isolation",
           "cue": "Shrug straight up toward your ears, pause, and lower to a full stretch.",
+          "cue_ar": "ارفع كتفيك مباشرة نحو أذنيك، توقف لحظة، ثم أنزلهما إلى إطالة كاملة.",
           "alts": [
             "Barbell shrug",
             "Machine shrug"
+          ],
+          "alts_ar": [
+            "رفع الكتفين بالبار",
+            "رفع الكتفين على الجهاز"
           ]
         }
       ]
@@ -326,10 +457,13 @@
     {
       "id": "ppl-e",
       "name": "Push B",
+      "name_ar": "دفع ب",
       "short": "Push",
+      "short_ar": "دفع",
       "exercises": [
         {
           "id": "ppl-e1",
+          "ref": "incline-db-press",
           "name": "Incline Dumbbell Press",
           "sets": 3,
           "reps": "8–10",
@@ -339,10 +473,16 @@
             "Incline barbell press",
             "Incline machine press",
             "Incline Smith press"
+          ],
+          "alts_ar": [
+            "ضغط البنش المائل بالبار",
+            "ضغط الصدر المائل على الجهاز",
+            "ضغط الصدر المائل على جهاز سميث"
           ]
         },
         {
           "id": "ppl-e2",
+          "ref": "machine-shoulder-press",
           "name": "Machine Shoulder Press",
           "sets": 3,
           "reps": "10–12",
@@ -351,22 +491,33 @@
           "alts": [
             "Seated dumbbell shoulder press",
             "Standing overhead press"
+          ],
+          "alts_ar": [
+            "ضغط الكتف بالدمبل جالسًا",
+            "الضغط العسكري واقفًا"
           ]
         },
         {
           "id": "ppl-e3",
+          "ref": "assisted-dip",
           "name": "Assisted Dip",
           "sets": 2,
           "reps": "8–12",
           "type": "compound",
           "cue": "Lean forward slightly and lower until your shoulders are just below your elbows.",
+          "cue_ar": "مِل للأمام قليلًا وانزل حتى يصبح كتفاك أسفل مرفقيك بقليل.",
           "alts": [
             "Machine dip",
             "Close-grip bench press"
+          ],
+          "alts_ar": [
+            "المتوازي على الجهاز",
+            "ضغط البنش بقبضة ضيقة"
           ]
         },
         {
           "id": "ppl-e4",
+          "ref": "cable-lateral-raise",
           "name": "Cable Lateral Raise",
           "sets": 3,
           "reps": "12–15",
@@ -375,10 +526,15 @@
           "alts": [
             "Dumbbell lateral raise",
             "Machine lateral raise"
+          ],
+          "alts_ar": [
+            "الرفع الجانبي بالدمبل",
+            "الرفع الجانبي على الجهاز"
           ]
         },
         {
           "id": "ppl-e5",
+          "ref": "overhead-cable-extension",
           "name": "Overhead Cable Triceps Extension",
           "sets": 3,
           "reps": "10–12",
@@ -387,6 +543,10 @@
           "alts": [
             "Overhead dumbbell extension",
             "EZ-bar skull crusher"
+          ],
+          "alts_ar": [
+            "تمديد الترايسبس فوق الرأس بالدمبل",
+            "كسارة الجمجمة بالبار المتعرج"
           ]
         }
       ]
@@ -394,10 +554,13 @@
     {
       "id": "ppl-f",
       "name": "Legs B",
+      "name_ar": "أرجل ب",
       "short": "Legs",
+      "short_ar": "أرجل",
       "exercises": [
         {
           "id": "ppl-f1",
+          "ref": "hack-squat",
           "name": "Hack Squat",
           "sets": 3,
           "reps": "8–10",
@@ -407,36 +570,56 @@
             "Leg press",
             "Smith machine squat",
             "Back squat"
+          ],
+          "alts_ar": [
+            "ضغط الأرجل",
+            "السكوات على جهاز سميث",
+            "السكوات الخلفي بالبار"
           ]
         },
         {
           "id": "ppl-f2",
+          "ref": "hip-thrust",
           "name": "Hip Thrust",
           "sets": 3,
           "reps": "8–10",
           "type": "compound",
           "cue": "Chin tucked, ribs down; drive through your heels and squeeze your glutes hard at the top.",
+          "cue_ar": "الذقن للداخل والأضلاع للأسفل؛ ادفع بكعبيك واعصر أردافك بقوة في الأعلى.",
           "alts": [
             "Machine hip thrust",
             "Glute bridge",
             "Cable pull-through"
+          ],
+          "alts_ar": [
+            "دفع الورك على الجهاز",
+            "جسر الأرداف",
+            "السحب بين الرجلين بالكيبل"
           ]
         },
         {
           "id": "ppl-f3",
+          "ref": "bulgarian-split-squat",
           "name": "Bulgarian Split Squat",
           "sets": 2,
           "reps": "8–10",
           "type": "compound",
           "cue": "Rear foot on a bench, lean your torso slightly forward and sink straight down. Do all reps, then switch legs.",
+          "cue_ar": "القدم الخلفية على مقعد، مِل بجذعك للأمام قليلًا وانزل مباشرة للأسفل. أكمل كل التكرارات ثم بدّل الرجل.",
           "alts": [
             "Walking lunge",
             "Reverse lunge",
             "Step-up"
+          ],
+          "alts_ar": [
+            "الطعن مع المشي",
+            "الطعن الخلفي",
+            "الصعود على الصندوق"
           ]
         },
         {
           "id": "ppl-f4",
+          "ref": "lying-leg-curl",
           "name": "Lying Leg Curl",
           "sets": 2,
           "reps": "10–12",
@@ -445,10 +628,15 @@
           "alts": [
             "Seated leg curl",
             "Nordic ham curl"
+          ],
+          "alts_ar": [
+            "ثني الأرجل جالسًا",
+            "الثني النوردي"
           ]
         },
         {
           "id": "ppl-f5",
+          "ref": "seated-calf-raise",
           "name": "Seated Calf Raise",
           "sets": 3,
           "reps": "12–15",
@@ -457,19 +645,30 @@
           "alts": [
             "Standing calf raise",
             "Leg press calf raise"
+          ],
+          "alts_ar": [
+            "رفع السمانة واقفًا",
+            "رفع السمانة على جهاز ضغط الأرجل"
           ]
         },
         {
           "id": "ppl-f6",
+          "ref": "hanging-leg-raise",
           "name": "Hanging Leg Raise",
           "sets": 3,
           "reps": "10–15",
           "type": "isolation",
           "cue": "Curl your pelvis up toward your ribs instead of just lifting your legs. Log 0 for bodyweight.",
+          "cue_ar": "ارفع حوضك نحو أضلاعك بدلًا من رفع ساقيك فقط. سجّل 0 لوزن الجسم.",
           "alts": [
             "Captain's chair leg raise",
             "Lying leg raise",
             "Cable crunch"
+          ],
+          "alts_ar": [
+            "رفع الأرجل على كرسي الكابتن",
+            "رفع الأرجل مستلقيًا",
+            "الطحن بالكيبل"
           ]
         }
       ]

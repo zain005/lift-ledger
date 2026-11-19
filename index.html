@@ -26,13 +26,15 @@
     <div class="title-row">
       <h1 id="appTitle">Lift Ledger</h1>
       <div class="phase" id="phase"></div>
+      <button type="button" class="statsbtn" id="statsBtn" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l5-6 4 3 7-9"/></svg><span data-i18n="stats.short">Stats</span></button>
     </div>
-    <div class="modes" id="modes" role="group" data-i18n-aria="nav.aria">
-      <button type="button" class="mode" id="modeWorkout" aria-pressed="true" data-i18n="nav.workout">Workout</button>
-      <button type="button" class="mode" id="modeCal" aria-pressed="false" data-i18n="nav.calories">Calories</button>
-      <button type="button" class="mode" id="modeSet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="nav.settings">Settings</span></button>
+    <div class="weekbar" id="weekbar" hidden>
+      <button type="button" class="weektoggle" id="weekToggle" aria-expanded="false" aria-controls="weeks">
+        <span class="wt-text"><b id="wtMain"></b><small id="wtSub"></small></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
     </div>
-    <div class="weeks" id="weeks" role="group" data-i18n-aria="nav.weekAria"></div>
+    <div class="weeks" id="weeks" role="group" data-i18n-aria="nav.weekAria" hidden></div>
     <div class="days" id="days" role="group" data-i18n-aria="nav.dayAria"></div>
   </div>
 </header>
@@ -40,6 +42,33 @@
 <main>
   <div class="wrap">
     <p class="loading" id="loading" data-i18n="loading">Loading programs…</p>
+
+    <section class="home" id="home" hidden data-i18n-aria="nav.home">
+      <div class="home-hero">
+        <p class="eyebrow" data-i18n="home.eyebrow">Your training log</p>
+        <h2 id="homeHeadline"></h2>
+        <p class="sub" id="homeSub"></p>
+      </div>
+      <div class="panel tip" id="installTip" hidden>
+        <b data-i18n="tip.title">Keep your program one tap away</b>
+        <p id="tipSteps"></p>
+        <button type="button" class="linkbtn" id="tipClose" data-i18n="tip.close">Got it</button>
+      </div>
+      <div id="homeContinue"></div>
+      <button type="button" class="create-hl" id="homeCreate">
+        <span class="plus" aria-hidden="true">+</span>
+        <span><b data-i18n="home.create">Create my own program</b><small data-i18n="home.createSub">Choose your training days, then add exercises from the library.</small></span>
+      </button>
+      <h3 class="sect" id="homeMineH" data-i18n="home.mine" hidden>My programs</h3>
+      <div class="progs" id="homeMine"></div>
+      <h3 class="sect" id="homeChooseH"></h3>
+      <div class="progs" id="homeProgs"></div>
+      <div class="home-links">
+        <label class="linkbtn" for="progFile" data-i18n="home.import">Import a program file</label>
+        <input type="file" id="progFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="msg" id="progMsg" hidden></p>
+    </section>
 
     <details class="rpe" id="rpe" hidden>
       <summary data-i18n="rpe.summary">What does RPE mean?</summary>
@@ -66,11 +95,16 @@
     <button type="button" class="daydone" id="dayDone" aria-pressed="false" hidden></button>
 
     <section class="cal" id="cal" hidden data-i18n-aria="nav.calories">
-      <h2 data-i18n="cal.title">Calories</h2>
+      <div class="panel setup" id="calSetup" hidden>
+        <h3 data-i18n="cal.setupTitle">Set up your calorie calculator</h3>
+        <p class="sub" data-i18n="cal.setupText">Add your weight, height and age, and it works out what you burn and where your eating puts you.</p>
+        <button type="button" class="addbtn" id="calSetupBtn" data-i18n="cal.setupBtn">Add my details</button>
+      </div>
+      <div id="calBody">
       <p class="note"><span data-i18n="cal.detailsIn">Your weight, height and weekly routine are in</span> <button type="button" class="linkbtn" id="calToSet" data-i18n="nav.settings">Settings</button>.</p>
 
       <div class="panel hero">
-        <div class="k" style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)" data-i18n="cal.heroLabel">Your usual week, on average</div>
+        <div class="k" style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="cal.heroLabel">Your usual week, on average</div>
         <div class="big"><b id="cPct">–</b><span id="cBand">–</span></div>
         <p id="cHero1"></p>
         <p id="cHero2"></p>
@@ -160,25 +194,40 @@
         <p data-i18n-html="how.weight"></p>
         <p data-i18n-html="how.accuracy"></p>
       </details>
+      </div>
     </section>
 
     <section class="cal" id="settings" hidden data-i18n-aria="nav.settings">
-      <h2 data-i18n="set.title">Settings</h2>
+      <div class="setlist" id="setList"></div>
+      <button type="button" class="backbtn" id="setBack" hidden><span aria-hidden="true">‹</span> <span data-i18n="set.title">Settings</span></button>
+      <div class="subpage" data-page="language" hidden>
       <div class="panel">
         <h3 data-i18n="set.language">Language</h3>
         <div class="seg two" id="langSeg" role="group" data-i18n-aria="set.language"></div>
       </div>
-      <div class="panel">
-        <h3 data-i18n="set.program">Program</h3>
-        <p class="sub" data-i18n="set.programSub">Each program keeps its own log, so switching never deletes anything.</p>
-        <div class="progs" id="setProgs"></div>
-        <div class="btnrow">
-          <label class="ghostbtn" for="progFile" style="cursor:pointer" data-i18n="set.import">Import a program (.json)</label>
-          <input type="file" id="progFile" accept=".json,application/json" hidden>
-          <a class="ghostbtn" href="https://github.com/zain005/lift-ledger/blob/main/docs/program-format.md" target="_blank" rel="noopener" style="text-decoration:none" data-i18n="set.format">Program file format</a>
-        </div>
-        <p class="msg" id="progMsg" hidden></p>
       </div>
+      <div class="subpage" data-page="pro" hidden>
+      <div class="panel">
+        <h3 data-i18n="pro.title">Pro mode</h3>
+        <p class="sub" data-i18n="pro.intro">For lifters and coaches who plan training week by week. Everything stays free.</p>
+        <ul class="pro-list">
+          <li data-i18n="pro.weeks">Plan programs by week: up to 12 weeks, each with its own days and exercises</li>
+          <li data-i18n="pro.weekPicker">See and log any week of your program</li>
+          <li data-i18n="pro.calories">The calorie calculator</li>
+          <li data-i18n="pro.coach">Coaches: send a program as a Pro program</li>
+          <li data-i18n="pro.all">See every program, even when following a coach</li>
+        </ul>
+        <label class="tog pro-tog"><span><b data-i18n="pro.switch">Pro mode</b><small data-i18n="pro.switchDesc">Turn off any time. Nothing you've logged is lost; Pro parts are just hidden.</small></span><input type="checkbox" role="switch" id="proToggle"></label>
+      </div>
+      </div>
+      <div class="subpage" data-page="library" hidden>
+      <div class="panel">
+        <h3 data-i18n="lib.title">Exercise library</h3>
+        <p class="sub" id="libSummary"></p>
+        <button type="button" class="ghostbtn" id="libBrowse" data-i18n="lib.browse">Browse exercises</button>
+      </div>
+      </div>
+      <div class="subpage" data-page="appearance" hidden>
       <div class="panel">
         <h3 data-i18n="set.look">Appearance</h3>
         <div class="fld"><label data-i18n="set.theme">Theme</label>
@@ -189,6 +238,8 @@
           </div>
         </div>
       </div>
+      </div>
+      <div class="subpage" data-page="workout" hidden>
       <div class="panel">
         <h3 data-i18n="set.workoutScreen">Workout screen</h3>
         <div class="togs" id="setWorkout"></div>
@@ -200,10 +251,14 @@
         </div>
         <p class="note" data-i18n="set.unitNote">The unit is a label only. Pick it before you start logging; it doesn't convert numbers you've already entered.</p>
       </div>
+      </div>
+      <div class="subpage" data-page="app" hidden>
       <div class="panel">
         <h3 data-i18n="set.app">App</h3>
         <div class="togs" id="setApp"></div>
       </div>
+      </div>
+      <div class="subpage" data-page="details" hidden>
       <div class="panel">
         <h3 data-i18n="set.details">Your details</h3>
         <p class="sub" data-i18n="set.detailsSub">Used by the calorie calculator only.</p>
@@ -244,7 +299,10 @@
           <div class="fld"><label for="cInc" data-i18n="p.incline">Incline %</label><input id="cInc" inputmode="decimal"></div>
         </div>
         <p class="note" id="pAgeNote"></p>
+        <button type="button" class="addbtn" id="detailsDone" hidden data-i18n="set.seeCalories">See my calorie numbers</button>
       </div>
+      </div>
+      <div class="subpage" data-page="data" hidden>
       <div class="panel">
         <h3 data-i18n="data.title">Your data</h3>
         <p class="note" data-i18n="data.note">Everything is stored in this browser on this device. Nothing is sent anywhere. Export a backup now and then, and before clearing your browser data.</p>
@@ -260,6 +318,7 @@
           <button type="button" class="ghostbtn danger" id="eraseAll" data-i18n="data.erase">Erase all data</button>
         </div>
       </div>
+      </div>
     </section>
 
     <div class="foot" id="foot" hidden>
@@ -269,9 +328,151 @@
   </div>
 </main>
 
+<nav class="tabbar" id="tabbar" data-i18n-aria="nav.aria">
+  <button type="button" class="tab" id="modeHome" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Home</span></button>
+  <button type="button" class="tab" id="modeWorkout" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg><span data-i18n="nav.workout">Workout</span></button>
+  <button type="button" class="tab" id="modeCal" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5.5 1-8.5z"/></svg><span data-i18n="nav.calories">Calories</span></button>
+  <button type="button" class="tab" id="modeSet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="nav.settings">Settings</span></button>
+</nav>
+
+<div class="sheet" id="share" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <h2 id="shTitle" data-i18n="share.title">Share program</h2>
+      <button type="button" class="sheet-x" id="shClose" data-i18n-aria="lib.close">×</button>
+    </div>
+    <div class="panel share-card">
+      <b id="shName"></b>
+      <small id="shSummary"></small>
+      <label class="tog sh-pro" id="shProRow" hidden><span><b data-i18n="share.proSwitch">Send as Pro program</b><small data-i18n="share.proDesc">Your trainee gets weeks and the calorie calculator, and can see other programs too.</small></span><input type="checkbox" role="switch" id="shPro"></label>
+      <button type="button" class="addbtn" id="shNative" data-i18n="share.send">Send link</button>
+      <div class="btnrow share-btns">
+        <button type="button" class="ghostbtn" id="shCopy" data-i18n="share.copy">Copy link</button>
+        <button type="button" class="ghostbtn" id="shFile" data-i18n="share.file">Save as file</button>
+      </div>
+      <p class="msg" id="shMsg" hidden></p>
+      <div class="qr-box" id="shQrBox"><div id="shQr"></div><p class="note" data-i18n="share.qrNote">Let the person scan this with their phone camera.</p></div>
+      <p class="note" id="shQrTooBig" hidden data-i18n="share.qrTooBig">This program is too big for a QR code. Share the link instead.</p>
+      <input class="share-link" id="shLink" readonly data-i18n-aria="share.linkAria">
+      <p class="note" data-i18n="share.privacy">The program travels inside the link itself, so nothing is uploaded. Anyone with the link can add it to their phone, and it then works offline.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="importSheet" role="dialog" aria-modal="true" aria-labelledby="imTitle" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head"><h2 id="imTitle" data-i18n="share.inTitle">Program shared with you</h2></div>
+    <div id="imOk">
+      <div class="panel share-card">
+        <b id="imName"></b>
+        <small id="imSummary"></small>
+        <span class="tag pro-tag" id="imPro" hidden data-i18n="share.proTag">Pro program</span>
+        <ul class="im-days" id="imDays"></ul>
+        <p class="note" id="imUpdateNote" hidden data-i18n="share.updateNote">You already have this program. Updating it keeps all the weights you've logged.</p>
+        <div class="im-changes" id="imChanges" hidden><b data-i18n="share.changesTitle">What changed</b><ul id="imChangeList"></ul></div>
+        <button type="button" class="addbtn" id="imAdd"></button>
+        <button type="button" class="ghostbtn" id="imCancel" data-i18n="lib.cancel">Cancel</button>
+        <p class="note" data-i18n="share.inNote">The program is saved on this phone and works offline. You won't need the link again.</p>
+      </div>
+    </div>
+    <div id="imErr" hidden>
+      <div class="panel share-card">
+        <b data-i18n="share.errTitle">This link can't be opened</b>
+        <p id="imErrText"></p>
+        <button type="button" class="ghostbtn" id="imErrClose" data-i18n="lib.close">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="builder" role="dialog" aria-modal="true" aria-labelledby="bdTitle" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <h2 id="bdTitle"></h2>
+      <button type="button" class="sheet-x" id="bdClose" data-i18n-aria="lib.close">×</button>
+    </div>
+    <div class="panel">
+      <div class="fld"><label for="bdName" data-i18n="bd.name">Program name</label><input id="bdName" maxlength="40" autocomplete="off" data-i18n-ph="bd.namePh"></div>
+    </div>
+    <div class="bd-weekbox" id="bdWeekBox" hidden>
+      <div class="bd-weektabs" id="bdWeekTabs" role="group" data-i18n-aria="nav.weekAria"></div>
+      <p class="note" id="bdWeeksNote"></p>
+    </div>
+    <div class="bd-daytabs" id="bdDayTabs" role="group" data-i18n-aria="nav.dayAria"></div>
+    <p class="note bd-daysnote" id="bdDaysNote"></p>
+    <div class="panel">
+      <div class="bd-dayhead">
+        <div class="fld"><label for="bdDayName" data-i18n="bd.dayName">Day name</label><input id="bdDayName" maxlength="30" autocomplete="off" data-i18n-ph="bd.dayNamePh"></div>
+        <div class="bd-daymove"><button type="button" class="iconbtn" id="bdDayUp" data-i18n-aria="bd.dayEarlier">↑</button><button type="button" class="iconbtn" id="bdDayDown" data-i18n-aria="bd.dayLater">↓</button></div>
+      </div>
+      <ul class="bd-exlist" id="bdExList"></ul>
+      <button type="button" class="addbtn" id="bdAdd" data-i18n="bd.add">+ Add exercise</button>
+      <button type="button" class="linkbtn danger-link" id="bdDelDay" data-i18n="bd.deleteDay">Delete this day</button>
+      <button type="button" class="linkbtn danger-link" id="bdDelWeek" hidden data-i18n="bd.deleteWeek">Delete this week</button>
+    </div>
+    <div class="panel">
+      <h3 id="bdMusclesTitle" data-i18n="bd.musclesTitle">Weekly sets per muscle</h3>
+      <p class="sub" data-i18n="bd.musclesSub">Each set counts fully for the main muscle and half for the others it works. As a rough guide, 6–20 sets a week suits most people.</p>
+      <div class="m3d" id="bdBody" hidden></div>
+      <div class="bd-muscles" id="bdMuscles"></div>
+    </div>
+    <div class="bd-foot">
+      <p class="msg" id="bdMsg" hidden></p>
+      <button type="button" class="addbtn" id="bdSave" data-i18n="bd.save">Save program</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="picker" role="dialog" aria-modal="true" aria-labelledby="pkTitle" hidden>
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <h2 id="pkTitle"></h2>
+      <button type="button" class="sheet-x" id="pkClose" data-i18n-aria="lib.close">×</button>
+    </div>
+    <div id="pkBrowse">
+      <input type="search" id="pkSearch" class="pk-search" autocomplete="off" data-i18n-ph="lib.search">
+      <div class="chips" id="pkMuscles" role="group" data-i18n-aria="lib.muscleFilter"></div>
+      <div class="pk-row">
+        <select id="pkEquip" data-i18n-aria="lib.equipFilter"></select>
+        <span class="pk-count" id="pkCount"></span>
+      </div>
+      <ul class="pk-list" id="pkList"></ul>
+      <button type="button" class="addbtn" id="pkAddOwn" data-i18n="lib.addOwn">+ Add my own exercise</button>
+    </div>
+    <div id="pkForm" hidden>
+      <h3 id="pkFormTitle"></h3>
+      <div class="fld"><label for="fxName" data-i18n="lib.name">Exercise name</label><input id="fxName" maxlength="60" autocomplete="off"></div>
+      <div class="fgrid">
+        <div class="fld"><label for="fxPrimary" data-i18n="lib.primary">Main muscle</label><select id="fxPrimary"></select></div>
+        <div class="fld"><label for="fxEquip" data-i18n="lib.equipment">Equipment</label><select id="fxEquip"></select></div>
+      </div>
+      <div class="fld"><label data-i18n="lib.secondary">Other muscles it works (optional)</label><div class="chips chips-wrap" id="fxSecondary"></div></div>
+      <div class="pk-checks">
+        <label class="chk"><input type="checkbox" id="fxTimed"> <span data-i18n="lib.isTimed">Timed (seconds, not reps)</span></label>
+        <label class="chk"><input type="checkbox" id="fxSide"> <span data-i18n="lib.isSide">One side at a time</span></label>
+        <label class="chk"><input type="checkbox" id="fxBw"> <span data-i18n="lib.isBw">Bodyweight</span></label>
+      </div>
+      <div class="fld"><label for="fxReps" id="fxRepsL"></label><input id="fxReps" inputmode="numeric" autocomplete="off" placeholder="8–12"></div>
+      <p class="msg" id="fxMsg" hidden></p>
+      <div class="btnrow">
+        <button type="button" class="addbtn" id="fxSave" data-i18n="lib.save">Save exercise</button>
+        <button type="button" class="ghostbtn" id="fxCancel" data-i18n="lib.cancel">Cancel</button>
+        <button type="button" class="ghostbtn danger" id="fxDelete" data-i18n="lib.delete" hidden>Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="js/i18n.js"></script>
+<script src="js/strings-ar.js"></script>
 <script src="js/app.js"></script>
+<script src="js/library.js"></script>
+<script src="js/builder.js"></script>
+<script src="vendor/fflate.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="js/share.js"></script>
 <script src="js/calories.js"></script>
+<script src="js/muscle3d.js"></script>
 <script>
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   /* When an update takes over, reload once so the new version shows straight away */

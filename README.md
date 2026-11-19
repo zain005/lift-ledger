@@ -1,11 +1,11 @@
 # Lift Ledger
 
-**A workout log and calorie calculator that runs in your browser, installs to your phone's home screen, and works offline. No account, no tracking: your data stays on your device.**
+**A workout log and program builder that runs in your browser, installs to your phone's home screen, and works offline, in English and Arabic. Coaches can send a program to trainees as a link. No account, no tracking: your data stays on your device.**
 
 [**Open the app →**](https://zain005.github.io/lift-ledger/)
 
 [![Tests](https://github.com/zain005/lift-ledger/actions/workflows/tests.yml/badge.svg)](https://github.com/zain005/lift-ledger/actions/workflows/tests.yml)
-![No dependencies](https://img.shields.io/badge/runtime%20dependencies-0-1d4ed8)
+![No build step](https://img.shields.io/badge/build%20step-none-1d4ed8)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1d4ed8)](LICENSE)
 
 <p>
@@ -14,7 +14,7 @@
   <img src="docs/screenshots/calories.png" width="220" alt="Calorie calculator showing a moderate deficit">
 </p>
 
-<sub>Screenshots use made-up demo data.</sub>
+<sub>Screenshots use made-up demo data and show the earlier design.</sub>
 
 ## Contents
 
@@ -22,6 +22,7 @@
 - [Install on your phone](#install-on-your-phone)
 - [Built-in programs](#built-in-programs)
 - [Your own programs](#your-own-programs)
+- [Coaches and trainees](#coaches-and-trainees)
 - [Your data and privacy](#your-data-and-privacy)
 - [How the calorie numbers work](#how-the-calorie-numbers-work)
 - [Run it locally](#run-it-locally)
@@ -31,32 +32,34 @@
 
 ## Features
 
+**Programs**
+- Three ready-made 8-week programs, or build your own: 1–7 training days, each exercise with its own sets and reps.
+- An exercise library of 171 exercises with search (including common gym nicknames), muscle and equipment filters, and form tips. Add your own exercises too.
+- While you build, a 3D body and a list show how many sets each muscle gets per week.
+
 **Workout log**
-- One box per set, with target reps and effort (RPE) for every exercise.
-- "Last time" shows what you lifted the week before, so you know what to beat.
+- One box per set, with target reps and effort (RPE) for every exercise. Last time's weight shows in grey inside each box, as the number to beat.
 - Mark a day done when you finish:
   - Done days turn green.
-  - A skipped day turns red once you complete a later one.
-  - A red dot flags done days with empty sets.
+  - A skipped day turns amber once you complete a later one.
+  - A dot flags done days with empty sets.
 - The app opens on your next session, or on the day that still needs weights.
-- Swap any exercise for an alternative; the swap applies to that week only.
+- Swap any exercise for an alternative or anything from the library.
+- A round play button opens a demo video, and the screen stays on while you train.
 
 **Progress**
-- Sessions completed and missed, shown as a week-by-week grid.
-- Weekly training volume chart.
-- Strength trend for every exercise, from first logged week to latest.
+- Sessions completed and missed, week by week.
+- Weekly training volume chart and a strength trend for every exercise.
+- "Muscles worked": a 3D body coloured by the sets you logged for each muscle that week.
 
-**Calorie calculator**
-- BMR and maintenance from your details and weekly routine (training, cardio and rest days).
-- Build your usual day of eating from a food list to see where you stand, from deficit to surplus.
-- A what-if calculator for any single day, including extra food or activity.
+**Pro mode** (free, off by default)
+- Programs planned week by week, up to 12 weeks, each week with its own days.
+- The calorie calculator: BMR and maintenance from your details and routine, your usual day of eating, and a what-if calculator for any single day.
 
 **Settings**
-- Switch between programs; each keeps its own log.
-- Light, dark, or match your phone's theme.
-- Language choice (Arabic is on the way; see the [roadmap](ROADMAP.md)).
-- kg or lb.
-- Show or hide demo links, exercise tips, last-time weights, the RPE explainer and the Calories tab.
+- English or Arabic (right-to-left, with Arabic exercise names and the English name underneath). Numbers always show as 1 2 3.
+- Light, dark, or match your phone's theme. kg or lb.
+- Show or hide demo links, exercise tips, last-time weights and the RPE explainer.
 
 ## Install on your phone
 
@@ -98,17 +101,23 @@ See [Sources](#sources). The programs are general guidance, not personal coachin
 
 ## Your own programs
 
-Programs are plain JSON files:
-1. Copy one from [`programs/`](programs) and edit it.
-2. Import it from **Settings → Import a program**.
+Tap **Create my own program** on Home. Name it, add days, pick exercises from the library, and set the reps for each set. Without Pro, a program is one week that repeats with no end. With Pro on, plan it week by week: **Add week** copies the previous week so you only change what's different.
 
-The format, including phases, rep ranges, RPE by exercise type, alternatives and demo links, is documented in **[docs/program-format.md](docs/program-format.md)**.
+Programs are also plain JSON files, so you can write one by hand and import it. The format is documented in **[docs/program-format.md](docs/program-format.md)**.
 
-Imported programs stay on your device. Please only add programs to this repository that you wrote or have the right to share.
+Your programs stay on your device. Please only add programs to this repository that you wrote or have the right to share.
+
+## Coaches and trainees
+
+- **Share** a program as a link, a QR code or a file. The whole program travels inside the link, so there's no server and no account.
+- A trainee who opens the link sees what's in it and taps **Add this program**. On a coach's normal program, the trainee sees only that program, with nothing else to choose. Turning on Pro shows the full app.
+- To update, the coach edits the same program and sends a new link. The trainee sees what changed and chooses to update or keep their version. Logged weights are always kept.
+- A coach in Pro can send a **Pro program**, which turns on Pro for the trainee.
 
 ## Your data and privacy
 
-- Everything is saved in your browser's local storage, on your device. Nothing is sent to a server, and the app makes no requests to other sites; the fonts are bundled.
+- Everything is saved in your browser's local storage, on your device. Nothing is sent to a server, and the app makes no requests to other sites; the fonts and libraries are bundled.
+- A shared program travels inside its link and is never uploaded anywhere.
 - **Settings → Your data** lets you:
   - **Export a backup (.json):** everything, to restore later or on another device.
   - **Export sets (.csv):** one row per logged set, ready for Excel, Google Sheets, Python or Power BI.
@@ -145,7 +154,7 @@ Opening `index.html` straight from your files won't load the programs, because b
 
 ## Development
 
-**Built with** plain HTML, CSS and JavaScript. It has no framework, no build tools and no runtime dependencies.
+**Built with** plain HTML, CSS and JavaScript. It has no framework and no build tools. Three small libraries are bundled in `vendor/`: fflate (compresses share links), qrcode-generator (QR codes) and three.js (the 3D muscle map, loaded only when it's shown).
 - **Charts** are inline SVG drawn by the app itself.
 - **Offline support** comes from a service worker and a web app manifest, so it can be installed as a PWA.
 - **Tests** use [Playwright](https://playwright.dev/).
@@ -160,30 +169,37 @@ npm test
 **Test version.** New work ships first to [`/beta/`](https://zain005.github.io/lift-ledger/beta/), a full copy of the app that stores its data separately. When it's ready, `scripts/release-beta.sh` promotes it to the main app. See [ROADMAP.md](ROADMAP.md) for what's planned and the decisions behind it.
 
 The tests drive the app in a phone-sized browser. They check:
-- logging and saving
-- missed-session detection
-- last-week weights
-- swaps
-- program switching
-- program import
-- CSV and backup export and restore
-- settings
-- the calorie calculator
-- that the page makes no outside requests
+- logging and saving, and the warning if the phone refuses to save
+- missed-session detection and last-week weights
+- swaps and the exercise library
+- the program builder, Pro weeks and safe editing of logged programs
+- sharing between a coach and a trainee, including updates and damaged links
+- program import, CSV and backup export and restore
+- the Arabic version, including a scan for leftover English
+- settings and the calorie calculator
+- working offline, and that the page makes no outside requests
 
 They run on every push and pull request.
 
 ```
 index.html               page markup
 css/app.css              styles
-js/app.js                workout log, programs, settings, export/import
+js/app.js                workout log, programs, stats, settings, export/import
+js/builder.js            program builder
+js/library.js            exercise library and picker
+js/share.js              share links, QR codes, coach and trainee
+js/muscle3d.js           3D muscle map
 js/calories.js           calorie calculator
+js/i18n.js, strings-ar.js  English and Arabic text
+data/exercises.json      the 171-exercise library
 programs/*.json          built-in programs
-docs/                    program format and screenshots
+vendor/                  bundled libraries and their licences
+docs/                    program format, UI research and screenshots
 sw.js                    offline cache (bump VERSION on each release)
 manifest.webmanifest     install metadata
 icons/, fonts/           app icons and bundled fonts
 tests/                   Playwright tests
+beta/                    the test version (same layout)
 ```
 
 ## Sources
@@ -206,5 +222,8 @@ tests/                   Playwright tests
 
 - Created by [Zain Ali](https://github.com/zain005).
 - Code: [MIT License](LICENSE).
-- Fonts: [Barlow and Barlow Condensed](https://github.com/jpt/barlow) by The Barlow Project Authors, under the [SIL Open Font License 1.1](fonts/OFL.txt).
+- Fonts: [IBM Plex Sans and IBM Plex Sans Arabic](https://github.com/IBM/plex) by IBM, under the [SIL Open Font License 1.1](fonts/IBM-Plex-OFL.txt).
+- [fflate](https://github.com/101arrowz/fflate) by Arjun Barrett, [MIT](vendor/fflate-LICENSE.txt).
+- [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase, [MIT](vendor/qrcode-LICENSE.txt).
+- [three.js](https://threejs.org/) by the three.js authors, [MIT](vendor/three-LICENSE.txt).
 - Lift Ledger is a personal project and isn't affiliated with any coach, gym, program or equipment maker.

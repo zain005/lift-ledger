@@ -1,11 +1,15 @@
 /* Offline support: always try the newest version online, fall back to the saved copy offline. Bump VERSION on each release. */
-const VERSION = "lift-ledger-v4";
+const VERSION = "lift-ledger-v5";
+/* vendor/three.module.min.js (670 KB, the 3D muscle map) is left out on purpose: it loads only when a muscle panel
+   is first opened, and networkFirst below saves it then, so the first install stays small. */
 const SHELL = [
-  "./", "index.html", "css/app.css", "js/i18n.js", "js/app.js", "js/calories.js", "manifest.webmanifest",
+  "./", "index.html", "css/app.css", "js/i18n.js", "js/strings-ar.js", "js/app.js", "js/library.js", "js/builder.js", "js/share.js", "vendor/fflate.js", "vendor/qrcode.js", "js/calories.js", "js/muscle3d.js", "data/exercises.json", "manifest.webmanifest",
   "programs/index.json", "programs/full-body-3.json", "programs/upper-lower-4.json", "programs/push-pull-legs-6.json",
   "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png",
-  "fonts/barlow-latin-400-normal.woff2", "fonts/barlow-latin-500-normal.woff2", "fonts/barlow-latin-600-normal.woff2",
-  "fonts/barlow-condensed-latin-500-normal.woff2", "fonts/barlow-condensed-latin-600-normal.woff2", "fonts/barlow-condensed-latin-700-normal.woff2"
+  "fonts/ibm-plex-sans-latin-400-normal.woff2", "fonts/ibm-plex-sans-latin-500-normal.woff2",
+  "fonts/ibm-plex-sans-latin-600-normal.woff2", "fonts/ibm-plex-sans-latin-700-normal.woff2",
+  "fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2", "fonts/ibm-plex-sans-arabic-arabic-500-normal.woff2",
+  "fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2", "fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2"
 ];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -29,7 +33,8 @@ async function networkFirst(req) {
   const cache = await caches.open(VERSION);
   const cached = await cache.match(req, { ignoreSearch: true });
   const fresh = fetch(req.mode === "navigate" ? new Request(req.url, { cache: "no-cache", credentials: "same-origin" }) : new Request(req, { cache: "no-cache" }))
-    .then(res => { if (res.ok) cache.put(req, res.clone()); return res; });
+    // An error from the server (GitHub having a bad moment, a half-finished deploy) never replaces a good saved copy
+    .then(res => { if (res.ok) { cache.put(req, res.clone()); return res; } return cached || res; });
   if (!cached) return fresh;
   const slow = new Promise(resolve => setTimeout(() => resolve(cached), 4000));
   return Promise.race([fresh.catch(() => cached), slow]);

@@ -3,7 +3,7 @@
 
 const CAL_KEY = PREFIX + "cal", WHATIF_KEY = PREFIX + "whatif";
 const CAL_DEFAULT = {
-  weight: 75, height: 175, age: 30, sex: "male", bf: 0, act: 1.2, target: 20,
+  weight: "", height: "", age: "", sex: "male", bf: "", act: 1.2, target: 20,
   trainDays: 3, cardioDays: 0,
   warmMin: 5, warmSpd: 3, warmInc: 0, liftMin: 60, liftMet: 5,
   cardMin: 30, cardSpd: 3, cardInc: 5,
@@ -158,7 +158,7 @@ function renderCalOutputs() {
     return f;
   };
   const bold = v => { const b = document.createElement("b"); b.textContent = r0(v); return b; };
-  tr([t("cal.col.day"), t("cal.col.maintain"), "−" + tp + "%", "+" + tp + "%"], "", true);
+  tr([t("cal.col.day"), t("cal.col.maintain"), bidi("−" + tp + "%"), bidi("+" + tp + "%")], "", true);
   if (R.nt) tr([first(t("cal.day.training"), R.nt, t("cal.day.trainingSub", { warm: r0(R.warm), lift: r0(R.lift) })), bold(R.days.training), r0(R.days.training * (1 - T)), r0(R.days.training * (1 + T))]);
   if (R.nc) tr([first(t("cal.day.cardio"), R.nc, t("cal.day.cardioSub", { card: r0(R.card) })), bold(R.days.cardio), r0(R.days.cardio * (1 - T)), r0(R.days.cardio * (1 + T))]);
   if (R.nr) tr([first(t("cal.day.rest"), R.nr, t("cal.day.restSub")), bold(R.days.rest), r0(R.days.rest * (1 - T)), r0(R.days.rest * (1 + T))]);
@@ -166,7 +166,7 @@ function renderCalOutputs() {
   setHtml($("rBaseOut"), R.hasDiet ? t("cal.usualTotals", { kcal: r0(R.base.kcal), p: r0(R.base.p), pkg: R.kg ? (R.base.p / R.kg).toFixed(1) : "–", f: r0(R.base.f), c: r0(R.base.c) }) : "");
   setHtml($("rWeekOut"), R.hasDiet ? t("cal.weekAvg", { kcal: r0(R.avgIn) }) + (+CAL.highDays ? t("cal.biggerDaysTotal", { kcal: r0(R.base.kcal + (+CAL.highExtra || 0)) }) : "") : "");
   $("wkNote").textContent = tn("cal.restLeft", R.nr);
-  $("pAgeNote").textContent = R.katch === null
+  $("pAgeNote").textContent = !detailsComplete() ? "" : R.katch === null
     ? t("cal.bmrNote", { bmr: r0(R.bmr) })
     : t("cal.bmrNoteBf", { lean: R.lean.toFixed(1), katch: r0(R.katch), mifflin: r0(R.mifflin), bmr: r0(R.bmr) });
   renderWhatIfResult(R);
@@ -178,7 +178,7 @@ const BIND = { pWeight: "weight", pHeight: "height", pAge: "age", pBf: "bf", pSe
   tWm: "warmMin", tWs: "warmSpd", tWi: "warmInc", tLm: "liftMin", tLi: "liftMet", cMin: "cardMin", cSpd: "cardSpd", cInc: "cardInc" };
 function saveCal() { store(CAL_KEY, CAL); }
 function fillInputs() {
-  Object.entries(BIND).forEach(([id, k]) => { const el = $(id); if (el && document.activeElement !== el) el.value = k === "bf" && !+CAL[k] ? "" : CAL[k]; });
+  Object.entries(BIND).forEach(([id, k]) => { const el = $(id); if (el && document.activeElement !== el) el.value = PERSONAL.includes(k) && !+CAL[k] ? "" : CAL[k]; });
 }
 Object.entries(BIND).forEach(([id, k]) => {
   const el = $(id); if (!el) return;
@@ -186,10 +186,12 @@ Object.entries(BIND).forEach(([id, k]) => {
   el.addEventListener(ev, () => {
     let v = el.value;
     if (el.tagName !== "SELECT") { v = cleanNumber(v, 8); if (v !== el.value) el.value = v; }
-    CAL[k] = k === "sex" ? v : (v === "" ? 0 : parseFloat(v));
+    CAL[k] = k === "sex" ? v : (v === "" ? (PERSONAL.includes(k) ? "" : 0) : parseFloat(v));
     saveCal(); renderCalOutputs();
+    $("detailsDone").hidden = !detailsComplete() || !SET.calTab;
   });
 });
+$("detailsDone").addEventListener("click", () => { appMode = "cal"; renderAll(); window.scrollTo({ top: 0 }); });
 
 /* ---- food pickers ---- */
 const unitLbl = f => t("food.unit." + f.u);
@@ -293,5 +295,15 @@ function renderWhatIfResult(R) {
   $("wFatS").textContent = t(bal < 0 ? "whatif.fatUsed" : "whatif.fatStored");
 }
 
-function renderCal() { fillFoodSelects(); fillInputs(); syncFoodUnit(); syncActFields(); renderUsual(); renderWhatIfLists(); renderCalOutputs(); }
+/* New users start with blank details; the calculator stays on its setup prompt until these are filled in */
+const PERSONAL = ["weight", "height", "age", "bf"];
+const detailsComplete = () => +CAL.weight > 0 && +CAL.height > 0 && +CAL.age > 0;
+function detailsSummary() {
+  if (!detailsComplete()) return t("set.detailsNone");
+  return t("set.detailsSum", { kg: CAL.weight, cm: CAL.height, age: CAL.age });
+}
+function renderCal() {
+  const ok = detailsComplete();
+  $("detailsDone").hidden = !ok || !SET.calTab;
+  $("calSetup").hidden = ok; $("calBody").hidden = !ok; fillFoodSelects(); fillInputs(); syncFoodUnit(); syncActFields(); renderUsual(); renderWhatIfLists(); renderCalOutputs(); }
 if (typeof renderAll === "function" && typeof appMode !== "undefined" && appMode !== "workout") renderAll();

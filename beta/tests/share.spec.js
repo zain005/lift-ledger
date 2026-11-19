@@ -152,7 +152,7 @@ test("opening a link to my own program changes nothing, so it stays mine to edit
   await coach.click("#imErrClose");
   expect(await coach.locator("#homeContinue .own-acts button").evaluateAll(b => b.map(x => x.dataset.act))).toEqual(["share", "edit", "delete"]);
   await expect(coach.locator("#homeCreate")).toBeVisible();
-  const saved = await coach.evaluate(() => JSON.parse(localStorage.getItem("llb-programs-custom")));
+  const saved = await coach.evaluate(() => JSON.parse(localStorage.getItem(PREFIX + "programs-custom")));
   expect(saved).toHaveLength(1);
   expect(saved[0].builder).toBe(true);
   expect(saved[0].shared).toBeFalsy();

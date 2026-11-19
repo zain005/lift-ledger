@@ -2,12 +2,16 @@
   "format": 2,
   "id": "full-body-3",
   "name": "Full Body",
+  "name_ar": "الجسم الكامل",
   "description": "3 days a week. Most muscles trained two or three times a week; a good first program.",
+  "description_ar": "3 أيام في الأسبوع. تُدرَّب معظم العضلات مرتين أو ثلاثًا أسبوعيًا؛ برنامج أول ممتاز.",
   "schedule": "Train on 3 non-consecutive days, for example day on, day off.",
+  "schedule_ar": "تدرّب 3 أيام غير متتالية، مثلًا يوم تدريب ويوم راحة.",
   "weeks": 8,
   "phases": [
     {
       "name": "Foundation",
+      "name_ar": "التأسيس",
       "weeks": [
         1,
         4
@@ -20,6 +24,7 @@
     },
     {
       "name": "Build",
+      "name_ar": "البناء",
       "weeks": [
         5,
         8
@@ -35,10 +40,13 @@
     {
       "id": "fb-a",
       "name": "Full Body A",
+      "name_ar": "الجسم الكامل أ",
       "short": "A",
+      "short_ar": "أ",
       "exercises": [
         {
           "id": "fb-a1",
+          "ref": "back-squat",
           "name": "Back Squat",
           "sets": 3,
           "reps": "6–8",
@@ -48,10 +56,16 @@
             "Hack squat",
             "Smith machine squat",
             "Leg press"
+          ],
+          "alts_ar": [
+            "الهاك سكوات",
+            "السكوات على جهاز سميث",
+            "ضغط الأرجل"
           ]
         },
         {
           "id": "fb-a2",
+          "ref": "db-bench-press",
           "name": "Dumbbell Bench Press",
           "sets": 3,
           "reps": "8–10",
@@ -61,10 +75,16 @@
             "Barbell bench press",
             "Machine chest press",
             "Push-up"
+          ],
+          "alts_ar": [
+            "ضغط البنش بالبار",
+            "ضغط الصدر على الجهاز",
+            "الضغط"
           ]
         },
         {
           "id": "fb-a3",
+          "ref": "lat-pulldown",
           "name": "Lat Pulldown",
           "sets": 3,
           "reps": "8–10",
@@ -74,10 +94,16 @@
             "Pull-up",
             "Assisted pull-up",
             "Single-arm cable pulldown"
+          ],
+          "alts_ar": [
+            "العقلة",
+            "العقلة بالمساعدة",
+            "السحب بالكيبل بذراع واحدة"
           ]
         },
         {
           "id": "fb-a4",
+          "ref": "romanian-deadlift",
           "name": "Romanian Deadlift",
           "sets": 2,
           "reps": "8–10",
@@ -87,10 +113,16 @@
             "Dumbbell Romanian deadlift",
             "Stiff-leg deadlift",
             "45° back extension"
+          ],
+          "alts_ar": [
+            "الرفعة الرومانية بالدمبل",
+            "الرفعة بأرجل مستقيمة",
+            "تمديد الظهر 45°"
           ]
         },
         {
           "id": "fb-a5",
+          "ref": "cable-lateral-raise",
           "name": "Cable Lateral Raise",
           "sets": 2,
           "reps": "12–15",
@@ -99,10 +131,15 @@
           "alts": [
             "Dumbbell lateral raise",
             "Machine lateral raise"
+          ],
+          "alts_ar": [
+            "الرفع الجانبي بالدمبل",
+            "الرفع الجانبي على الجهاز"
           ]
         },
         {
           "id": "fb-a6",
+          "ref": "cable-curl",
           "name": "Cable Curl",
           "sets": 2,
           "reps": "10–12",
@@ -111,6 +148,10 @@
           "alts": [
             "EZ-bar curl",
             "Dumbbell curl"
+          ],
+          "alts_ar": [
+            "ثني الذراعين بالبار المتعرج",
+            "ثني الذراعين بالدمبل"
           ]
         }
       ]
@@ -118,10 +159,13 @@
     {
       "id": "fb-b",
       "name": "Full Body B",
+      "name_ar": "الجسم الكامل ب",
       "short": "B",
+      "short_ar": "ب",
       "exercises": [
         {
           "id": "fb-b1",
+          "ref": "leg-press",
           "name": "Leg Press",
           "sets": 3,
           "reps": "8–10",
@@ -131,10 +175,16 @@
             "Hack squat",
             "Smith machine squat",
             "Goblet squat"
+          ],
+          "alts_ar": [
+            "الهاك سكوات",
+            "السكوات على جهاز سميث",
+            "سكوات الكأس (جوبلت)"
           ]
         },
         {
           "id": "fb-b2",
+          "ref": "seated-db-shoulder-press",
           "name": "Seated Dumbbell Shoulder Press",
           "sets": 3,
           "reps": "8–10",
@@ -144,10 +194,16 @@
             "Machine shoulder press",
             "Standing overhead press",
             "Arnold press"
+          ],
+          "alts_ar": [
+            "ضغط الكتف على الجهاز",
+            "الضغط العسكري واقفًا",
+            "ضغط أرنولد"
           ]
         },
         {
           "id": "fb-b3",
+          "ref": "chest-supported-row",
           "name": "Chest-Supported Row",
           "sets": 3,
           "reps": "8–10",
@@ -157,10 +213,16 @@
             "Seated cable row",
             "Dumbbell row",
             "Machine row"
+          ],
+          "alts_ar": [
+            "التجديف بالكيبل جالسًا",
+            "التجديف بالدمبل بذراع واحدة",
+            "التجديف على الجهاز"
           ]
         },
         {
           "id": "fb-b4",
+          "ref": "seated-leg-curl",
           "name": "Seated Leg Curl",
           "sets": 3,
           "reps": "10–12",
@@ -169,10 +231,15 @@
           "alts": [
             "Lying leg curl",
             "Nordic ham curl"
+          ],
+          "alts_ar": [
+            "ثني الأرجل مستلقيًا",
+            "الثني النوردي"
           ]
         },
         {
           "id": "fb-b5",
+          "ref": "overhead-cable-extension",
           "name": "Overhead Cable Triceps Extension",
           "sets": 2,
           "reps": "10–12",
@@ -181,10 +248,15 @@
           "alts": [
             "Overhead dumbbell extension",
             "EZ-bar skull crusher"
+          ],
+          "alts_ar": [
+            "تمديد الترايسبس فوق الرأس بالدمبل",
+            "كسارة الجمجمة بالبار المتعرج"
           ]
         },
         {
           "id": "fb-b6",
+          "ref": "standing-calf-raise",
           "name": "Standing Calf Raise",
           "sets": 3,
           "reps": "10–12",
@@ -194,6 +266,11 @@
             "Leg press calf raise",
             "Seated calf raise",
             "Single-leg calf raise"
+          ],
+          "alts_ar": [
+            "رفع السمانة على جهاز ضغط الأرجل",
+            "رفع السمانة جالسًا",
+            "رفع السمانة برجل واحدة"
           ]
         }
       ]
@@ -201,23 +278,33 @@
     {
       "id": "fb-c",
       "name": "Full Body C",
+      "name_ar": "الجسم الكامل ج",
       "short": "C",
+      "short_ar": "ج",
       "exercises": [
         {
           "id": "fb-c1",
+          "ref": "hip-thrust",
           "name": "Hip Thrust",
           "sets": 3,
           "reps": "8–10",
           "type": "compound",
           "cue": "Chin tucked, ribs down; drive through your heels and squeeze your glutes hard at the top.",
+          "cue_ar": "الذقن للداخل والأضلاع للأسفل؛ ادفع بكعبيك واعصر أردافك بقوة في الأعلى.",
           "alts": [
             "Machine hip thrust",
             "Glute bridge",
             "Cable pull-through"
+          ],
+          "alts_ar": [
+            "دفع الورك على الجهاز",
+            "جسر الأرداف",
+            "السحب بين الرجلين بالكيبل"
           ]
         },
         {
           "id": "fb-c2",
+          "ref": "incline-db-press",
           "name": "Incline Dumbbell Press",
           "sets": 3,
           "reps": "8–10",
@@ -227,10 +314,16 @@
             "Incline barbell press",
             "Incline machine press",
             "Incline Smith press"
+          ],
+          "alts_ar": [
+            "ضغط البنش المائل بالبار",
+            "ضغط الصدر المائل على الجهاز",
+            "ضغط الصدر المائل على جهاز سميث"
           ]
         },
         {
           "id": "fb-c3",
+          "ref": "neutral-pulldown",
           "name": "Neutral-Grip Pulldown",
           "sets": 3,
           "reps": "10–12",
@@ -239,23 +332,35 @@
           "alts": [
             "Lat pulldown",
             "Neutral-grip pull-up"
+          ],
+          "alts_ar": [
+            "السحب الأمامي",
+            "العقلة بقبضة متوازية"
           ]
         },
         {
           "id": "fb-c4",
+          "ref": "bulgarian-split-squat",
           "name": "Bulgarian Split Squat",
           "sets": 2,
           "reps": "8–10",
           "type": "compound",
           "cue": "Rear foot on a bench, lean your torso slightly forward and sink straight down. Do all reps, then switch legs.",
+          "cue_ar": "القدم الخلفية على مقعد، مِل بجذعك للأمام قليلًا وانزل مباشرة للأسفل. أكمل كل التكرارات ثم بدّل الرجل.",
           "alts": [
             "Walking lunge",
             "Reverse lunge",
             "Step-up"
+          ],
+          "alts_ar": [
+            "الطعن مع المشي",
+            "الطعن الخلفي",
+            "الصعود على الصندوق"
           ]
         },
         {
           "id": "fb-c5",
+          "ref": "reverse-pec-deck",
           "name": "Reverse Pec Deck",
           "sets": 2,
           "reps": "12–15",
@@ -265,10 +370,16 @@
             "Reverse cable fly",
             "Face pull",
             "Bent-over dumbbell reverse fly"
+          ],
+          "alts_ar": [
+            "التفتيح العكسي بالكيبل",
+            "سحب الحبل للوجه",
+            "التفتيح العكسي بالدمبل منحنيًا"
           ]
         },
         {
           "id": "fb-c6",
+          "ref": "cable-crunch",
           "name": "Cable Crunch",
           "sets": 3,
           "reps": "10–12",
@@ -277,6 +388,10 @@
           "alts": [
             "Machine crunch",
             "Weighted crunch"
+          ],
+          "alts_ar": [
+            "الطحن على الجهاز",
+            "الطحن بالوزن"
           ]
         }
       ]

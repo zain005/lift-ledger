@@ -1,7 +1,7 @@
 // @ts-check
 const { test, expect } = require("@playwright/test");
 
-/** Collect page errors and fail the test if there are any. */
+/** Collect page errors and missing strings; fail the test if there are any. */
 const errors = new WeakMap();
 test.beforeEach(async ({ page }) => {
   const list = []; errors.set(page, list);
@@ -9,33 +9,126 @@ test.beforeEach(async ({ page }) => {
   await page.goto("./");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await expect(page.locator(".ex").first()).toBeVisible();
+  await expect(page.locator("#home")).toBeVisible();
+});
+test.afterEach(async ({ page }) => {
+  expect(errors.get(page)).toEqual([]);
+  expect(await page.evaluate(() => [...MISSING])).toEqual([]);
 });
 
-test.afterEach(async ({ page }) => { expect(errors.get(page)).toEqual([]); });
-
+/* ---------- helpers ---------- */
+const start = async (page, id = "full-body-3") => {
+  await page.click("#modeHome");
+  await page.locator(`.home-card[data-id="${id}"]`).click();
+  await expect(page.locator(".ex").first()).toBeVisible();
+};
+const cont = async page => { await page.click("#homeGo"); await expect(page.locator(".ex").first()).toBeVisible(); };
+/* The week selector is off the workout page for now; tests move between weeks the way the app does internally */
+const week = (page, n) => page.evaluate(w => goWeek(w), n);
+const day = (page, n) => page.locator(".day").nth(n - 1).click();
+const settingsPage = async (page, name) => { await page.click("#modeSet"); await page.click(`.setrow[data-page="${name}"]`); };
+const firstSet = page => page.locator(".ex").first().locator(".set input").first();
 const noSideScroll = page => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+/* Weeks and calories live in Pro mode, which is off by default */
+const proOn = async page => {
+  if (await page.evaluate(() => SET.pro)) return;
+  await settingsPage(page, "pro");
+  await page.locator("#proToggle").click();
+  await expect(page.locator("#proToggle")).toBeChecked();
+};
+const fillDetails = async page => {
+  await proOn(page);
+  await settingsPage(page, "details");
+  await page.fill("#pWeight", "80"); await page.fill("#pHeight", "180"); await page.fill("#pAge", "30");
+};
 
-test("loads the default program on a phone-sized screen", async ({ page }) => {
-  await expect(page.locator("#appTitle")).toHaveText("Full Body");
-  await expect(page.locator("#dayTitle")).toHaveText("Wk 1 · Full Body A");
-  await expect(page.locator(".day")).toHaveCount(3);
-  await expect(page.locator(".wk:not(.prog)")).toHaveCount(8);
+/* ---------- first launch and Home ---------- */
+
+test("first launch is a clean Home page with nothing chosen", async ({ page }) => {
+  await expect(page.locator("#homeHeadline")).toHaveText("Let's get you started");
+  await expect(page.locator("#homeGo")).toHaveCount(0);
+  await expect(page.locator(".home-card")).toHaveCount(3);
+  await expect(page.locator(".home-card .act").first()).toHaveText("Start");
+  await expect(page.locator("#homeCreate")).toBeVisible();
+  await expect(page.locator("#modeWorkout")).toBeHidden();
+  await expect(page.locator("#weekbar")).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem(PREFIX + "program"))).toBeNull();
   expect(await noSideScroll(page)).toBe(true);
 });
+
+test("calorie details start blank, with a setup prompt", async ({ page }) => {
+  await proOn(page);
+  await page.click("#modeCal");
+  await expect(page.locator("#calSetup")).toBeVisible();
+  await expect(page.locator("#calBody")).toBeHidden();
+  await page.click("#calSetupBtn");
+  for (const id of ["#pWeight", "#pHeight", "#pAge", "#pBf"]) await expect(page.locator(id)).toHaveValue("");
+  await page.fill("#pWeight", "80"); await page.fill("#pHeight", "180"); await page.fill("#pAge", "30");
+  await page.click("#detailsDone");
+  await expect(page.locator("#calBody")).toBeVisible();
+  const maint = Number((await page.locator("#tMaint").textContent()).replace(/,/g, ""));
+  expect(maint).toBeGreaterThan(1500);
+  expect(maint).toBeLessThan(3500);
+});
+
+test("starting a program opens it, and Home then offers Continue", async ({ page }) => {
+  await start(page);
+  await expect(page.locator("#appTitle")).toHaveText("Full Body");
+  await expect(page.locator("#dayTitle")).toHaveText("Full Body A");
+  await expect(page.locator(".day")).toHaveCount(3);
+  expect(await noSideScroll(page)).toBe(true);
+  for (const box of await page.locator(".set input").all()) await box.fill("20");
+  await page.click("#dayDone");
+  await page.click("#modeHome");
+  await expect(page.locator("#homeHeadline")).toHaveText("Welcome back");
+  await expect(page.locator("#homeGo")).toContainText("Next: Full Body B");
+  await expect(page.locator('.home-card[data-id="full-body-3"] .act')).toHaveText("Open");
+  await page.reload();
+  await expect(page.locator("#home")).toBeVisible();              // every launch opens on Home
+  await cont(page);
+  await expect(page.locator("#dayTitle")).toHaveText("Full Body B");
+});
+
+test("the workout page has no week selector, just the days and Stats", async ({ page }) => {
+  await start(page);
+  await expect(page.locator("#weekbar")).toBeHidden();
+  await expect(page.locator("#weekToggle")).toBeHidden();
+  await expect(page.locator(".wk:visible")).toHaveCount(0);
+  await expect(page.locator(".day")).toHaveCount(3);
+  await expect(page.locator("#statsBtn")).toBeVisible();
+});
+
+test("Settings is a short list, and each item opens its own page", async ({ page }) => {
+  await page.click("#modeSet");
+  await expect(page.locator(".setrow")).toHaveCount(7);
+  await expect(page.locator('.setrow[data-page="details"]')).toHaveCount(0);   // personal details belong to Pro
+  await expect(page.locator("#settings .subpage:visible")).toHaveCount(0);
+  await page.click('.setrow[data-page="appearance"]');
+  await expect(page.locator('.subpage[data-page="appearance"]')).toBeVisible();
+  await expect(page.locator("#setList")).toBeHidden();
+  await page.click("#setBack");
+  await expect(page.locator("#setList")).toBeVisible();
+  await proOn(page);
+  await page.click("#setBack");
+  await expect(page.locator('.setrow[data-page="details"] small')).toHaveText("Not set yet");
+});
+
+/* ---------- logging ---------- */
 
 test("makes no requests to other sites", async ({ page }) => {
   const external = [];
   const origin = new URL(page.url()).origin;
   page.on("request", r => { if (new URL(r.url()).origin !== origin) external.push(r.url()); });
   await page.reload();
-  await expect(page.locator(".ex").first()).toBeVisible();
+  await proOn(page);
+  await start(page);
   await page.click("#modeCal");
   await page.click("#modeSet");
   expect(external).toEqual([]);
 });
 
 test("logged weights and done days survive a reload", async ({ page }) => {
+  await start(page);
   const first = page.locator(".ex").first().locator(".set input");
   await first.nth(0).fill("60");
   await first.nth(1).fill("62.5");
@@ -43,79 +136,96 @@ test("logged weights and done days survive a reload", async ({ page }) => {
   await expect(page.locator("#emptyWarn")).toBeVisible();
   await expect(page.locator(".set input.empty").first()).toBeVisible();
   await page.reload();
-  // A done day with empty sets is where the app reopens
-  await expect(page.locator("#dayTitle")).toHaveText("Wk 1 · Full Body A");
+  await cont(page);
+  // A done day with empty sets is where Continue goes
+  await expect(page.locator("#dayTitle")).toHaveText("Full Body A");
   await expect(page.locator(".ex").first().locator(".set input").nth(1)).toHaveValue("62.5");
   await expect(page.locator(".day").first()).toHaveClass(/complete/);
 });
 
 test("a skipped session is marked missed", async ({ page }) => {
-  await page.locator(".day").nth(1).click();
+  await start(page);
+  await day(page, 2);
   await page.click("#dayDone");
   await expect(page.locator(".day").first()).toHaveClass(/missed/);
 });
 
 test("last week's weights show on the next week", async ({ page }) => {
-  await page.locator(".ex").first().locator(".set input").first().fill("80");
-  await page.locator(".wk").nth(1).click();
-  await page.locator(".day").first().click();
+  await start(page);
+  await firstSet(page).fill("80");
+  await week(page, 2);
+  await day(page, 1);
   await expect(page.locator(".ex").first().locator(".last")).toContainText("80");
+  await expect(firstSet(page)).toHaveAttribute("placeholder", "80");   // last time's weight is the grey hint
+  await expect(firstSet(page)).toHaveValue("");
+});
+
+test("the workout screen can keep the phone awake, and it's a setting", async ({ page }) => {
+  await settingsPage(page, "workout");
+  const tog = page.locator(".tog", { hasText: "Keep screen on" }).locator("input");
+  await expect(tog).toBeChecked();
+  await tog.click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem(PREFIX + "settings")).awake)).toBe(false);
 });
 
 test("swapping an exercise only changes that week", async ({ page }) => {
+  await start(page);
   const card = page.locator(".ex").first();
   await card.locator(".alts summary").click();
   await card.locator(".alts li button").first().click();
   await expect(page.locator(".ex").first().locator(".tag")).toHaveText("Swapped");
-  await page.locator(".wk").nth(1).click();
-  await page.locator(".day").first().click();
+  await week(page, 2);
+  await day(page, 1);
   await expect(page.locator(".ex").first().locator(".tag")).toHaveCount(0);
 });
 
 test("each program keeps its own log", async ({ page }) => {
-  await page.locator(".ex").first().locator(".set input").first().fill("50");
-  await page.click("#modeSet");
-  await page.locator(".pcard").nth(2).click();
-  await page.click("#modeWorkout");
+  await start(page);
+  await firstSet(page).fill("50");
+  await start(page, "push-pull-legs-6");
   await expect(page.locator("#appTitle")).toHaveText("Push Pull Legs");
   await expect(page.locator(".day")).toHaveCount(6);
   expect(await noSideScroll(page)).toBe(true);
-  await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("");
-  await page.click("#modeSet");
-  await page.locator(".pcard").nth(0).click();
-  await page.click("#modeWorkout");
-  await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("50");
+  await expect(firstSet(page)).toHaveValue("");
+  await page.click("#modeHome");
+  await expect(page.locator('.home-card[data-id="full-body-3"] .act')).toHaveText("Resume");
+  await page.locator('.home-card[data-id="full-body-3"]').click();
+  await expect(firstSet(page)).toHaveValue("50");
 });
 
 test("stats page counts sessions", async ({ page }) => {
+  await start(page);
   await page.click("#dayDone");
-  await page.click(".wk.prog");
+  await page.click("#statsBtn");
   await expect(page.locator("#progress .tile .v").first()).toContainText("1");
   await expect(page.locator(".sessgrid .cell")).toHaveCount(24);
   expect(await noSideScroll(page)).toBe(true);
+  await page.click("#statsBtn");
+  await expect(page.locator(".ex").first()).toBeVisible();
 });
 
 test("imports a valid program and rejects a broken one", async ({ page }) => {
-  await page.click("#modeSet");
   const program = {
     name: "Test Plan", weeks: 4,
     days: [{ name: "Only Day", exercises: [{ name: "Goblet Squat", sets: 2, reps: "10" }] }]
   };
   await page.setInputFiles("#progFile", { name: "p.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(program)) });
   await expect(page.locator("#progMsg")).toContainText("Imported");
-  await page.click("#modeWorkout");
+  await expect(page.locator("#homeGo")).toContainText("Test Plan");
+  await cont(page);
   await expect(page.locator("#appTitle")).toHaveText("Test Plan");
-  await expect(page.locator(".wk:not(.prog)")).toHaveCount(4);
+  expect(await page.evaluate(() => NW())).toBe(4);
   await expect(page.locator(".ex .set")).toHaveCount(2);
 
-  await page.click("#modeSet");
+  await page.click("#modeHome");
   await page.setInputFiles("#progFile", { name: "bad.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify({ name: "Bad" })) });
   await expect(page.locator("#progMsg")).toHaveClass(/err/);
 });
 
 test("exports logged sets as CSV", async ({ page }) => {
-  await page.locator(".ex").first().locator(".set input").first().fill("70");
-  await page.click("#modeSet");
+  await start(page);
+  await firstSet(page).fill("70");
+  await settingsPage(page, "data");
   const [download] = await Promise.all([page.waitForEvent("download"), page.click("#expCsv")]);
   const text = require("fs").readFileSync(await download.path(), "utf8");
   expect(text.split("\n")[0]).toContain("program,week,phase");
@@ -124,35 +234,39 @@ test("exports logged sets as CSV", async ({ page }) => {
 });
 
 test("backup restores everything", async ({ page }) => {
-  await page.locator(".ex").first().locator(".set input").first().fill("90");
-  await page.click("#modeSet");
+  await start(page);
+  await firstSet(page).fill("90");
+  await settingsPage(page, "data");
   const [download] = await Promise.all([page.waitForEvent("download"), page.click("#expJson")]);
   const backup = require("fs").readFileSync(await download.path());
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.click("#modeSet");
+  await settingsPage(page, "data");
   page.once("dialog", d => d.accept());
   await page.setInputFiles("#impFile", { name: "b.json", mimeType: "application/json", buffer: backup });
   await page.waitForLoadState("load");
-  await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("90");
+  await cont(page);
+  await expect(firstSet(page)).toHaveValue("90");
 });
 
 test("settings hide tips and the calories tab", async ({ page }) => {
+  await proOn(page);
+  await start(page);
   await expect(page.locator(".cue").first()).toBeVisible();
-  await page.click("#modeSet");
+  await settingsPage(page, "workout");
   await page.locator(".tog", { hasText: "Exercise tips" }).locator("input").click();
+  await page.click("#setBack");
+  await page.click('.setrow[data-page="app"]');
   await page.locator(".tog", { hasText: "Calories tab" }).locator("input").click();
   await expect(page.locator("#modeCal")).toBeHidden();
   await page.click("#modeWorkout");
   await expect(page.locator(".cue")).toHaveCount(0);
 });
 
-test("calorie calculator shows maintenance, then a balance once food is added", async ({ page }) => {
+test("calorie calculator shows a balance once food is added", async ({ page }) => {
+  await fillDetails(page);
   await page.click("#modeCal");
   await expect(page.locator("#cBand")).toHaveText("kcal maintenance");
-  const maint = Number((await page.locator("#tMaint").textContent()).replace(/,/g, ""));
-  expect(maint).toBeGreaterThan(1500);
-  expect(maint).toBeLessThan(3500);
   await page.selectOption("#uSel", "rice");
   await page.fill("#uAmt", "500");
   await page.click("#uAdd");
@@ -160,19 +274,19 @@ test("calorie calculator shows maintenance, then a balance once food is added", 
   expect(await noSideScroll(page)).toBe(true);
 });
 
-/* ---------- Step 1: dark mode, translation groundwork, permanent ids ---------- */
+/* ---------- dark mode, translation groundwork, permanent ids ---------- */
 
 const bodyBg = page => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 
 test("dark mode can be chosen in settings and is remembered", async ({ page }) => {
   const light = await bodyBg(page);
-  await page.click("#modeSet");
+  await settingsPage(page, "appearance");
   await page.locator('#themeSeg button[data-th="dark"]').click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   expect(await bodyBg(page)).not.toBe(light);
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.click("#modeSet");
+  await settingsPage(page, "appearance");
   await page.locator('#themeSeg button[data-th="light"]').click();
   expect(await bodyBg(page)).toBe(light);
 });
@@ -180,35 +294,44 @@ test("dark mode can be chosen in settings and is remembered", async ({ page }) =
 test("'Match phone' follows the phone's dark setting", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
-  expect(await bodyBg(page)).toBe("rgb(13, 16, 22)");
+  expect(await bodyBg(page)).toBe("rgb(15, 15, 14)");
   await page.emulateMedia({ colorScheme: "light" });
-  expect(await bodyBg(page)).toBe("rgb(238, 241, 245)");
+  expect(await bodyBg(page)).toBe("rgb(246, 245, 242)");
 });
 
 test("every screen's text comes from the strings file", async ({ page }) => {
-  await page.locator(".ex").first().locator(".set input").first().fill("40");
+  await proOn(page);
+  await page.click("#modeCal");
+  await start(page);
+  await firstSet(page).fill("40");
   await page.click("#dayDone");
-  await page.click(".wk.prog");
+  await page.click("#statsBtn");
+  await fillDetails(page);
   await page.click("#modeCal");
   await page.selectOption("#uSel", "egg"); await page.fill("#uAmt", "3"); await page.click("#uAdd");
   await page.selectOption("#aSel", "steps"); await page.fill("#aV1", "5000"); await page.click("#aAdd");
-  await page.click("#modeSet");
-  expect(await page.evaluate(() => [...MISSING])).toEqual([]);
+  await page.click("#modeWorkout"); await page.click("#weekToggle");
+  for (const p of ["language", "pro", "appearance", "workout", "app", "details", "library", "data"]) { await settingsPage(page, p); }
+  await page.click("#modeHome");
 });
 
 test("Arabic-Indic digits typed on an Arabic keyboard are accepted", async ({ page }) => {
-  const box = page.locator(".ex").first().locator(".set input").first();
-  await box.fill("٦٢٫٥");
-  await expect(box).toHaveValue("62.5");
+  await start(page);
+  await firstSet(page).fill("٦٢٫٥");
+  await expect(firstSet(page)).toHaveValue("62.5");
   await page.reload();
-  await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("62.5");
+  await cont(page);
+  await expect(firstSet(page)).toHaveValue("62.5");
 });
 
 test("right-to-left layout fits the screen on every page", async ({ page }) => {
+  await start(page);
   await page.evaluate(() => { document.documentElement.dir = "rtl"; renderAll(); });
   const fits = () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
   expect(await fits()).toBe(true);
-  await page.click(".wk.prog"); expect(await fits()).toBe(true);
+  await page.click("#statsBtn"); expect(await fits()).toBe(true);
+  await page.click("#modeHome"); expect(await fits()).toBe(true);
+  await fillDetails(page); expect(await fits()).toBe(true);
   await page.click("#modeCal"); expect(await fits()).toBe(true);
   await page.click("#modeSet"); expect(await fits()).toBe(true);
 });
@@ -222,12 +345,13 @@ test("logs saved by the previous version are upgraded without losing anything", 
     }));
   });
   await page.reload();
-  await page.locator(".wk").first().click();
-  await page.locator(".day").first().click();
+  await cont(page);
+  await week(page, 1);
+  await day(page, 1);
   await expect(page.locator(".day").first()).toHaveClass(/complete/);
   await expect(page.locator(".ex").nth(0).locator(".set input").nth(2)).toHaveValue("60");
   await expect(page.locator(".ex").nth(3)).toContainText("Stiff-leg deadlift");
-  await page.locator(".day").nth(1).click();
+  await day(page, 2);
   await expect(page.locator(".ex").nth(2).locator(".set input").first()).toHaveValue("30");
   const saved = await page.evaluate(() => ({
     log: JSON.parse(localStorage.getItem(PREFIX + "log-full-body-3")),
@@ -245,19 +369,21 @@ test("a backup restores whichever version made it", async ({ page }) => {
     "ll-log-upper-lower-4": { w1: { "0-0": { s: ["70", "70", "70"] } } },
     "ll-settings": { theme: "dark" }
   } };
-  await page.click("#modeSet");
+  await settingsPage(page, "data");
   page.once("dialog", d => d.accept());
   await page.setInputFiles("#impFile", { name: "b.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(backup)) });
   await page.waitForLoadState("load");
-  await expect(page.locator("#appTitle")).toHaveText("Upper / Lower");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.locator(".wk").first().click();
-  await page.locator(".day").first().click();
-  await expect(page.locator(".ex").first().locator(".set input").first()).toHaveValue("70");
+  await cont(page);
+  await expect(page.locator("#appTitle")).toHaveText("Upper / Lower");
+  await week(page, 1);
+  await day(page, 1);
+  await expect(firstSet(page)).toHaveValue("70");
 });
 
 test("the test version and the main app keep separate data", async ({ page }) => {
-  await page.locator(".ex").first().locator(".set input").first().fill("99");
+  await start(page);
+  await firstSet(page).fill("99");
   const { keys, prefix } = await page.evaluate(() => ({ keys: Object.keys(localStorage), prefix: PREFIX }));
   expect(prefix).toBe(new URL(page.url()).pathname.includes("/beta/") ? "llb-" : "ll-");
   expect(keys.length).toBeGreaterThan(0);
@@ -266,10 +392,67 @@ test("the test version and the main app keep separate data", async ({ page }) =>
 
 test("language choice sits at the top of Settings", async ({ page }) => {
   await page.click("#modeSet");
-  const first = page.locator("#settings .panel").first();
-  await expect(first.locator("h3")).toHaveText("Language");
-  await expect(first.locator("#langSeg button")).toHaveCount(2);
-  await expect(first.locator('#langSeg button[lang="en"]')).toHaveAttribute("aria-pressed", "true");
-  await expect(first.locator('#langSeg button[lang="ar"]')).toBeDisabled();
-  await expect(first.locator('#langSeg button[lang="ar"]')).toContainText("العربية");
+  await expect(page.locator(".setrow").first()).toContainText("Language");
+  await page.locator(".setrow").first().click();
+  await expect(page.locator("#langSeg button")).toHaveCount(2);
+  await expect(page.locator('#langSeg button[lang="en"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('#langSeg button[lang="ar"]')).toBeEnabled();
+  await expect(page.locator('#langSeg button[lang="ar"]')).toContainText("العربية");
+});
+
+test("a long repeating program shows the last 12 weeks in Stats, readable on a phone", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => {
+    const L = { v: 2 };
+    for (let w = 1; w <= 30; w++) L["w" + w] = { ex: { x1: { s: ["40", "40", "40"] } }, done: { d1: true } };
+    localStorage.setItem(PREFIX + "programs-custom", JSON.stringify([{ format: 2, id: "my-long", name: "Long run", weeks: 1, repeat: true, builder: true,
+      days: [{ id: "d1", name: "Day 1", exercises: [{ id: "x1", name: "Squat", sets: 3, reps: "8" }] }] }]));
+    localStorage.setItem(PREFIX + "program", JSON.stringify("my-long"));
+    localStorage.setItem(PREFIX + "log-my-long", JSON.stringify(L));
+    localStorage.setItem(PREFIX + "settings", JSON.stringify({ pro: false }));
+  });
+  await page.reload();
+  await page.click("#homeGo");
+  await page.click("#statsBtn");
+  await expect(page.locator("#lastWeeksNote")).toBeVisible();
+  const cells = page.locator(".sessgrid .cell");
+  await expect(cells).toHaveCount(12);                             // weeks 20–31 (31 is the next one to train)
+  await expect(page.locator(".sessgrid .lbl").first()).toHaveText("W20");
+  expect(await cells.first().evaluate(c => c.getBoundingClientRect().width)).toBeGreaterThan(18);
+  await expect(page.locator("#progress .chart .hit")).toHaveCount(12);
+  await expect(page.locator("#progress .tile").first()).toContainText("30");   // all 30 sessions still counted
+});
+
+test("if the phone refuses to save, the app says so once and keeps what's on screen", async ({ page }) => {
+  await page.goto("./");
+  await page.locator('.home-card[data-id="full-body-3"]').click();
+  await expect(page.locator(".ex").first()).toBeVisible();
+  const dialogs = [];
+  page.on("dialog", d => { dialogs.push(d.message()); d.accept(); });
+  await page.evaluate(() => { Storage.prototype.setItem = () => { throw new DOMException("full", "QuotaExceededError"); }; });
+  const inputs = page.locator(".ex").first().locator(".set input");
+  await inputs.nth(0).fill("40");
+  await inputs.nth(1).fill("42");
+  await expect.poll(() => dialogs.length).toBe(1);
+  await page.waitForTimeout(300);
+  expect(dialogs).toHaveLength(1);
+  expect(dialogs[0]).toContain("didn't let Lift Ledger save");
+  await expect(inputs.nth(1)).toHaveValue("42");
+});
+
+test("timed exercises add nothing to weekly volume (seconds aren't reps)", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => {
+    localStorage.setItem(PREFIX + "programs-custom", JSON.stringify([{ format: 2, id: "my-timed", name: "Timed", weeks: 1, repeat: true, builder: true,
+      days: [{ id: "d1", name: "Day 1", exercises: [
+        { id: "x1", name: "Squat", sets: 1, reps: "10" },
+        { id: "x2", name: "Weighted plank", sets: 2, reps: "45", timed: true }] }] }]));
+    localStorage.setItem(PREFIX + "program", JSON.stringify("my-timed"));
+    localStorage.setItem(PREFIX + "log-my-timed", JSON.stringify({ v: 2, w1: { ex: { x1: { s: ["50"] }, x2: { s: ["10", "10"] } }, done: { d1: true } } }));
+    localStorage.setItem(PREFIX + "settings", JSON.stringify({ pro: false }));
+  });
+  await page.reload();
+  await page.click("#homeGo");
+  await page.click("#statsBtn");
+  await expect(page.locator("#progress .tile").nth(2).locator(".v")).toHaveText(/^500\b/);   // 50 kg × 10 reps; the plank adds nothing
 });

@@ -262,10 +262,10 @@ test("in a saved program only the last week can be deleted, so logged weeks neve
   await page.goto("./");
   await page.evaluate(() => {
     const days = [{ id: "d1", name: "Day 1", exercises: [{ id: "x1", name: "Squat", sets: 3, reps: "8" }] }];
-    localStorage.setItem("llb-programs-custom", JSON.stringify([{ format: 2, id: "my-weeks", name: "Three weeks", weeks: 3, weekly: true, builder: true,
+    localStorage.setItem(PREFIX + "programs-custom", JSON.stringify([{ format: 2, id: "my-weeks", name: "Three weeks", weeks: 3, weekly: true, builder: true,
       days, phases: [1, 2, 3].map(w => ({ name: "", weeks: [w, w], days })) }]));
-    localStorage.setItem("llb-program", JSON.stringify("my-weeks"));
-    localStorage.setItem("llb-settings", JSON.stringify({ pro: true }));
+    localStorage.setItem(PREFIX + "program", JSON.stringify("my-weeks"));
+    localStorage.setItem(PREFIX + "settings", JSON.stringify({ pro: true }));
   });
   await page.reload();
   const dialogs = [];

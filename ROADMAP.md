@@ -9,11 +9,11 @@ Each step ships first to the **test version** at [zain005.github.io/lift-ledger/
 | Step | What | Status |
 |---|---|---|
 | 1 | Groundwork: dark mode, translation system, right-to-left layout, permanent exercise ids | **Released** |
-| 2 | Exercise library: 171 exercises, search and filters, "My exercises" | **In test version** |
-| 3 | Program builder: 1–7 days, exercises from the library or added by hand, one box per set (up to 5) with its own reps, weekly sets per muscle, edit safely | **In test version** (phases come later) |
-| 4 | Sharing programs: link, QR code and file; update keeps the trainee's weights; home-screen tip | **In test version** (backup reminders and a one-screen "Full program" view come later) |
-| 4b | Pro mode (weeks, calories) and coach → trainee programs | **In test version** |
-| 5 | Arabic: every screen, 171 exercises with tips and Arabic/gym search words, ready-made programs | **In test version** (native-speaker review next) |
+| 2 | Exercise library: 171 exercises, search and filters, "My exercises" | **Released** (19 Nov 2026) |
+| 3 | Program builder: 1–7 days, exercises from the library or added by hand, one box per set (up to 5) with its own reps, weekly sets per muscle (list and 3D body), edit safely | **Released** (19 Nov 2026) |
+| 4 | Sharing programs: link, QR code and file; update keeps the trainee's weights; home-screen tip | **Released** (19 Nov 2026; backup reminders and a one-screen "Full program" view come later) |
+| 4b | Pro mode (weeks, calories) and coach → trainee programs | **Released** (19 Nov 2026) |
+| 5 | Arabic: every screen, 171 exercises with tips and Arabic/gym search words, ready-made programs | **Released** (19 Nov 2026; wording fixed as people report it) |
 
 ## Decisions
 
@@ -50,7 +50,7 @@ These were agreed before building. Change them here first if they change.
 - Status always pairs colour with a word or icon: done is green, skipped is amber (never alarm red), records are gold.
 - Last time's weight shows in grey inside each set box as the number to beat. The screen stays awake while the workout page is open (a setting, on by default).
 - Next, from the same research, to discuss before building: tick a set to log it (prefilled from last time) with a rest timer; a short first-launch question (kg or lb) leading straight into Day 1; "just today" vs "update program" when swapping; free charts per exercise, a records list and "2 of 3 days this week" in Stats.
-- On release to the main app: update the README credits (IBM Plex replaces Barlow; add fflate and qrcode-generator).
+- Released 19 November 2026; the README credits now list IBM Plex, fflate, qrcode-generator and three.js.
 
 **Data safety**
 - Days and exercises have permanent ids, and logs are stored by id (log format v2), so reordering or editing a program never moves logged weights to the wrong exercise. Older logs are converted automatically, and an untouched copy of the original is kept.
@@ -60,7 +60,7 @@ These were agreed before building. Change them here first if they change.
 - **Numbers always show as 1 2 3.** Typed Arabic-Indic digits (١٢٣) and the Arabic decimal mark (٫) are accepted and converted, because many Arabic phone keyboards type them.
 - Exercise names show in clear Modern Standard Arabic with the English name underneath, which is what people say in the gym. Search matches Arabic, English and common transliterations and dialect terms (for example سكوات، ديدلفت، بايسبس).
 - Programs store exercise ids, not names, so a program built in English appears in Arabic for an Arabic-speaking trainee.
-- All Arabic lives in one strings file and is reviewed by a native speaker before release.
+- All Arabic lives in one strings file. Decided 19 November 2026: rather than a line-by-line review of all ~1,400 texts before release, the Arabic goes live and wording is fixed as the owner and users report it.
 - The app keeps the name "Lift Ledger" for now; an Arabic name may come later.
 
 **Sharing**

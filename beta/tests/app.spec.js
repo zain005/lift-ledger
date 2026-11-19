@@ -405,11 +405,11 @@ test("a long repeating program shows the last 12 weeks in Stats, readable on a p
   await page.evaluate(() => {
     const L = { v: 2 };
     for (let w = 1; w <= 30; w++) L["w" + w] = { ex: { x1: { s: ["40", "40", "40"] } }, done: { d1: true } };
-    localStorage.setItem("llb-programs-custom", JSON.stringify([{ format: 2, id: "my-long", name: "Long run", weeks: 1, repeat: true, builder: true,
+    localStorage.setItem(PREFIX + "programs-custom", JSON.stringify([{ format: 2, id: "my-long", name: "Long run", weeks: 1, repeat: true, builder: true,
       days: [{ id: "d1", name: "Day 1", exercises: [{ id: "x1", name: "Squat", sets: 3, reps: "8" }] }] }]));
-    localStorage.setItem("llb-program", JSON.stringify("my-long"));
-    localStorage.setItem("llb-log-my-long", JSON.stringify(L));
-    localStorage.setItem("llb-settings", JSON.stringify({ pro: false }));
+    localStorage.setItem(PREFIX + "program", JSON.stringify("my-long"));
+    localStorage.setItem(PREFIX + "log-my-long", JSON.stringify(L));
+    localStorage.setItem(PREFIX + "settings", JSON.stringify({ pro: false }));
   });
   await page.reload();
   await page.click("#homeGo");
@@ -443,13 +443,13 @@ test("if the phone refuses to save, the app says so once and keeps what's on scr
 test("timed exercises add nothing to weekly volume (seconds aren't reps)", async ({ page }) => {
   await page.goto("./");
   await page.evaluate(() => {
-    localStorage.setItem("llb-programs-custom", JSON.stringify([{ format: 2, id: "my-timed", name: "Timed", weeks: 1, repeat: true, builder: true,
+    localStorage.setItem(PREFIX + "programs-custom", JSON.stringify([{ format: 2, id: "my-timed", name: "Timed", weeks: 1, repeat: true, builder: true,
       days: [{ id: "d1", name: "Day 1", exercises: [
         { id: "x1", name: "Squat", sets: 1, reps: "10" },
         { id: "x2", name: "Weighted plank", sets: 2, reps: "45", timed: true }] }] }]));
-    localStorage.setItem("llb-program", JSON.stringify("my-timed"));
-    localStorage.setItem("llb-log-my-timed", JSON.stringify({ v: 2, w1: { ex: { x1: { s: ["50"] }, x2: { s: ["10", "10"] } }, done: { d1: true } } }));
-    localStorage.setItem("llb-settings", JSON.stringify({ pro: false }));
+    localStorage.setItem(PREFIX + "program", JSON.stringify("my-timed"));
+    localStorage.setItem(PREFIX + "log-my-timed", JSON.stringify({ v: 2, w1: { ex: { x1: { s: ["50"] }, x2: { s: ["10", "10"] } }, done: { d1: true } } }));
+    localStorage.setItem(PREFIX + "settings", JSON.stringify({ pro: false }));
   });
   await page.reload();
   await page.click("#homeGo");
