@@ -399,3 +399,60 @@ test("language choice sits at the top of Settings", async ({ page }) => {
   await expect(page.locator('#langSeg button[lang="ar"]')).toBeEnabled();
   await expect(page.locator('#langSeg button[lang="ar"]')).toContainText("العربية");
 });
+
+test("a long repeating program shows the last 12 weeks in Stats, readable on a phone", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => {
+    const L = { v: 2 };
+    for (let w = 1; w <= 30; w++) L["w" + w] = { ex: { x1: { s: ["40", "40", "40"] } }, done: { d1: true } };
+    localStorage.setItem("llb-programs-custom", JSON.stringify([{ format: 2, id: "my-long", name: "Long run", weeks: 1, repeat: true, builder: true,
+      days: [{ id: "d1", name: "Day 1", exercises: [{ id: "x1", name: "Squat", sets: 3, reps: "8" }] }] }]));
+    localStorage.setItem("llb-program", JSON.stringify("my-long"));
+    localStorage.setItem("llb-log-my-long", JSON.stringify(L));
+    localStorage.setItem("llb-settings", JSON.stringify({ pro: false }));
+  });
+  await page.reload();
+  await page.click("#homeGo");
+  await page.click("#statsBtn");
+  await expect(page.locator("#lastWeeksNote")).toBeVisible();
+  const cells = page.locator(".sessgrid .cell");
+  await expect(cells).toHaveCount(12);                             // weeks 20–31 (31 is the next one to train)
+  await expect(page.locator(".sessgrid .lbl").first()).toHaveText("W20");
+  expect(await cells.first().evaluate(c => c.getBoundingClientRect().width)).toBeGreaterThan(18);
+  await expect(page.locator("#progress .chart .hit")).toHaveCount(12);
+  await expect(page.locator("#progress .tile").first()).toContainText("30");   // all 30 sessions still counted
+});
+
+test("if the phone refuses to save, the app says so once and keeps what's on screen", async ({ page }) => {
+  await page.goto("./");
+  await page.locator('.home-card[data-id="full-body-3"]').click();
+  await expect(page.locator(".ex").first()).toBeVisible();
+  const dialogs = [];
+  page.on("dialog", d => { dialogs.push(d.message()); d.accept(); });
+  await page.evaluate(() => { Storage.prototype.setItem = () => { throw new DOMException("full", "QuotaExceededError"); }; });
+  const inputs = page.locator(".ex").first().locator(".set input");
+  await inputs.nth(0).fill("40");
+  await inputs.nth(1).fill("42");
+  await expect.poll(() => dialogs.length).toBe(1);
+  await page.waitForTimeout(300);
+  expect(dialogs).toHaveLength(1);
+  expect(dialogs[0]).toContain("didn't let Lift Ledger save");
+  await expect(inputs.nth(1)).toHaveValue("42");
+});
+
+test("timed exercises add nothing to weekly volume (seconds aren't reps)", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => {
+    localStorage.setItem("llb-programs-custom", JSON.stringify([{ format: 2, id: "my-timed", name: "Timed", weeks: 1, repeat: true, builder: true,
+      days: [{ id: "d1", name: "Day 1", exercises: [
+        { id: "x1", name: "Squat", sets: 1, reps: "10" },
+        { id: "x2", name: "Weighted plank", sets: 2, reps: "45", timed: true }] }] }]));
+    localStorage.setItem("llb-program", JSON.stringify("my-timed"));
+    localStorage.setItem("llb-log-my-timed", JSON.stringify({ v: 2, w1: { ex: { x1: { s: ["50"] }, x2: { s: ["10", "10"] } }, done: { d1: true } } }));
+    localStorage.setItem("llb-settings", JSON.stringify({ pro: false }));
+  });
+  await page.reload();
+  await page.click("#homeGo");
+  await page.click("#statsBtn");
+  await expect(page.locator("#progress .tile").nth(2).locator(".v")).toHaveText(/^500\b/);   // 50 kg × 10 reps; the plank adds nothing
+});

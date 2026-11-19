@@ -6,7 +6,16 @@ const $ = id => document.getElementById(id);
 const range = n => Array.from({ length: n }, (_, k) => k);
 const KEY = { custom: PREFIX + "programs-custom", prog: PREFIX + "program", view: PREFIX + "view", set: PREFIX + "settings", log: id => PREFIX + "log-" + id };
 function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; } catch (e) { return fallback; } }
-function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+/* If the phone refuses to save (storage full, or blocked), say so once, so nobody trains a whole session
+   believing it was saved. The app keeps working with what's on screen. */
+let saveWarned = false;
+function store(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch (e) {
+    if (!saveWarned) { saveWarned = true; setTimeout(() => alert(t("err.saveFailed")), 0); }
+    return false;
+  }
+}
 
 const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>';
@@ -140,6 +149,9 @@ function nwOf(p, L) {
   return Math.max(1, hi + 1);
 }
 const NW = () => nwOf(P, logs);
+/* A repeating program keeps growing, so week grids show at most the last 12 weeks (all of them stay in the logs) */
+const SHOWN_WEEKS = 12;
+const firstShown = () => P.repeat ? Math.max(1, NW() - SHOWN_WEEKS + 1) : 1;
 const phaseFor = (p, w) => p.phases.find(x => w >= x.from && w <= x.to) || p.phases[p.phases.length - 1];
 const phaseOf = w => phaseFor(P, w);
 const phaseNum = w => P.phases.indexOf(phaseOf(w)) + 1;
@@ -267,11 +279,12 @@ let weeksOpen = false;
 function renderWeeks() {
   const el = $("weeks"); el.innerHTML = "";
   const cols = [];
-  if (P.weekly || P.repeat) cols.push("repeat(" + NW() + ", minmax(0, 1fr))");
+  const W0 = firstShown();
+  if (P.weekly || P.repeat) cols.push("repeat(" + (NW() - W0 + 1) + ", minmax(0, 1fr))");
   else P.phases.forEach((ph, pi) => { if (pi) cols.push("6px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
   el.style.gridTemplateColumns = cols.join(" ");
   let anyMissed = false;
-  for (let w = 1; w <= NW(); w++) {
+  for (let w = W0; w <= NW(); w++) {
     if (!P.weekly && !P.repeat && P.phases.some((ph, pi) => pi && ph.from === w)) { const g = document.createElement("span"); g.className = "gap"; g.setAttribute("aria-hidden", "true"); el.appendChild(g); }
     const b = document.createElement("button");
     const wc = weekComplete(w), wm = weekHasMissed(w);
@@ -476,7 +489,8 @@ function computeStats() {
       dayList(w, d).forEach((ex, i) => {
         const e = peek(w, d, i); if (!e || !e.s) return;
         const ws = e.s.slice(0, ex.sets).map(num).filter(Boolean); if (!ws.length) return;
-        vol += e.s.slice(0, ex.sets).reduce((a, v, k) => a + num(v) * (parseInt(ex.setReps ? ex.setReps[k] : ex.reps, 10) || 0), 0);
+        // volume is weight × reps; a timed exercise's target is seconds, so it adds nothing
+        if (!ex.timed) vol += e.s.slice(0, ex.sets).reduce((a, v, k) => a + num(v) * (parseInt(ex.setReps ? ex.setReps[k] : ex.reps, 10) || 0), 0);
         const actual = e.alt || ex.name;
         const L = lifts[actual] || (lifts[actual] = { name: actual, pts: {} });
         L.pts[w] = Math.max(L.pts[w] || 0, ...ws);
@@ -490,6 +504,25 @@ function computeStats() {
     return { name: L.name, pts: L.pts, weeks, first, last, firstW: weeks[0], lastW: weeks[weeks.length - 1], diff: last - first, pct: first ? (last - first) / first * 100 : 0 };
   }).sort((a, b) => (b.weeks.length > 1) - (a.weeks.length > 1) || b.pct - a.pct || a.name.localeCompare(b.name));
   return { done, missed, weekVol, liftList, totalVol: weekVol.reduce((a, b) => a + b, 0) };
+}
+
+/* Sets with a weight logged per muscle, in the latest week that has any: the main muscle counts fully, the others half.
+   A swap picked from the library counts for its own muscles; other swaps count for the planned exercise's. */
+function musclesWorked() {
+  const lib = id => id && typeof exById === "function" ? exById(id) : null;
+  for (let w = NW(); w >= 1; w--) {
+    const tally = {}; let any = false;
+    for (let d = 0; d < DPW(w); d++) dayList(w, d).forEach((ex, i) => {
+      const e = peek(w, d, i); if (!e || !e.s) return;
+      const n = e.s.slice(0, ex.sets).filter(v => v !== "" && v !== undefined).length; if (!n) return;
+      const src = lib(e.altRef) || lib(ex.ref) || ex;
+      const primary = src.primary || ex.primary, secondary = src.secondary && src.secondary.length ? src.secondary : ex.secondary || [];
+      if (primary) { tally[primary] = (tally[primary] || 0) + n; any = true; }
+      secondary.forEach(m => { tally[m] = (tally[m] || 0) + n / 2; any = true; });
+    });
+    if (any) return { week: w, tally };
+  }
+  return null;
 }
 
 function sparkline(L) {
@@ -506,7 +539,9 @@ function sparkline(L) {
     '<circle cx="' + x(lw).toFixed(1) + '" cy="' + y(L.pts[lw]).toFixed(1) + '" r="3.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="1.5"/></svg>';
 }
 
-function volumeChart(weekVol) {
+/* Bars for weekVol from index `from` on; bar labels and data-i keep the real week numbers */
+function volumeChart(allVol, from) {
+  const weekVol = allVol.slice(from || 0), off = from || 0;
   const W = 340, H = 170, L = 38, R = 6, T = 10, B = 24, n = weekVol.length;
   const max = Math.max(...weekVol);
   const step = max <= 0 ? 1000 : Math.pow(10, Math.floor(Math.log10(max / 3)));
@@ -523,8 +558,8 @@ function volumeChart(weekVol) {
   weekVol.forEach((v, i) => {
     const x0 = L + i * bw + gap / 2, w = bw - gap, x1 = x0 + w, yb = y(0), yt = y(v), r = Math.min(4, (yb - yt) / 2, w / 2);
     if (v > 0) s += '<path d="M' + x0 + ',' + yb + 'V' + (yt + r) + 'Q' + x0 + ',' + yt + ' ' + (x0 + r) + ',' + yt + 'H' + (x1 - r) + 'Q' + x1 + ',' + yt + ' ' + x1 + ',' + (yt + r) + 'V' + yb + 'Z" fill="var(--accent)"/>';
-    s += '<rect class="hit" data-i="' + i + '" x="' + (L + i * bw) + '" y="' + T + '" width="' + bw + '" height="' + (H - T - B) + '" fill="transparent" style="cursor:pointer"/>';
-    s += '<text x="' + (x0 + w / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)">' + escAttr(t("week.chartN", { n: i + 1 })) + '</text>';
+    s += '<rect class="hit" data-i="' + (i + off) + '" x="' + (L + i * bw) + '" y="' + T + '" width="' + bw + '" height="' + (H - T - B) + '" fill="transparent" style="cursor:pointer"/>';
+    s += '<text x="' + (x0 + w / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)">' + escAttr(t("week.chartN", { n: i + off + 1 })) + '</text>';
   });
   return s + '</svg>';
 }
@@ -546,15 +581,20 @@ function renderProgress() {
     '<div class="tile"><div class="k">' + T("stats.up") + '</div><div class="v">' + ups + '<small> / ' + gains.length + '</small></div><div class="s">' + T(gains.length ? "stats.upDesc" : "stats.upNone") + '</div></div>' +
     '</div>';
 
-  const cols = ["22px"], blocks = !P.weekly && !P.repeat;
+  const mw = musclesWorked();
+  h += '<div class="panel" id="stMuscles"><h3>' + escAttr(mw ? t("stats.musclesTitle", { n: mw.week }) : t("stats.musclesTitleNone")) + '</h3><p class="sub">' +
+    T(mw ? "stats.musclesSub" : "stats.musclesEmpty") + '</p>' + (mw ? '<div class="m3d" id="stBody" hidden></div>' : '') + '</div>';
+
+  const cols = ["22px"], blocks = !P.weekly && !P.repeat, W0 = firstShown();
   if (blocks) P.phases.forEach((ph, pi) => { if (pi) cols.push("4px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
-  else cols.push("repeat(" + NW() + ", minmax(0, 1fr))");
+  else cols.push("repeat(" + (NW() - W0 + 1) + ", minmax(0, 1fr))");
   const isBreak = w => blocks && P.phases.some((ph, pi) => pi && ph.from === w);
-  h += '<div class="panel"><h3>' + T("stats.byWeek") + '</h3><div class="sessgrid" style="grid-template-columns:' + cols.join(" ") + '"><span></span>';
-  for (let w = 1; w <= NW(); w++) { if (isBreak(w)) h += '<span></span>'; h += '<span class="lbl">' + escAttr(t("week.chartN", { n: w })) + '</span>'; }
+  h += '<div class="panel"><h3>' + T("stats.byWeek") + '</h3>' + (W0 > 1 ? '<p class="sub" id="lastWeeksNote">' + escAttr(t("stats.lastWeeks", { n: SHOWN_WEEKS })) + '</p>' : '') +
+    '<div class="sessgrid" style="grid-template-columns:' + cols.join(" ") + '"><span></span>';
+  for (let w = W0; w <= NW(); w++) { if (isBreak(w)) h += '<span></span>'; h += '<span class="lbl">' + escAttr(t("week.chartN", { n: w })) + '</span>'; }
   for (let d = 0; d < D; d++) {
     h += '<span class="lbl">' + escAttr(t("day.shortN", { n: d + 1 })) + '</span>';
-    for (let w = 1; w <= NW(); w++) {
+    for (let w = W0; w <= NW(); w++) {
       if (isBreak(w)) h += '<span></span>';
       if (d >= DPW(w)) { h += '<span class="cell none"></span>'; continue; }     // this week has fewer days
       const dn = isDayDone(w, d), ms = isMissed(w, d);
@@ -564,7 +604,7 @@ function renderProgress() {
   h += '</div><div class="legend"><span><i class="done"></i>' + T("status.done") + '</span><span><i class="missed"></i>' + T("status.missed") + '</span><span><i></i>' + T("status.todo") + '</span></div></div>';
 
   h += '<div class="panel chart"><h3>' + escAttr(t("stats.volTitle", { unit: unitLabel() })) + '</h3><p class="sub">' + T("stats.volSub") + '</p>' +
-    volumeChart(st.weekVol) + '<div class="readout" id="volReadout"></div></div>';
+    volumeChart(st.weekVol, W0 - 1) + '<div class="readout" id="volReadout"></div></div>';
 
   h += '<div class="panel"><h3>' + T("stats.strength") + '</h3><p class="sub">' + T("stats.strengthSub") + '</p><div class="lifts">';
   if (!st.liftList.length) h += '<p class="empty">' + T("stats.liftsEmpty") + '</p>';
@@ -579,6 +619,7 @@ function renderProgress() {
   });
   h += '</div></div>';
   el.innerHTML = h;
+  if (mw && typeof M3D !== "undefined") M3D.show($("stBody"), mw.tally, "stats");
   $("progTitle").textContent = t("stats.heading", { name: P.name });
   el.querySelectorAll(".lift .n").forEach((n, i) => { n.textContent = st.liftList[i].name; });
 

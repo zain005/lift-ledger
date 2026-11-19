@@ -140,3 +140,36 @@ test("a ready-made program can be shared too (Share only); my own has Share, Edi
   expect(await page.locator("#homeContinue .own-acts button").evaluateAll(b => b.map(x => x.dataset.act))).toEqual(["share", "edit", "delete"]);
   await clean(page);
 });
+
+test("opening a link to my own program changes nothing, so it stays mine to edit and share", async ({ browser, baseURL }) => {
+  const coach = await phone(browser, baseURL);
+  await buildProgram(coach);
+  const link = await shareLink(coach);
+  await coach.goto(link);                      // a coach checking their own link on the same phone
+  await expect(coach.locator("#importSheet")).toBeVisible();
+  await expect(coach.locator("#imErrText")).toContainText("your own program");
+  await expect(coach.locator("#imAdd")).toBeHidden();
+  await coach.click("#imErrClose");
+  expect(await coach.locator("#homeContinue .own-acts button").evaluateAll(b => b.map(x => x.dataset.act))).toEqual(["share", "edit", "delete"]);
+  await expect(coach.locator("#homeCreate")).toBeVisible();
+  const saved = await coach.evaluate(() => JSON.parse(localStorage.getItem("llb-programs-custom")));
+  expect(saved).toHaveLength(1);
+  expect(saved[0].builder).toBe(true);
+  expect(saved[0].shared).toBeFalsy();
+  await clean(coach);
+});
+
+test("a shared program can never take a ready-made program's place", async ({ browser, baseURL }) => {
+  const trainee = await phone(browser, baseURL);
+  // A link whose program uses the same id as the ready-made Full Body program
+  const link = await trainee.evaluate(() => shareUrl({ id: "full-body-3", name: "Look-alike", weeks: 1, repeat: true,
+    days: [{ id: "d1", name: "Day 1", exercises: [{ id: "x1", name: "Squat", sets: 3, reps: "8" }] }] }, false));
+  await trainee.goto(link);
+  await trainee.click("#imAdd");
+  await trainee.reload();
+  await expect(trainee.locator("#homeContinue .c-name")).toHaveText("Look-alike");
+  const ids = await trainee.evaluate(() => PROGRAMS.map(p => p.id));
+  expect(ids).toContain("full-body-3");
+  expect(ids).toContain("full-body-3-custom");
+  await clean(trainee);
+});

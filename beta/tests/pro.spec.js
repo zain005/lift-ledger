@@ -257,3 +257,29 @@ test("week-by-week programs travel in the link, and links made before weeks stil
   await expect(trainee.locator("#imName")).toHaveText("Old link");
   await clean(coach); await clean(trainee);
 });
+
+test("in a saved program only the last week can be deleted, so logged weeks never shift", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => {
+    const days = [{ id: "d1", name: "Day 1", exercises: [{ id: "x1", name: "Squat", sets: 3, reps: "8" }] }];
+    localStorage.setItem("llb-programs-custom", JSON.stringify([{ format: 2, id: "my-weeks", name: "Three weeks", weeks: 3, weekly: true, builder: true,
+      days, phases: [1, 2, 3].map(w => ({ name: "", weeks: [w, w], days })) }]));
+    localStorage.setItem("llb-program", JSON.stringify("my-weeks"));
+    localStorage.setItem("llb-settings", JSON.stringify({ pro: true }));
+  });
+  await page.reload();
+  const dialogs = [];
+  page.on("dialog", d => { dialogs.push(d.type() + ": " + d.message()); d.accept(); });
+  await page.click('#homeContinue .own-acts [data-act="edit"]');
+  await expect(page.locator("#builder")).toBeVisible();
+  const tabs = page.locator(".bd-weektab:not(.add)");
+  await expect(tabs).toHaveCount(3);
+  await tabs.nth(1).click();
+  await page.click("#bdDelWeek");
+  await expect(tabs).toHaveCount(3);
+  expect(dialogs[0]).toMatch(/^alert: .*only the last week \(week 3\)/);
+  await tabs.nth(2).click();
+  await page.click("#bdDelWeek");
+  await expect(tabs).toHaveCount(2);
+  expect(dialogs[1]).toMatch(/^confirm: Delete week 3/);
+});

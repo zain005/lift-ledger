@@ -176,6 +176,7 @@ $("shClose").addEventListener("click", closeShare);
 
 /* ---------- opening a shared link ---------- */
 let INCOMING = null;
+const isOwn = p => !!(p && p.byBuilder && !p.shared);
 const prescr = e => e.sets + "×" + (e.setReps ? e.setReps.join("/") : e.reps);
 /* What's different between the trainee's copy and the coach's new version, in a few readable lines */
 function changeList(oldP, newP) {
@@ -208,9 +209,16 @@ function readShareHash() {
   try {
     got = decodeProgram(decodeURIComponent(m[1]));
     if (got.builtin) { p = progById(got.builtin); if (!p || !p.builtin) throw Object.assign(new Error("damaged"), { code: "damaged" }); }
-    else p = normalizeProgram(got.raw, false);
+    else {
+      p = normalizeProgram(got.raw, false);
+      // Same rule as importing a file: a shared program can never take a ready-made program's id
+      if (PROGRAMS.some(q => q.builtin && q.id === p.id)) { got.raw = Object.assign({}, got.raw, { id: p.id + "-custom" }); p = normalizeProgram(got.raw, false); }
+    }
   }
   catch (e) { err = e.code === "version" ? "share.errVersion" : "share.errDamaged"; got = null; }
+  // A link to a program I built myself (a coach checking their own link) changes nothing: importing it would
+  // turn my program into a coach's one, without Edit or Share
+  if (got && !got.builtin && isOwn(progById(p.id))) { err = "share.errOwn"; got = null; }
   $("imOk").hidden = !got; $("imErr").hidden = !!got;
   if (got) {
     INCOMING = Object.assign({ p }, got);
@@ -247,6 +255,7 @@ $("imErrClose").addEventListener("click", closeImport);
 $("imAdd").addEventListener("click", () => {
   if (!INCOMING) return;
   const got = INCOMING, p = got.p, updating = !got.builtin && !!progById(p.id);
+  if (!got.builtin && isOwn(progById(p.id))) { closeImport(); return; }
   if (!got.builtin) {
     store(KEY.custom, load(KEY.custom, []).filter(r => slug(r.id || r.name) !== p.id).concat([got.raw]));
     PROGRAMS = PROGRAMS.filter(q => q.id !== p.id).concat([p]);

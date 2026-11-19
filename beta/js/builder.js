@@ -211,6 +211,7 @@ function renderMuscleCheck() {
     if (m.primary) tally[m.primary] = (tally[m.primary] || 0) + n;
     m.secondary.forEach(s => { tally[s] = (tally[s] || 0) + n / 2; });
   }));
+  if (typeof M3D !== "undefined") M3D.show($("bdBody"), tally, "builder");
   const box = $("bdMuscles"); box.innerHTML = "";
   Object.entries(tally).forEach(([m, v]) => {
     const row = document.createElement("div"); row.className = "bd-mrow" + (v === 0 ? " zero" : v < 6 ? " low" : v > 20 ? " high" : " ok");
@@ -227,6 +228,9 @@ $("bdName").addEventListener("input", e => { BD.draft.name = e.target.value.slic
 $("bdDayName").addEventListener("input", e => { curDays()[BD.day].name = e.target.value.slice(0, 30); });
 $("bdDelWeek").addEventListener("click", () => {
   const W = BD.draft.weeks; if (W.length < 2) return;
+  // Logs are kept by week number, so removing a middle week of a saved program would move every later week's
+  // logged weights onto a different week's plan (and on trainees' phones after they update)
+  if (BD.editingId && BD.week !== W.length - 1) { alert(t("bd.delWeekLast", { n: W.length })); return; }
   if (!confirm(t("bd.removeWeekConfirm", { n: BD.week + 1 }))) return;
   W.splice(BD.week, 1); BD.week = Math.max(0, BD.week - 1); BD.day = 0; renderBuilder();
 });
