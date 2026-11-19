@@ -1,5 +1,12 @@
 // @ts-check
 const { defineConfig } = require("@playwright/test");
+const { execSync } = require("child_process");
+
+// Linux and Mac call it "python3". Windows calls it "python", or only "py" when Python came from python.org's launcher.
+function python() {
+  if (process.platform !== "win32") return "python3";
+  try { execSync("python --version", { stdio: "ignore" }); return "python"; } catch { return "py"; }
+}
 
 module.exports = defineConfig({
   // "stable" tests the live app at /, "beta" tests the test version at /beta/
@@ -15,7 +22,7 @@ module.exports = defineConfig({
     serviceWorkers: "block"
   },
   webServer: {
-    command: (process.platform === "win32" ? "python" : "python3") + " -m http.server 4173",   // Windows calls it "python"
+    command: python() + " -m http.server 4173",
     url: "http://localhost:4173",
     reuseExistingServer: !process.env.CI,
     stdout: "ignore",
