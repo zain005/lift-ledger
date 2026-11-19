@@ -676,6 +676,12 @@ button:active:not(:disabled) { opacity: .72; }
 /* About page */
 .about-text { margin: 0; font-size: 14.5px; line-height: 1.6; max-width: 62ch; }
 .subpage[data-page="about"] a { color: var(--accent); text-underline-offset: 3px; }
+.socials { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.social { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-ctl); border: 1px solid var(--line); background: var(--surface-2); }
+.subpage[data-page="about"] .social { color: var(--ink); }
+.social svg { width: 24px; height: 24px; display: block; }
+.social:active { background: var(--line); }
+.social:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .panel .about-text + h3 { margin-top: 6px; }
 .changelog { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .changelog > li { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }

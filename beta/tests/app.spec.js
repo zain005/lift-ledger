@@ -132,6 +132,14 @@ test("About shows the version, what's new in every version, and the health and p
   await expect(about.locator("h3", { hasText: "Health" })).toBeVisible();
   await expect(about.locator("h3", { hasText: "Privacy" })).toBeVisible();
   await expect(about.locator('a[href="https://github.com/zain005/lift-ledger"]')).toBeVisible();
+  // The owner's profiles: logo buttons that open in a new tab, with a spoken label
+  for (const [href, label] of [["https://github.com/zain005", /GitHub/], ["https://www.linkedin.com/in/zain-hafedh", /LinkedIn/]]) {
+    const a = about.locator(`a.social[href="${href}"]`);
+    await expect(a).toBeVisible();
+    await expect(a).toHaveAttribute("target", "_blank");
+    await expect(a).toHaveAttribute("aria-label", label);
+    expect((await a.boundingBox()).width).toBeGreaterThanOrEqual(44);
+  }
 });
 
 /* ---------- logging ---------- */

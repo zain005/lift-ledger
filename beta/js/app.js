@@ -730,6 +730,7 @@ const SET_PAGES = [
 /* What's new, newest first; each line's text is "new.<version>.<n>" in the strings files.
    The newest entry has no date while it's only in the test version; scripts/release-beta.sh fills it in. */
 const CHANGES = [
+  { v: 8, date: "2026-11-19", n: 1 },
   { v: 7, date: "2026-11-19", n: 1 },
   { v: 6, date: "2026-11-19", n: 1 },
   { v: 5, date: "2026-11-19", n: 5 },

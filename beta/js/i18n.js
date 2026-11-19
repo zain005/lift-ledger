@@ -175,6 +175,8 @@ const STRINGS = {
     "csv.target_reps": "target_reps", "csv.target_rpe": "target_rpe", "csv.day_done": "day_done", "csv.yes": "yes", "csv.no": "no",
     "about.title": "About", "about.sum": "Version {v} · what's new, health and privacy", "about.heading": "About Lift Ledger",
     "about.intro": "I'm Zain Ali, and I made Lift Ledger because I wanted a simple, serious workout log that works in Arabic and English, works without internet and never asks for an account. It's free for everyone, with no ads and nothing to buy.",
+    "about.findMe": "Find me on", "about.github": "My GitHub profile (opens in a new tab)", "about.linkedin": "My LinkedIn profile (opens in a new tab)",
+    "new.8.1": "Links to my GitHub and LinkedIn on the About page.",
     "about.versionN": "Version {v}", "about.source": "Free and open source on GitHub", "about.newTitle": "What's new", "about.notReleased": "In the test version",
     "about.healthTitle": "Health",
     "about.health": "Lift Ledger gives general training information, not medical advice. Check with a doctor before starting a new program, especially if you have an injury or a health condition, and stop any exercise that causes pain. Calorie numbers are estimates.",

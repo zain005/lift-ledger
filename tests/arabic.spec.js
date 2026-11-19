@@ -130,7 +130,7 @@ test("numbers with signs and percentages read correctly inside Arabic text", asy
 test("no English is left on any screen in Arabic (apart from brand and technical names)", async ({ page }) => {
   await toArabic(page);
   await proOn(page);
-  const ALLOW = /^(Lift|Ledger|GitHub|RPE|QR|BMR|MET|ACSM|JSON|CSV|json|csv|YouTube|Safari|README|index\.html|Mifflin-St|Jeor|Katch-McArdle|JM|T|V|name|weeks|days|exercises|sets)$/;
+  const ALLOW = /^(Lift|Ledger|GitHub|LinkedIn|RPE|QR|BMR|MET|ACSM|JSON|CSV|json|csv|YouTube|Safari|README|index\.html|Mifflin-St|Jeor|Katch-McArdle|JM|T|V|name|weeks|days|exercises|sets)$/;
   const scan = async () => page.evaluate(allow => {
     const re = new RegExp(allow), out = [];
     const ok = s => (s.match(/[A-Za-z][A-Za-z.\-]*/g) || []).every(w => re.test(w.replace(/[.\-]+$/, "")));
