@@ -42,7 +42,12 @@ decisions already agreed with the owner, and what's in the test version.
 - Tests: `npm install`, `npx playwright install chromium`, then `npm test` (both the main app and `/beta/`).
   All tests must pass before pushing; GitHub Actions runs them on every push.
 - Release the test version to the main app (only when the owner asks): `bash scripts/release-beta.sh <n>`
-  (on Windows use Git Bash), then update the README credits, run the tests and commit.
+  (on Windows use Git Bash), then update the README, run the tests and commit. Before releasing, the newest entry in
+  `CHANGES` (beta/js/app.js) must be version `<n>`, with its text as `new.<n>.<k>` in both strings files; the script
+  refuses otherwise and stamps the release date. Settings → About shows it as "What's new".
+- Roll the main app back (owner only, only when asked): `bash scripts/rollback.sh <n>`, or `--dry-run` first. It refuses
+  versions older than v4 (they can't read today's logs) and re-releases the old files under a new version number.
+- On Windows, edit files with Node or perl, not `sed`: Git Bash's `sed -i` turns this repo's CRLF line endings into LF.
 
 ## Style
 - Keep it small: reuse existing code and native browser features before adding anything. No frameworks, no build step.

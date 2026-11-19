@@ -100,7 +100,7 @@ test("the workout page has no week selector, just the days and Stats", async ({ 
 
 test("Settings is a short list, and each item opens its own page", async ({ page }) => {
   await page.click("#modeSet");
-  await expect(page.locator(".setrow")).toHaveCount(7);
+  await expect(page.locator(".setrow")).toHaveCount(8);
   await expect(page.locator('.setrow[data-page="details"]')).toHaveCount(0);   // personal details belong to Pro
   await expect(page.locator("#settings .subpage:visible")).toHaveCount(0);
   await page.click('.setrow[data-page="appearance"]');
@@ -111,6 +111,27 @@ test("Settings is a short list, and each item opens its own page", async ({ page
   await proOn(page);
   await page.click("#setBack");
   await expect(page.locator('.setrow[data-page="details"] small')).toHaveText("Not set yet");
+});
+
+test("About shows the version, what's new in every version, and the health and privacy notes", async ({ page }) => {
+  await page.click("#modeSet");
+  const row = page.locator('.setrow[data-page="about"]');
+  await expect(row.locator("small")).toContainText(/^Version \d+ · what's new/);
+  await row.click();
+  const about = page.locator('.subpage[data-page="about"]');
+  await expect(about).toBeVisible();
+  await expect(about.locator("#aboutVersion")).toHaveText(/^Version \d+$/);
+  const versions = about.locator(".changelog > li");
+  expect(await versions.count()).toBeGreaterThanOrEqual(5);
+  await expect(versions.last()).toContainText("Version 1");
+  await expect(versions.first().locator("ul li").first()).not.toHaveText(/^new\./);   // real text, not a missing key
+  // Released versions show their date; only the test version's newest entry may say it isn't out yet
+  const dates = await about.locator(".changelog .ver small").allTextContents();
+  dates.slice(1).forEach(d => expect(d).toMatch(/\d{4}$/));
+  if (!new URL(page.url()).pathname.includes("/beta/")) expect(dates[0]).toMatch(/\d{4}$/);
+  await expect(about.locator("h3", { hasText: "Health" })).toBeVisible();
+  await expect(about.locator("h3", { hasText: "Privacy" })).toBeVisible();
+  await expect(about.locator('a[href="https://github.com/zain005/lift-ledger"]')).toBeVisible();
 });
 
 /* ---------- logging ---------- */

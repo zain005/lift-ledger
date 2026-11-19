@@ -724,8 +724,31 @@ const SET_PAGES = [
   ["app", "set.app", () => t(SET.calTab ? "set.appSum" : "set.appSumNoCal")],
   ["details", "set.details", () => typeof detailsSummary === "function" ? detailsSummary() : "", "pro"],
   ["library", "lib.title", () => typeof LIBRARY !== "undefined" ? tn("lib.count", LIBRARY.exercises.length + CUSTOM_EX.length) : ""],
-  ["data", "data.title", () => t("data.sum")]
+  ["data", "data.title", () => t("data.sum")],
+  ["about", "about.title", () => t("about.sum", { v: CHANGES[0].v })]
 ];
+/* What's new, newest first; each line's text is "new.<version>.<n>" in the strings files.
+   The newest entry has no date while it's only in the test version; scripts/release-beta.sh fills it in. */
+const CHANGES = [
+  { v: 7, date: "2026-11-19", n: 1 },
+  { v: 6, date: "2026-11-19", n: 1 },
+  { v: 5, date: "2026-11-19", n: 5 },
+  { v: 4, date: "2026-11-15", n: 1 },
+  { v: 1, date: "2026-11-15", n: 1 }
+];
+function renderAbout() {
+  $("aboutVersion").textContent = t("about.versionN", { v: CHANGES[0].v });
+  const fmtDate = d => new Intl.DateTimeFormat(LANG === "ar" ? "ar-u-nu-latn" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(d + "T00:00:00Z"));
+  const ol = $("aboutNew"); ol.innerHTML = "";
+  CHANGES.forEach(c => {
+    const li = document.createElement("li"), head = document.createElement("p"), b = document.createElement("b"), when = document.createElement("small");
+    head.className = "ver"; b.textContent = t("about.versionN", { v: c.v }); when.textContent = c.date ? fmtDate(c.date) : t("about.notReleased");
+    head.append(b, " ", when);
+    const ul = document.createElement("ul");
+    range(c.n).forEach(k => { const x = document.createElement("li"); x.textContent = t("new." + c.v + "." + (k + 1)); ul.appendChild(x); });
+    li.append(head, ul); ol.appendChild(li);
+  });
+}
 function openSetPage(page) { setPage = page; appMode = "settings"; renderAll(); window.scrollTo({ top: 0 }); }
 function renderSettings() {
   const list = $("setList"); list.innerHTML = "";
@@ -768,6 +791,7 @@ function renderSettings() {
     lg.appendChild(b);
   });
   if (setPage === "details" && typeof renderCal === "function") renderCal();
+  if (setPage === "about") renderAbout();
 }
 $("setBack").addEventListener("click", () => openSetPage(""));
 document.querySelectorAll("#unitSeg button").forEach(b => b.addEventListener("click", () => { SET.unit = b.dataset.u; saveSettings(); renderSettings(); }));

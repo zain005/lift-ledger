@@ -130,7 +130,7 @@ test("numbers with signs and percentages read correctly inside Arabic text", asy
 test("no English is left on any screen in Arabic (apart from brand and technical names)", async ({ page }) => {
   await toArabic(page);
   await proOn(page);
-  const ALLOW = /^(Lift|Ledger|RPE|QR|BMR|MET|ACSM|JSON|CSV|json|csv|YouTube|Safari|README|index\.html|Mifflin-St|Jeor|Katch-McArdle|JM|T|V|name|weeks|days|exercises|sets)$/;
+  const ALLOW = /^(Lift|Ledger|GitHub|RPE|QR|BMR|MET|ACSM|JSON|CSV|json|csv|YouTube|Safari|README|index\.html|Mifflin-St|Jeor|Katch-McArdle|JM|T|V|name|weeks|days|exercises|sets)$/;
   const scan = async () => page.evaluate(allow => {
     const re = new RegExp(allow), out = [];
     const ok = s => (s.match(/[A-Za-z][A-Za-z.\-]*/g) || []).every(w => re.test(w.replace(/[.\-]+$/, "")));
@@ -151,7 +151,7 @@ test("no English is left on any screen in Arabic (apart from brand and technical
   await page.click("#weekToggle"); await look();
   await page.click("#statsBtn"); await look();
   await page.click("#modeHome"); await look();
-  for (const pg of ["language", "pro", "appearance", "workout", "app", "library", "data", "details"]) { await page.click("#modeSet"); await page.locator(`.setrow[data-page="${pg}"]`).click(); await look(); }
+  for (const pg of ["language", "pro", "appearance", "workout", "app", "library", "data", "about", "details"]) { await page.click("#modeSet"); await page.locator(`.setrow[data-page="${pg}"]`).click(); await look(); }
   await page.fill("#pWeight", "80"); await page.fill("#pHeight", "180"); await page.fill("#pAge", "30");
   await page.click("#modeCal"); await page.evaluate(() => document.querySelectorAll("#cal details").forEach(d => { d.open = true; })); await look();
   await page.click("#modeHome"); await page.click("#homeCreate"); await look();

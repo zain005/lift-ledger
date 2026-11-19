@@ -673,6 +673,18 @@ button:active:not(:disabled) { opacity: .72; }
 .sessgrid .cell.none { background: transparent; border-color: transparent; }
 .pro-list { margin: 0; padding-inline-start: 20px; display: grid; gap: 6px; color: var(--ink); font-size: 14.5px; }
 .pro-list li::marker { color: var(--accent); }
+/* About page */
+.about-text { margin: 0; font-size: 14.5px; line-height: 1.6; max-width: 62ch; }
+.subpage[data-page="about"] a { color: var(--accent); text-underline-offset: 3px; }
+.panel .about-text + h3 { margin-top: 6px; }
+.changelog { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.changelog > li { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.changelog > li:first-child { padding-top: 0; border-top: 0; }
+.changelog .ver { margin: 0; font-size: 14.5px; }
+.changelog .ver b { font-weight: 600; }
+.changelog .ver small { color: var(--muted); font-size: 12.5px; }
+.changelog ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 14px; }
+.changelog ul li::marker { color: var(--muted); }
 .pro-tog { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 2px; }
 /* Builder: weeks (Pro) sit above the days */
 .bd-weekbox { display: grid; gap: 6px; }

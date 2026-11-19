@@ -59,6 +59,7 @@
 - English or Arabic (right-to-left, with Arabic exercise names and the English name underneath). Numbers always show as 1 2 3.
 - Light, dark, or match your phone's theme. kg or lb.
 - Show or hide demo links, exercise tips, last-time weights and the RPE explainer.
+- **About:** what's new in each version, plus health and privacy notes.
 
 ## Install on your phone
 
@@ -165,7 +166,7 @@ npx playwright install chromium
 npm test
 ```
 
-**Test version.** New work ships first to [`/beta/`](https://zain005.github.io/lift-ledger/beta/), a full copy of the app that stores its data separately. When it's ready, `scripts/release-beta.sh` promotes it to the main app. See [ROADMAP.md](ROADMAP.md) for what's planned and the decisions behind it.
+**Test version.** New work ships first to [`/beta/`](https://zain005.github.io/lift-ledger/beta/), a full copy of the app that stores its data separately. When it's ready, `scripts/release-beta.sh` promotes it to the main app. If a release goes wrong, `scripts/rollback.sh <version>` puts the main app back to an earlier one. See [ROADMAP.md](ROADMAP.md) for what's planned and the decisions behind it.
 
 The tests drive the app in a phone-sized browser. They check:
 - logging and saving, and the warning if the phone refuses to save
