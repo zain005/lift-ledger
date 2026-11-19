@@ -211,7 +211,6 @@ function renderMuscleCheck() {
     if (m.primary) tally[m.primary] = (tally[m.primary] || 0) + n;
     m.secondary.forEach(s => { tally[s] = (tally[s] || 0) + n / 2; });
   }));
-  if (typeof M3D !== "undefined") M3D.show($("bdBody"), tally, "builder");
   const box = $("bdMuscles"); box.innerHTML = "";
   Object.entries(tally).forEach(([m, v]) => {
     const row = document.createElement("div"); row.className = "bd-mrow" + (v === 0 ? " zero" : v < 6 ? " low" : v > 20 ? " high" : " ok");

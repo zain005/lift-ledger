@@ -35,7 +35,7 @@
 **Programs**
 - Three ready-made 8-week programs, or build your own: 1–7 training days, each exercise with its own sets and reps.
 - An exercise library of 171 exercises with search (including common gym nicknames), muscle and equipment filters, and form tips. Add your own exercises too.
-- While you build, a 3D body and a list show how many sets each muscle gets per week.
+- While you build, a list shows how many sets each muscle gets per week.
 
 **Workout log**
 - One box per set, with target reps and effort (RPE) for every exercise. Last time's weight shows in grey inside each box, as the number to beat.
@@ -50,7 +50,6 @@
 **Progress**
 - Sessions completed and missed, week by week.
 - Weekly training volume chart and a strength trend for every exercise.
-- "Muscles worked": a 3D body coloured by the sets you logged for each muscle that week.
 
 **Pro mode** (free, off by default)
 - Programs planned week by week, up to 12 weeks, each week with its own days.
@@ -154,7 +153,7 @@ Opening `index.html` straight from your files won't load the programs, because b
 
 ## Development
 
-**Built with** plain HTML, CSS and JavaScript. It has no framework and no build tools. Three small libraries are bundled in `vendor/`: fflate (compresses share links), qrcode-generator (QR codes) and three.js (the 3D muscle map, loaded only when it's shown).
+**Built with** plain HTML, CSS and JavaScript. It has no framework and no build tools. Two small libraries are bundled in `vendor/`: fflate (compresses share links) and qrcode-generator (QR codes).
 - **Charts** are inline SVG drawn by the app itself.
 - **Offline support** comes from a service worker and a web app manifest, so it can be installed as a PWA.
 - **Tests** use [Playwright](https://playwright.dev/).
@@ -188,7 +187,6 @@ js/app.js                workout log, programs, stats, settings, export/import
 js/builder.js            program builder
 js/library.js            exercise library and picker
 js/share.js              share links, QR codes, coach and trainee
-js/muscle3d.js           3D muscle map
 js/calories.js           calorie calculator
 js/i18n.js, strings-ar.js  English and Arabic text
 data/exercises.json      the 171-exercise library
@@ -225,5 +223,4 @@ beta/                    the test version (same layout)
 - Fonts: [IBM Plex Sans and IBM Plex Sans Arabic](https://github.com/IBM/plex) by IBM, under the [SIL Open Font License 1.1](fonts/IBM-Plex-OFL.txt).
 - [fflate](https://github.com/101arrowz/fflate) by Arjun Barrett, [MIT](vendor/fflate-LICENSE.txt).
 - [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase, [MIT](vendor/qrcode-LICENSE.txt).
-- [three.js](https://threejs.org/) by the three.js authors, [MIT](vendor/three-LICENSE.txt).
 - Lift Ledger is a personal project and isn't affiliated with any coach, gym, program or equipment maker.

@@ -506,25 +506,6 @@ function computeStats() {
   return { done, missed, weekVol, liftList, totalVol: weekVol.reduce((a, b) => a + b, 0) };
 }
 
-/* Sets with a weight logged per muscle, in the latest week that has any: the main muscle counts fully, the others half.
-   A swap picked from the library counts for its own muscles; other swaps count for the planned exercise's. */
-function musclesWorked() {
-  const lib = id => id && typeof exById === "function" ? exById(id) : null;
-  for (let w = NW(); w >= 1; w--) {
-    const tally = {}; let any = false;
-    for (let d = 0; d < DPW(w); d++) dayList(w, d).forEach((ex, i) => {
-      const e = peek(w, d, i); if (!e || !e.s) return;
-      const n = e.s.slice(0, ex.sets).filter(v => v !== "" && v !== undefined).length; if (!n) return;
-      const src = lib(e.altRef) || lib(ex.ref) || ex;
-      const primary = src.primary || ex.primary, secondary = src.secondary && src.secondary.length ? src.secondary : ex.secondary || [];
-      if (primary) { tally[primary] = (tally[primary] || 0) + n; any = true; }
-      secondary.forEach(m => { tally[m] = (tally[m] || 0) + n / 2; any = true; });
-    });
-    if (any) return { week: w, tally };
-  }
-  return null;
-}
-
 function sparkline(L) {
   const W = 84, H = 28, pad = 4, span1 = Math.max(1, NW() - 1);
   const vals = L.weeks.map(w => L.pts[w]);
@@ -581,10 +562,6 @@ function renderProgress() {
     '<div class="tile"><div class="k">' + T("stats.up") + '</div><div class="v">' + ups + '<small> / ' + gains.length + '</small></div><div class="s">' + T(gains.length ? "stats.upDesc" : "stats.upNone") + '</div></div>' +
     '</div>';
 
-  const mw = musclesWorked();
-  h += '<div class="panel" id="stMuscles"><h3>' + escAttr(mw ? t("stats.musclesTitle", { n: mw.week }) : t("stats.musclesTitleNone")) + '</h3><p class="sub">' +
-    T(mw ? "stats.musclesSub" : "stats.musclesEmpty") + '</p>' + (mw ? '<div class="m3d" id="stBody" hidden></div>' : '') + '</div>';
-
   const cols = ["22px"], blocks = !P.weekly && !P.repeat, W0 = firstShown();
   if (blocks) P.phases.forEach((ph, pi) => { if (pi) cols.push("4px"); cols.push("repeat(" + (ph.to - ph.from + 1) + ", minmax(0, 1fr))"); });
   else cols.push("repeat(" + (NW() - W0 + 1) + ", minmax(0, 1fr))");
@@ -619,7 +596,6 @@ function renderProgress() {
   });
   h += '</div></div>';
   el.innerHTML = h;
-  if (mw && typeof M3D !== "undefined") M3D.show($("stBody"), mw.tally, "stats");
   $("progTitle").textContent = t("stats.heading", { name: P.name });
   el.querySelectorAll(".lift .n").forEach((n, i) => { n.textContent = st.liftList[i].name; });
 
